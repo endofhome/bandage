@@ -1,1 +1,1 @@
-web: build/install/bandage/bin/bandage
+web: build/install/bandage/bin/bandage $PORT
