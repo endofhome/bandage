@@ -4,3 +4,8 @@ sudo: false
 script:
 - "./gradlew assemble"
 - "./gradlew check --info"
+deploy:
+  provider: heroku
+  app: band-age
+  api_key:
+    secure: Zq0bKgH3VoxjV4qtHcDJfnoS8IkWt+qJPtKhcpfZ5y+ixMkK/JwXFDXittoUc0hM8/+MbHEJaGS35OqUMegmnABzXTtS69iHARcyzGE3MdV2waEi9fQ1i+B1id9hoavEby3AozVFJcSs+2qtwqOHPVzwtmQBveJjTOW39XV1XzIksYbTdXH4lF7qVEep8HKitwBSpILDHrMMIPS7fgijZESckuXdWgHaHg1E0NjgdGPPVH1TgQQTYpAfhD9g38+9rEn/3mv41kCYMmIdBpS9rKDFrwWwrCIjM2esHZpo6uDeib+JMWz76xXOq+kuZ3YHaUBcQ0SUY1vYwMsvW+7WW+BEWiMAtyPk2Nxd9njdIFq3W/qyyGaVn2J7aXucK+4qGSBNoo7N77clUl6hTVycbyoyEp37RO5LqczN6/SpwEejndvDqVmlaAyxSMADxb7q4Ot4DFQZsv1b8wN8q1knaG6g6bCen9QAJ9TDIb8LgP/h7EiAsPlzV7amE/FyDY5xRr0ZlYAhQR0GTjJuZcXXjIsmOYJ2QRb0J3lZvT5VgRw1O+JljuTD/rG9Flq5fHp7sCZ8cEb6CXsawqEpYjY6S9WD39lN80QsOFDbsPfOO5OHBfyjauVOkzIjPNpxOImkeXgRWeuP1BM58y2WrfK3j0zVtI22JZkm0bSxawCPhuI=
