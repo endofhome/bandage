@@ -17,20 +17,25 @@ test {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation group: "org.http4k", name: "http4k-core", version: "3.112.1"
-    implementation group: "org.http4k", name: "http4k-server-jetty", version: "3.112.1"
+    def http4kVersion = "3.112.1"
+    def junitVersion = '5.4.0'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.4.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.4.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation group: "org.http4k", name: "http4k-core", version: http4kVersion
+    implementation group: "org.http4k", name: "http4k-server-jetty", version: http4kVersion
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:' + junitVersion
     testImplementation "com.natpryce:hamkrest:1.6.0.0"
+    
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:' + junitVersion
 }
 
+def jvmTargetVersion = "1.8"
 compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = jvmTargetVersion
 }
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = jvmTargetVersion
 }
 
 mainClassName = "BandageKt"
