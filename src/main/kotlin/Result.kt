@@ -18,6 +18,4 @@ fun <F, S> Result<F, S>.orElse(transform: (F) -> S): S =
         is Failure -> transform(this.reason)
     }
 
-fun <T> T.asSuccess(): Success<T> = Success(this)
-
 data class Error(val message: String)
