@@ -3,8 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <title>Bandage: Please log in</title>
+    <link href="public/vendor/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="public/style.css" rel="stylesheet" type="text/css">
 </head>
 <body>
+<div class="container-fluid d-flex h-100">
+    <div class="justify-content-center align-self-center mx-auto" id="login-container">
+        <h1>Please log in</h1>
+        <br>
+        <br>
+        <form class="form-group">
+            <label for="user">User</label>
+            <br>
+            <select class="form-control full-width" id="user" name="user">
+                <option value="1">AC</option>
+                <option value="2">SO</option>
+                <option value="3">TB</option>
+            </select>
+            <br>
+            <label for="password">Password</label>
+            <br>
+            <input class="form-control full-width" id="password" type="password" name="password" />
+            <br>
+            <button class="form-control full-width" type="submit" formenctype="application/x-www-form-urlencoded" formmethod="post" name="login">Log in</button>
+        </form>
+    </div>
+</div>
 
 </body>
 </html>
