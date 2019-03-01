@@ -1,8 +1,9 @@
 import org.http4k.core.Body
 import org.http4k.core.ContentType
+import org.http4k.core.Method.GET
+import org.http4k.core.Method.POST
 import org.http4k.core.Response
 import org.http4k.core.with
-import org.http4k.core.Method.GET
 import org.http4k.core.Status.Companion.OK
 import org.http4k.routing.bind
 import org.http4k.routing.ResourceLoader
@@ -28,6 +29,7 @@ object Bandage {
 
     val routes = routes(
             "/" bind GET to { Response(OK).with(view of LoginPage) },
+            "/login" bind POST to { request -> AuthenticateUser(request) },
 
             "/public" bind static(ResourceLoader.Directory("public"))
         )
