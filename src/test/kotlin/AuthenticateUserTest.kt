@@ -54,11 +54,24 @@ class AuthenticateUserTest {
     fun `login without password is invalid`() {
         val request = Request(Method.POST, "/login")
             .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
-            .form("user", "2")
+            .form("user", "1")
 
         val response = AuthenticateUser(request)
 
         assertThat(response.status, equalTo(UNAUTHORIZED))
         assertThat(response.bodyString(), equalTo("Password not provided"))
+    }
+
+    @Test
+    fun `login with incorrect password is invalid`() {
+        val request = Request(Method.POST, "/login")
+            .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+            .form("user", "3")
+            .form("password", "wrong_password")
+
+        val response = AuthenticateUser(request)
+
+        assertThat(response.status, equalTo(UNAUTHORIZED))
+        assertThat(response.bodyString(), equalTo("Incorrect password"))
     }
 }

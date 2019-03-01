@@ -20,9 +20,10 @@ object AuthenticateUser {
         val user = formAsMap["user"]?.first()
         val password = formAsMap["password"]?.first()
         return when {
-            user == null     -> Failure(Error("User not provided"))
-            password == null -> Failure(Error("Password not provided"))
-            else             -> Success(user)
+            user == null                                  -> Failure(Error("User not provided"))
+            password == null                              -> Failure(Error("Password not provided"))
+            password != System.getenv("BANDAGE_PASSWORD") -> Failure(Error("Incorrect password"))
+            else                                          -> Success(user)
         }
     }
 
