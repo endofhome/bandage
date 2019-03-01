@@ -20,6 +20,7 @@ class AuthenticateUserTest {
         val request = Request(Method.POST, "/login")
             .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
             .form("user", userId)
+            .form("password", "super-secret")
 
         val response = AuthenticateUser(request)
         val validCookie = Cookie(
@@ -46,6 +47,18 @@ class AuthenticateUserTest {
         val response = AuthenticateUser(request)
 
         assertThat(response.status, equalTo(UNAUTHORIZED))
-        assertThat(response.bodyString(), equalTo("User not found"))
+        assertThat(response.bodyString(), equalTo("User not provided"))
+    }
+
+    @Test
+    fun `login without password is invalid`() {
+        val request = Request(Method.POST, "/login")
+            .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+            .form("user", "2")
+
+        val response = AuthenticateUser(request)
+
+        assertThat(response.status, equalTo(UNAUTHORIZED))
+        assertThat(response.bodyString(), equalTo("Password not provided"))
     }
 }

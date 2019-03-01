@@ -1,4 +1,5 @@
 import Result.Failure
+import Result.Success
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
@@ -14,8 +15,16 @@ object AuthenticateUser {
             Response(Status.UNAUTHORIZED).body(error.message)
         }
 
-    private fun Request.authenticatedUser(): Result<Error, String> =
-        formAsMap()["user"]?.first()?.asSuccess() ?: Failure(Error("User not found"))
+    private fun Request.authenticatedUser(): Result<Error, String> {
+        val formAsMap = formAsMap()
+        val user = formAsMap["user"]?.first()
+        val password = formAsMap["password"]?.first()
+        return when {
+            user == null     -> Failure(Error("User not provided"))
+            password == null -> Failure(Error("Password not provided"))
+            else             -> Success(user)
+        }
+    }
 
     private fun Response.withBandageCookieFor(user: String): Response =
         cookie(
