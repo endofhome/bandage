@@ -1,3 +1,4 @@
+import RouteMappings.dashboard
 import RouteMappings.login
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -35,7 +36,7 @@ class AuthenticateUserTest {
         )
 
         assertThat(response.status, equalTo(SEE_OTHER))
-        assertThat(response.header("Location"), equalTo("/dashboard"))
+        assertThat(response.header("Location"), equalTo(dashboard))
         assertThat(response.cookies(), equalTo(listOf(validCookie)))
     }
 

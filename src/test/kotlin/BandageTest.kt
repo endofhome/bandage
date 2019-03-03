@@ -1,3 +1,4 @@
+import RouteMappings.dashboard
 import RouteMappings.index
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -33,6 +34,6 @@ class BandageTest {
         val expectedCookie = Cookie("bandage_login", "${System.getenv("BANDAGE_API_KEY")}_3", "login")
 
         assertThat(loginCookie, equalTo(expectedCookie))
-        assertThat(driver.currentUrl, equalTo("/dashboard"))
+        assertThat(driver.currentUrl, equalTo(dashboard))
     }
 }
