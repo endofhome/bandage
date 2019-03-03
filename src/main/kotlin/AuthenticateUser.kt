@@ -12,7 +12,7 @@ object AuthenticateUser {
         request.authenticatedUser().map { user ->
             Response(Status.SEE_OTHER).header("Location", "/dashboard").withBandageCookieFor(user)
         }.orElse { error ->
-            Response(Status.UNAUTHORIZED).body(error.message)
+            Response(Status.SEE_OTHER).header("Location", "/login").body(error.message)
         }
 
     private fun Request.authenticatedUser(): Result<Error, String> {

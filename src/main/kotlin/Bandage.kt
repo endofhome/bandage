@@ -2,6 +2,7 @@ import org.http4k.core.Body
 import org.http4k.core.ContentType
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
+import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.with
 import org.http4k.core.Status.Companion.OK
@@ -28,11 +29,15 @@ object Bandage {
     private val view = Body.view(renderer, ContentType.TEXT_HTML)
 
     val routes = routes(
-            "/" bind GET to { Response(OK).with(view of LoginPage) },
+            "/" bind GET to loginPage(),
+            "/login" bind GET to loginPage(),
             "/login" bind POST to { request -> AuthenticateUser(request) },
 
             "/public" bind static(ResourceLoader.Directory("public"))
         )
+
+    private fun loginPage(): (Request) -> Response =
+        { Response(OK).with(view of LoginPage) }
 
     object LoginPage : ViewModel {
         override fun template() = "login-page"

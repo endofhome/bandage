@@ -4,7 +4,6 @@ import org.http4k.core.ContentType
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Status.Companion.SEE_OTHER
-import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.core.body.form
 import org.http4k.core.cookie.Cookie
 import org.http4k.core.cookie.cookies
@@ -46,7 +45,8 @@ class AuthenticateUserTest {
 
         val response = AuthenticateUser(request)
 
-        assertThat(response.status, equalTo(UNAUTHORIZED))
+        assertThat(response.status, equalTo(SEE_OTHER))
+        assertThat(response.header("Location"), equalTo("/login"))
         assertThat(response.bodyString(), equalTo("User not provided"))
     }
 
@@ -58,7 +58,8 @@ class AuthenticateUserTest {
 
         val response = AuthenticateUser(request)
 
-        assertThat(response.status, equalTo(UNAUTHORIZED))
+        assertThat(response.status, equalTo(SEE_OTHER))
+        assertThat(response.header("Location"), equalTo("/login"))
         assertThat(response.bodyString(), equalTo("Password not provided"))
     }
 
@@ -71,7 +72,8 @@ class AuthenticateUserTest {
 
         val response = AuthenticateUser(request)
 
-        assertThat(response.status, equalTo(UNAUTHORIZED))
+        assertThat(response.status, equalTo(SEE_OTHER))
+        assertThat(response.header("Location"), equalTo("/login"))
         assertThat(response.bodyString(), equalTo("Incorrect password"))
     }
 }
