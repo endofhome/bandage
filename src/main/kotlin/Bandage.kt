@@ -1,13 +1,14 @@
+import RouteMappings.login
 import org.http4k.core.Body
 import org.http4k.core.ContentType
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
 import org.http4k.core.Request
 import org.http4k.core.Response
-import org.http4k.core.with
 import org.http4k.core.Status.Companion.OK
-import org.http4k.routing.bind
+import org.http4k.core.with
 import org.http4k.routing.ResourceLoader
+import org.http4k.routing.bind
 import org.http4k.routing.routes
 import org.http4k.routing.static
 import org.http4k.server.Jetty
@@ -30,8 +31,8 @@ object Bandage {
 
     val routes = routes(
             "/" bind GET to loginPage(),
-            "/login" bind GET to loginPage(),
-            "/login" bind POST to { request -> AuthenticateUser(request) },
+            login bind GET to loginPage(),
+            login bind POST to { request -> AuthenticateUser(request) },
 
             "/public" bind static(ResourceLoader.Directory("public"))
         )

@@ -1,3 +1,4 @@
+import RouteMappings.login
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.http4k.core.ContentType
@@ -16,7 +17,7 @@ class AuthenticateUserTest {
     @Test
     fun `handles valid login`() {
         val userId = "1"
-        val request = Request(Method.POST, "/login")
+        val request = Request(Method.POST, login)
             .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
             .form("user", userId)
             .form("password", "super-secret")
@@ -40,32 +41,32 @@ class AuthenticateUserTest {
 
     @Test
     fun `login without user is invalid`() {
-        val request = Request(Method.POST, "/login")
+        val request = Request(Method.POST, login)
             .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
 
         val response = AuthenticateUser(request)
 
         assertThat(response.status, equalTo(SEE_OTHER))
-        assertThat(response.header("Location"), equalTo("/login"))
+        assertThat(response.header("Location"), equalTo(login))
         assertThat(response.bodyString(), equalTo("User not provided"))
     }
 
     @Test
     fun `login without password is invalid`() {
-        val request = Request(Method.POST, "/login")
+        val request = Request(Method.POST, login)
             .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
             .form("user", "1")
 
         val response = AuthenticateUser(request)
 
         assertThat(response.status, equalTo(SEE_OTHER))
-        assertThat(response.header("Location"), equalTo("/login"))
+        assertThat(response.header("Location"), equalTo(login))
         assertThat(response.bodyString(), equalTo("Password not provided"))
     }
 
     @Test
     fun `login with incorrect password is invalid`() {
-        val request = Request(Method.POST, "/login")
+        val request = Request(Method.POST, login)
             .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
             .form("user", "3")
             .form("password", "wrong_password")
@@ -73,7 +74,7 @@ class AuthenticateUserTest {
         val response = AuthenticateUser(request)
 
         assertThat(response.status, equalTo(SEE_OTHER))
-        assertThat(response.header("Location"), equalTo("/login"))
+        assertThat(response.header("Location"), equalTo(login))
         assertThat(response.bodyString(), equalTo("Incorrect password"))
     }
 }

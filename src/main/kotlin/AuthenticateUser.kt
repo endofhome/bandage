@@ -1,5 +1,6 @@
 import Result.Failure
 import Result.Success
+import RouteMappings.login
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
@@ -12,7 +13,7 @@ object AuthenticateUser {
         request.authenticatedUser().map { user ->
             Response(Status.SEE_OTHER).header("Location", "/dashboard").withBandageCookieFor(user)
         }.orElse { error ->
-            Response(Status.SEE_OTHER).header("Location", "/login").body(error.message)
+            Response(Status.SEE_OTHER).header("Location", login).body(error.message)
         }
 
     private fun Request.authenticatedUser(): Result<Error, String> {
