@@ -1,3 +1,4 @@
+import RouteMappings.index
 import RouteMappings.login
 import org.http4k.core.Body
 import org.http4k.core.ContentType
@@ -30,7 +31,7 @@ object Bandage {
     private val view = Body.view(renderer, ContentType.TEXT_HTML)
 
     val routes = routes(
-            "/" bind GET to loginPage(),
+            index bind GET to loginPage(),
             login bind GET to loginPage(),
             login bind POST to { request -> AuthenticateUser(request) },
 

@@ -1,3 +1,4 @@
+import RouteMappings.index
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.http4k.core.Status.Companion.OK
@@ -13,7 +14,7 @@ class BandageTest {
     fun `fully functional login page is returned`() {
         val driver = Http4kWebDriver(Bandage.routes)
 
-        driver.navigate().to("/")
+        driver.navigate().to(index)
 
         assertThat(driver.status, equalTo(OK))
         assertThat(driver.title, equalTo("Bandage: Please log in"))
