@@ -1,8 +1,10 @@
 import RouteMappings.dashboard
 import RouteMappings.index
+import RouteMappings.login
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.http4k.core.Status.Companion.OK
+import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.webdriver.Http4kWebDriver
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
@@ -11,11 +13,19 @@ import org.openqa.selenium.Cookie
 
 class BandageTest {
 
-    @Test
-    fun `fully functional login page is returned`() {
-        val driver = Http4kWebDriver(Bandage.routes)
+    private val driver = Http4kWebDriver(Bandage.routes)
 
+    @Test
+    fun `index redirects to login`() {
         driver.navigate().to(index)
+
+        assertThat(driver.status, equalTo(OK))
+        assertThat(driver.currentUrl, equalTo(login))
+    }
+
+    @Test
+    fun `can log in via login page`() {
+        driver.navigate().to(login)
 
         assertThat(driver.status, equalTo(OK))
         assertThat(driver.title, equalTo("Bandage: Please log in"))
