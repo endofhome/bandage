@@ -13,7 +13,7 @@ import org.http4k.core.with
 import org.http4k.lens.Header
 import org.junit.jupiter.api.Test
 
-class AuthenticateUserTest {
+class AuthenticationTest {
 
     private val authentication = Authentication()
 
