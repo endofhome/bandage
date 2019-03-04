@@ -21,7 +21,7 @@ class AuthenticateUserTest {
         val request = Request(Method.POST, login)
             .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
             .form("user", userId)
-            .form("password", "super-secret")
+            .form("password", System.getenv("BANDAGE_PASSWORD"))
 
         val response = AuthenticateUser(request)
         val validCookie = Cookie(
@@ -77,5 +77,20 @@ class AuthenticateUserTest {
         assertThat(response.status, equalTo(SEE_OTHER))
         assertThat(response.header("Location"), equalTo(login))
         assertThat(response.bodyString(), equalTo("Incorrect password"))
+    }
+
+    @Test
+    fun `ensure only one user field is provided`() {
+        val request = Request(Method.POST, login)
+            .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+            .form("user", "1")
+            .form("user", "2")
+            .form("password", System.getenv("BANDAGE_PASSWORD"))
+
+        val response = AuthenticateUser(request)
+
+        assertThat(response.status, equalTo(SEE_OTHER))
+        assertThat(response.header("Location"), equalTo(login))
+        assertThat(response.bodyString(), equalTo("Multiple user fields are not allowed"))
     }
 }
