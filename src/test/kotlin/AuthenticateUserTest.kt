@@ -15,6 +15,8 @@ import org.junit.jupiter.api.Test
 
 class AuthenticateUserTest {
 
+    private val authentication = Authentication()
+
     @Test
     fun `handles valid login`() {
         val userId = "1"
@@ -23,7 +25,7 @@ class AuthenticateUserTest {
             .form("user", userId)
             .form("password", System.getenv("BANDAGE_PASSWORD"))
 
-        val response = AuthenticateUser(request)
+        val response = authentication.authenticateUser(request)
         val validCookie = Cookie(
             name = "bandage_login",
             value = "${System.getenv("BANDAGE_API_KEY")}_$userId",
@@ -45,7 +47,7 @@ class AuthenticateUserTest {
         val request = Request(Method.POST, login)
             .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
 
-        val response = AuthenticateUser(request)
+        val response = authentication.authenticateUser(request)
 
         assertThat(response.status, equalTo(SEE_OTHER))
         assertThat(response.header("Location"), equalTo(login))
@@ -58,7 +60,7 @@ class AuthenticateUserTest {
             .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
             .form("user", "1")
 
-        val response = AuthenticateUser(request)
+        val response = authentication.authenticateUser(request)
 
         assertThat(response.status, equalTo(SEE_OTHER))
         assertThat(response.header("Location"), equalTo(login))
@@ -72,7 +74,7 @@ class AuthenticateUserTest {
             .form("user", "3")
             .form("password", "wrong_password")
 
-        val response = AuthenticateUser(request)
+        val response = authentication.authenticateUser(request)
 
         assertThat(response.status, equalTo(SEE_OTHER))
         assertThat(response.header("Location"), equalTo(login))
@@ -87,7 +89,7 @@ class AuthenticateUserTest {
             .form("user", "2")
             .form("password", System.getenv("BANDAGE_PASSWORD"))
 
-        val response = AuthenticateUser(request)
+        val response = authentication.authenticateUser(request)
 
         assertThat(response.status, equalTo(SEE_OTHER))
         assertThat(response.header("Location"), equalTo(login))
@@ -101,7 +103,7 @@ class AuthenticateUserTest {
             .form("user", "")
             .form("password", System.getenv("BANDAGE_PASSWORD"))
 
-        val response = AuthenticateUser(request)
+        val response = authentication.authenticateUser(request)
 
         assertThat(response.status, equalTo(SEE_OTHER))
         assertThat(response.header("Location"), equalTo(login))
@@ -116,10 +118,25 @@ class AuthenticateUserTest {
             .form("password", System.getenv("BANDAGE_PASSWORD"))
             .form("password", "hunter2")
 
-        val response = AuthenticateUser(request)
+        val response = authentication.authenticateUser(request)
 
         assertThat(response.status, equalTo(SEE_OTHER))
         assertThat(response.header("Location"), equalTo(login))
         assertThat(response.bodyString(), equalTo("Multiple password fields are not allowed"))
+    }
+
+    @Test
+    fun `invalid user ID cannot be logged in`() {
+        val request = Request(Method.POST, login)
+            .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+            .form("user", "1")
+            .form("password", System.getenv("BANDAGE_PASSWORD"))
+
+        val noUsers = UserManagement(emptyList())
+        val response = Authentication(noUsers).authenticateUser(request)
+
+        assertThat(response.status, equalTo(SEE_OTHER))
+        assertThat(response.header("Location"), equalTo(login))
+        assertThat(response.bodyString(), equalTo("Unknown user ID 1"))
     }
 }

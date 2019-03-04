@@ -12,6 +12,12 @@ fun <F, S, T> Result<F, S>.map(transform: (S) -> T): Result<F, T> =
         is Failure -> this
     }
 
+fun <F, S, T> Result<F, S>.flatMap(transform: (S) -> Result<F, T>): Result<F, T> =
+    when (this) {
+        is Success -> transform(this.value)
+        is Failure -> this
+    }
+
 fun <F, S> Result<F, S>.orElse(transform: (F) -> S): S =
     when (this) {
         is Success -> this.value

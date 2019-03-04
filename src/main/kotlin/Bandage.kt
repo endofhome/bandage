@@ -30,7 +30,7 @@ object Bandage {
     val routes = routes(
             index bind GET  to { Response(SEE_OTHER).header("Location", login) },
             login bind GET  to { Login(view) },
-            login bind POST to { request -> AuthenticateUser(request) },
+            login bind POST to { request -> Authentication().authenticateUser(request) },
 
             "/public" bind static(ResourceLoader.Directory("public"))
         )

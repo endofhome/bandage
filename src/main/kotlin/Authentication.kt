@@ -9,15 +9,16 @@ import org.http4k.core.body.formAsMap
 import org.http4k.core.cookie.Cookie
 import org.http4k.core.cookie.cookie
 
-object AuthenticateUser {
-    operator fun invoke(request: Request): Response =
+class Authentication(private val users: UserManagement = UserManagement()) {
+
+    fun authenticateUser(request: Request): Response =
         request.authenticatedUser().map { user ->
             Response(Status.SEE_OTHER).header("Location", dashboard).withBandageCookieFor(user)
         }.orElse { error ->
             Response(Status.SEE_OTHER).header("Location", login).body(error.message)
         }
 
-    private fun Request.authenticatedUser(): Result<Error, String> {
+    private fun Request.authenticatedUser(): Result<Error, User> {
         val formAsMap: Map<String, List<String?>> = formAsMap()
         val user = formAsMap["user"]
         val password = formAsMap["password"]
@@ -28,14 +29,14 @@ object AuthenticateUser {
             password.size > 1                                     -> Failure(Error("Multiple password fields are not allowed"))
             password.first() != System.getenv("BANDAGE_PASSWORD") -> Failure(Error("Incorrect password"))
             else                                                  -> user.firstOrFailure()
-        }
+        }.flatMap { userId -> users.findUser(userId) }
     }
 
-    private fun Response.withBandageCookieFor(user: String): Response =
+    private fun Response.withBandageCookieFor(user: User): Response =
         cookie(
             Cookie(
                 name = "bandage_login",
-                value = "${System.getenv("BANDAGE_API_KEY")}_$user",
+                value = "${System.getenv("BANDAGE_API_KEY")}_${user.userId}",
                 maxAge = 100000L,
                 expires = null,
                 domain = null,
