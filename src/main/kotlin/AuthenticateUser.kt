@@ -26,9 +26,12 @@ object AuthenticateUser {
             password == null                              -> Failure(Error("Password not provided"))
             password != System.getenv("BANDAGE_PASSWORD") -> Failure(Error("Incorrect password"))
             user.size > 1                                 -> Failure(Error("Multiple user fields are not allowed"))
-            else                                          -> Success(user.first()!!)
+            else                                          -> user.firstOrFailure("user")
         }
     }
+
+    private fun <T> List<T?>.firstOrFailure(fieldName: String) =
+        first()?.let { Success(it) } ?: Failure(Error("$fieldName field was empty"))
 
     private fun Response.withBandageCookieFor(user: String): Response =
         cookie(
