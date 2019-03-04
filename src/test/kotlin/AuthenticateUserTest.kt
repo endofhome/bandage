@@ -93,4 +93,18 @@ class AuthenticateUserTest {
         assertThat(response.header("Location"), equalTo(login))
         assertThat(response.bodyString(), equalTo("Multiple user fields are not allowed"))
     }
+
+    @Test
+    fun `user field cannot be empty`() {
+        val request = Request(Method.POST, login)
+            .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+            .form("user", "")
+            .form("password", System.getenv("BANDAGE_PASSWORD"))
+
+        val response = AuthenticateUser(request)
+
+        assertThat(response.status, equalTo(SEE_OTHER))
+        assertThat(response.header("Location"), equalTo(login))
+        assertThat(response.bodyString(), equalTo("User not provided"))
+    }
 }

@@ -22,7 +22,7 @@ object AuthenticateUser {
         val user = formAsMap["user"]
         val password = formAsMap["password"]?.first()
         return when {
-            user == null                                  -> Failure(Error("User not provided"))
+            user == null || user.first() == ""            -> Failure(Error("User not provided"))
             password == null                              -> Failure(Error("Password not provided"))
             password != System.getenv("BANDAGE_PASSWORD") -> Failure(Error("Incorrect password"))
             user.size > 1                                 -> Failure(Error("Multiple user fields are not allowed"))
