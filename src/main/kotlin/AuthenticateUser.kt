@@ -27,7 +27,7 @@ object AuthenticateUser {
             user.size > 1                                         -> Failure(Error("Multiple user fields are not allowed"))
             password.size > 1                                     -> Failure(Error("Multiple password fields are not allowed"))
             password.first() != System.getenv("BANDAGE_PASSWORD") -> Failure(Error("Incorrect password"))
-            else                                                  -> user.firstOrFailure("user")
+            else                                                  -> user.firstOrFailure()
         }
     }
 
@@ -45,6 +45,6 @@ object AuthenticateUser {
             )
         )
 
-    private fun <T> List<T?>.firstOrFailure(fieldName: String) =
-        first()?.let { Success(it) } ?: Failure(Error("$fieldName field was empty"))
+    private fun List<String?>.firstOrFailure() =
+        first()?.let { Success(it) } ?: Failure(Error("User field was empty"))
 }
