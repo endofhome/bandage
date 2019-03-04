@@ -20,18 +20,16 @@ object AuthenticateUser {
     private fun Request.authenticatedUser(): Result<Error, String> {
         val formAsMap: Map<String, List<String?>> = formAsMap()
         val user = formAsMap["user"]
-        val password = formAsMap["password"]?.first()
+        val password = formAsMap["password"]
         return when {
-            user == null || user.first() == ""            -> Failure(Error("User not provided"))
-            password == null                              -> Failure(Error("Password not provided"))
-            password != System.getenv("BANDAGE_PASSWORD") -> Failure(Error("Incorrect password"))
-            user.size > 1                                 -> Failure(Error("Multiple user fields are not allowed"))
-            else                                          -> user.firstOrFailure("user")
+            user == null || user.first() == ""                    -> Failure(Error("User not provided"))
+            password == null                                      -> Failure(Error("Password not provided"))
+            user.size > 1                                         -> Failure(Error("Multiple user fields are not allowed"))
+            password.size > 1                                     -> Failure(Error("Multiple password fields are not allowed"))
+            password.first() != System.getenv("BANDAGE_PASSWORD") -> Failure(Error("Incorrect password"))
+            else                                                  -> user.firstOrFailure("user")
         }
     }
-
-    private fun <T> List<T?>.firstOrFailure(fieldName: String) =
-        first()?.let { Success(it) } ?: Failure(Error("$fieldName field was empty"))
 
     private fun Response.withBandageCookieFor(user: String): Response =
         cookie(
@@ -46,4 +44,7 @@ object AuthenticateUser {
                 httpOnly = true
             )
         )
+
+    private fun <T> List<T?>.firstOrFailure(fieldName: String) =
+        first()?.let { Success(it) } ?: Failure(Error("$fieldName field was empty"))
 }

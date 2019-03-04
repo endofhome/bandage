@@ -107,4 +107,19 @@ class AuthenticateUserTest {
         assertThat(response.header("Location"), equalTo(login))
         assertThat(response.bodyString(), equalTo("User not provided"))
     }
+
+    @Test
+    fun `ensure only one password field is provided`() {
+        val request = Request(Method.POST, login)
+            .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+            .form("user", "1")
+            .form("password", System.getenv("BANDAGE_PASSWORD"))
+            .form("password", "hunter2")
+
+        val response = AuthenticateUser(request)
+
+        assertThat(response.status, equalTo(SEE_OTHER))
+        assertThat(response.header("Location"), equalTo(login))
+        assertThat(response.bodyString(), equalTo("Multiple password fields are not allowed"))
+    }
 }
