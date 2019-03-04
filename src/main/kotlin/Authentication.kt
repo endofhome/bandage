@@ -28,8 +28,8 @@ class Authentication(private val users: UserManagement = UserManagement()) {
             user.size > 1                                         -> Failure(Error("Multiple user fields are not allowed"))
             password.size > 1                                     -> Failure(Error("Multiple password fields are not allowed"))
             password.first() != System.getenv("BANDAGE_PASSWORD") -> Failure(Error("Incorrect password"))
-            else                                                  -> user.firstOrFailure()
-        }.flatMap { userId -> users.findUser(userId) }
+            else                                                  -> user.firstOrFailure().flatMap { users.findUser(it) }
+        }
     }
 
     private fun Response.withBandageCookieFor(user: User): Response =
