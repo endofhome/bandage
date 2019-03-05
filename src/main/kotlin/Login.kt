@@ -5,10 +5,10 @@ import org.http4k.lens.BiDiBodyLens
 import org.http4k.template.ViewModel
 
 object Login {
-    operator fun invoke(view: BiDiBodyLens<ViewModel>) =
-        Response(Status.OK).with(view of LoginPage)
+    operator fun invoke(view: BiDiBodyLens<ViewModel>, userManagement: UserManagement) =
+        Response(Status.OK).with(view of LoginPage(userManagement.users))
 
-    object LoginPage : ViewModel {
+    data class LoginPage(val users: List<User>) : ViewModel {
         override fun template() = "login-page"
     }
 }

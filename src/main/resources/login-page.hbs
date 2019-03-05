@@ -16,9 +16,9 @@
             <label for="user">User</label>
             <br>
             <select class="form-control full-width" id="user" name="user">
-                <option value="1">AC</option>
-                <option value="2">SO</option>
-                <option value="3">TB</option>
+                {{#each users}}
+                    <option value="{{this.userId}}">{{this.initials}}</option>
+                {{/each}}
             </select>
             <br>
             <label for="password">Password</label>

@@ -3,7 +3,7 @@ import Result.Success
 
 class UserManagement(users: List<User>? = null) {
 
-    private val users: List<User> = users ?: listOf(
+    val users: List<User> = users ?: listOf(
         User("1", System.getenv("BANDAGE_USER_ONE_FULL_NAME"), System.getenv("BANDAGE_USER_ONE_SHORT_NAME")),
         User("2", System.getenv("BANDAGE_USER_TWO_FULL_NAME"), System.getenv("BANDAGE_USER_TWO_SHORT_NAME")),
         User("3", System.getenv("BANDAGE_USER_THREE_FULL_NAME"), System.getenv("BANDAGE_USER_THREE_SHORT_NAME"))
@@ -19,4 +19,6 @@ class UserManagement(users: List<User>? = null) {
     }
 }
 
-data class User(val userId: String, val fullName: String, val shortName: String)
+data class User(val userId: String, val fullName: String, val shortName: String) {
+    val initials get() = fullName.split(" ").map { it.first() }.joinToString("")
+}

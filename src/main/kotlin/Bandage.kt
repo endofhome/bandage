@@ -1,3 +1,5 @@
+import Bandage.Config.defaultPort
+import Bandage.Config.view
 import RouteMappings.index
 import RouteMappings.login
 import org.http4k.core.Body
@@ -16,22 +18,25 @@ import org.http4k.template.HandlebarsTemplates
 import org.http4k.template.view
 
 fun main(args: Array<String>) {
-    val port = if (args.isNotEmpty()) args[0].toInt() else Bandage.defaultPort
+    val port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
     Bandage.routes.asServer(Jetty(port)).start()
 
     println("Bandage has started on http://localhost:$port")
 }
 
 object Bandage {
-    const val defaultPort = 7000
-    private val renderer = HandlebarsTemplates().HotReload("src/main/resources")
-    private val view = Body.view(renderer, ContentType.TEXT_HTML)
+    object Config {
+        private val renderer = HandlebarsTemplates().HotReload("src/main/resources")
+        val view = Body.view(renderer, ContentType.TEXT_HTML)
+        const val defaultPort = 7000
+    }
+
     private val userManagement = UserManagement()
     private val authentication = Authentication(userManagement)
 
     val routes = routes(
             index bind GET  to { Response(SEE_OTHER).header("Location", login) },
-            login bind GET  to { Login(view) },
+            login bind GET  to { Login(view, userManagement) },
             login bind POST to { request -> authentication.authenticateUser(request) },
 
             "/public" bind static(ResourceLoader.Directory("public"))
