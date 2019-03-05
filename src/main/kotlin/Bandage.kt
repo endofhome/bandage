@@ -26,11 +26,13 @@ object Bandage {
     const val defaultPort = 7000
     private val renderer = HandlebarsTemplates().HotReload("src/main/resources")
     private val view = Body.view(renderer, ContentType.TEXT_HTML)
+    private val userManagement = UserManagement()
+    private val authentication = Authentication(userManagement)
 
     val routes = routes(
             index bind GET  to { Response(SEE_OTHER).header("Location", login) },
             login bind GET  to { Login(view) },
-            login bind POST to { request -> Authentication().authenticateUser(request) },
+            login bind POST to { request -> authentication.authenticateUser(request) },
 
             "/public" bind static(ResourceLoader.Directory("public"))
         )

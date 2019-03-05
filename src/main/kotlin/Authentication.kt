@@ -9,7 +9,7 @@ import org.http4k.core.body.formAsMap
 import org.http4k.core.cookie.Cookie
 import org.http4k.core.cookie.cookie
 
-class Authentication(private val users: UserManagement = UserManagement()) {
+class Authentication(private val users: UserManagement) {
 
     fun authenticateUser(request: Request): Response =
         request.authenticatedUser().map { user ->

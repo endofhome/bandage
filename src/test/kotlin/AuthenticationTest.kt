@@ -14,8 +14,8 @@ import org.http4k.lens.Header
 import org.junit.jupiter.api.Test
 
 class AuthenticationTest {
-
-    private val authentication = Authentication()
+    private val userManagement = UserManagement()
+    private val authentication = Authentication(userManagement)
 
     @Test
     fun `handles valid login`() {
