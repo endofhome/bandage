@@ -31,7 +31,9 @@ class BandageTest {
         assertThat(driver.title, equalTo("Bandage: Please log in"))
 
         val usernameField = driver.findElement(By.cssSelector("#user")) ?: fail("username field not found")
-        val option = usernameField.findElement(By.cssSelector("option:contains(TB)"))
+        val lastUser = UserManagement().users.last()
+        val option = usernameField.findElement(By.cssSelector("option:contains(${lastUser.initials})"))
+            ?: fail("option ${lastUser.initials} is not available")
         option.click()
 
         val passwordField = driver.findElement(By.cssSelector("#password")) ?: fail("password field not found")
@@ -41,7 +43,7 @@ class BandageTest {
         loginButton.click()
 
         val loginCookie = driver.manage().getCookieNamed("bandage_login") ?: fail("login cookie not set")
-        val expectedCookie = Cookie("bandage_login", "${System.getenv("BANDAGE_API_KEY")}_3", "login")
+        val expectedCookie = Cookie("bandage_login", "${System.getenv("BANDAGE_API_KEY")}_${lastUser.userId}", "login")
 
         assertThat(loginCookie, equalTo(expectedCookie))
         assertThat(driver.currentUrl, equalTo(dashboard))
