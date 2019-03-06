@@ -37,7 +37,7 @@ class Authentication(private val users: UserManagement) {
             Cookie(
                 name = "bandage_login",
                 value = "${System.getenv("BANDAGE_API_KEY")}_${user.userId}",
-                maxAge = 100000L,
+                maxAge = Long.MAX_VALUE,
                 expires = null,
                 domain = null,
                 path = "login",

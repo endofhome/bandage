@@ -29,7 +29,7 @@ class AuthenticationTest {
         val validCookie = Cookie(
             name = "bandage_login",
             value = "${System.getenv("BANDAGE_API_KEY")}_$userId",
-            maxAge = 100000L,
+            maxAge = Long.MAX_VALUE,
             expires = null,
             domain = null,
             path = "login",
