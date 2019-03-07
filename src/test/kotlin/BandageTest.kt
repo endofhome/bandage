@@ -24,6 +24,28 @@ class BandageTest {
 
     @Test
     fun `can log in via login page`() {
+        val loggedInUser = userLogsIn()
+
+        val loginCookie = driver.manage().getCookieNamed(Authentication.loginCookieName) ?: fail("login cookie not set")
+        val expectedCookie = Cookie(Authentication.loginCookieName, "${System.getenv("BANDAGE_API_KEY")}_${loggedInUser.userId}", "login")
+
+        assertThat(loginCookie, equalTo(expectedCookie))
+        assertThat(driver.currentUrl, equalTo(dashboard))
+        assertThat(driver.title, equalTo("Bandage"))
+    }
+
+    @Test
+    fun `can log out`() {
+        userLogsIn()
+        val logoutLink = driver.findElement(By.cssSelector("a[data-test=\"logout\"]")) ?: fail("Logout link is unavailable")
+        logoutLink.click()
+
+        assertThat(driver.status, equalTo(OK))
+        assertThat(driver.manage().cookies, equalTo(emptySet()))
+        assertThat(driver.currentUrl, equalTo(login))
+    }
+
+    private fun userLogsIn(): User {
         driver.navigate().to(login)
 
         assertThat(driver.status, equalTo(OK))
@@ -38,13 +60,10 @@ class BandageTest {
         val passwordField = driver.findElement(By.cssSelector("#password")) ?: fail("password field not found")
         passwordField.sendKeys(System.getenv("BANDAGE_PASSWORD"))
 
-        val loginButton = driver.findElement(By.cssSelector("button[type=\"submit\"][name=\"login\"]")) ?: fail("login button not found")
+        val loginButton = driver.findElement(By.cssSelector("button[type=\"submit\"][name=\"login\"]"))
+            ?: fail("login button not found")
         loginButton.click()
 
-        val loginCookie = driver.manage().getCookieNamed(Authentication.loginCookieName) ?: fail("login cookie not set")
-        val expectedCookie = Cookie(Authentication.loginCookieName, "${System.getenv("BANDAGE_API_KEY")}_${lastUser.userId}", "login")
-
-        assertThat(loginCookie, equalTo(expectedCookie))
-        assertThat(driver.currentUrl, equalTo(dashboard))
+        return lastUser
     }
 }
