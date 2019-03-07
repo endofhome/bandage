@@ -12,6 +12,9 @@ import org.http4k.core.cookie.cookies
 import org.http4k.core.with
 import org.http4k.lens.Header
 import org.junit.jupiter.api.Test
+import java.time.Instant.EPOCH
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 class AuthenticationTest {
     private val userManagement = UserManagement()
@@ -26,20 +29,21 @@ class AuthenticationTest {
             .form("password", System.getenv("BANDAGE_PASSWORD"))
 
         val response = authentication.authenticateUser(request)
-        val validCookie = Cookie(
-            name = "bandage_login",
-            value = "${System.getenv("BANDAGE_API_KEY")}_$userId",
-            maxAge = Long.MAX_VALUE,
-            expires = null,
-            domain = null,
-            path = "login",
-            secure = false,
-            httpOnly = true
-        )
 
         assertThat(response.status, equalTo(SEE_OTHER))
         assertThat(response.header("Location"), equalTo(dashboard))
-        assertThat(response.cookies(), equalTo(listOf(validCookie)))
+        assertThat(response.cookies(), equalTo(listOf(
+            Cookie(
+                name = Authentication.loginCookieName,
+                value = "${System.getenv("BANDAGE_API_KEY")}_$userId",
+                maxAge = Long.MAX_VALUE,
+                expires = null,
+                domain = null,
+                path = "login",
+                secure = false,
+                httpOnly = true
+            )
+        )))
     }
 
     @Test
@@ -138,5 +142,21 @@ class AuthenticationTest {
         assertThat(response.status, equalTo(SEE_OTHER))
         assertThat(response.header("Location"), equalTo(login))
         assertThat(response.bodyString(), equalTo("Unknown user ID 1"))
+    }
+
+    @Test
+    fun `handles logout, removing login cookie`() {
+        val invalidatedCookie = Cookie(
+            name = Authentication.loginCookieName,
+            value = "",
+            maxAge = 0,
+            expires = LocalDateTime.ofInstant(EPOCH, ZoneId.of("GMT"))
+        )
+
+        val response = authentication.logout()
+
+        assertThat(response.status, equalTo(SEE_OTHER))
+        assertThat(response.header("Location"), equalTo(login))
+        assertThat(response.cookies(), equalTo(listOf(invalidatedCookie)))
     }
 }

@@ -4,7 +4,6 @@ import RouteMappings.login
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.http4k.core.Status.Companion.OK
-import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.webdriver.Http4kWebDriver
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
@@ -42,8 +41,8 @@ class BandageTest {
         val loginButton = driver.findElement(By.cssSelector("button[type=\"submit\"][name=\"login\"]")) ?: fail("login button not found")
         loginButton.click()
 
-        val loginCookie = driver.manage().getCookieNamed("bandage_login") ?: fail("login cookie not set")
-        val expectedCookie = Cookie("bandage_login", "${System.getenv("BANDAGE_API_KEY")}_${lastUser.userId}", "login")
+        val loginCookie = driver.manage().getCookieNamed(Authentication.loginCookieName) ?: fail("login cookie not set")
+        val expectedCookie = Cookie(Authentication.loginCookieName, "${System.getenv("BANDAGE_API_KEY")}_${lastUser.userId}", "login")
 
         assertThat(loginCookie, equalTo(expectedCookie))
         assertThat(driver.currentUrl, equalTo(dashboard))
