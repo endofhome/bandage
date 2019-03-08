@@ -27,127 +27,131 @@ class AuthenticationTest {
     private val userManagement = UserManagement()
     private val authentication = Authentication(userManagement)
 
-    @Test
-    fun `handles valid login`() {
-        val userId = "1"
-        val request = Request(Method.POST, login)
-            .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
-            .form("user", userId)
-            .form("password", System.getenv("BANDAGE_PASSWORD"))
+    @Nested
+    @DisplayName("Authenticating user at login")
+    inner class AuthenticatingUserAtLogin {
+        @Test
+        fun `handles valid login`() {
+            val userId = "1"
+            val request = Request(Method.POST, login)
+                .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+                .form("user", userId)
+                .form("password", System.getenv("BANDAGE_PASSWORD"))
 
-        val response = authentication.authenticateUser(request)
-        val validCookie = Cookie(
-            name = loginCookieName,
-            value = "${System.getenv("BANDAGE_API_KEY")}_$userId",
-            maxAge = Long.MAX_VALUE,
-            expires = null,
-            domain = null,
-            path = "login",
-            secure = false,
-            httpOnly = true
-        )
+            val response = authentication.authenticateUser(request)
+            val validCookie = Cookie(
+                name = loginCookieName,
+                value = "${System.getenv("BANDAGE_API_KEY")}_$userId",
+                maxAge = Long.MAX_VALUE,
+                expires = null,
+                domain = null,
+                path = "login",
+                secure = false,
+                httpOnly = true
+            )
 
-        assertThat(response.status, equalTo(SEE_OTHER))
-        assertThat(response.header("Location"), equalTo(dashboard))
-        assertThat(response.cookies(), equalTo(listOf(validCookie)))
-    }
+            assertThat(response.status, equalTo(SEE_OTHER))
+            assertThat(response.header("Location"), equalTo(dashboard))
+            assertThat(response.cookies(), equalTo(listOf(validCookie)))
+        }
 
-    @Test
-    fun `login without user is invalid`() {
-        val request = Request(Method.POST, login)
-            .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+        @Test
+        fun `login without user is invalid`() {
+            val request = Request(Method.POST, login)
+                .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
 
-        val response = authentication.authenticateUser(request)
+            val response = authentication.authenticateUser(request)
 
-        assertThat(response.status, equalTo(SEE_OTHER))
-        assertThat(response.header("Location"), equalTo(login))
-        assertThat(response.bodyString(), equalTo("User not provided"))
-    }
+            assertThat(response.status, equalTo(SEE_OTHER))
+            assertThat(response.header("Location"), equalTo(login))
+            assertThat(response.bodyString(), equalTo("User not provided"))
+        }
 
-    @Test
-    fun `login without password is invalid`() {
-        val request = Request(Method.POST, login)
-            .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
-            .form("user", "1")
+        @Test
+        fun `login without password is invalid`() {
+            val request = Request(Method.POST, login)
+                .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+                .form("user", "1")
 
-        val response = authentication.authenticateUser(request)
+            val response = authentication.authenticateUser(request)
 
-        assertThat(response.status, equalTo(SEE_OTHER))
-        assertThat(response.header("Location"), equalTo(login))
-        assertThat(response.bodyString(), equalTo("Password not provided"))
-    }
+            assertThat(response.status, equalTo(SEE_OTHER))
+            assertThat(response.header("Location"), equalTo(login))
+            assertThat(response.bodyString(), equalTo("Password not provided"))
+        }
 
-    @Test
-    fun `login with incorrect password is invalid`() {
-        val request = Request(Method.POST, login)
-            .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
-            .form("user", "3")
-            .form("password", "wrong_password")
+        @Test
+        fun `login with incorrect password is invalid`() {
+            val request = Request(Method.POST, login)
+                .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+                .form("user", "3")
+                .form("password", "wrong_password")
 
-        val response = authentication.authenticateUser(request)
+            val response = authentication.authenticateUser(request)
 
-        assertThat(response.status, equalTo(SEE_OTHER))
-        assertThat(response.header("Location"), equalTo(login))
-        assertThat(response.bodyString(), equalTo("Incorrect password"))
-    }
+            assertThat(response.status, equalTo(SEE_OTHER))
+            assertThat(response.header("Location"), equalTo(login))
+            assertThat(response.bodyString(), equalTo("Incorrect password"))
+        }
 
-    @Test
-    fun `ensure only one user field is provided`() {
-        val request = Request(Method.POST, login)
-            .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
-            .form("user", "1")
-            .form("user", "2")
-            .form("password", System.getenv("BANDAGE_PASSWORD"))
+        @Test
+        fun `ensure only one user field is provided`() {
+            val request = Request(Method.POST, login)
+                .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+                .form("user", "1")
+                .form("user", "2")
+                .form("password", System.getenv("BANDAGE_PASSWORD"))
 
-        val response = authentication.authenticateUser(request)
+            val response = authentication.authenticateUser(request)
 
-        assertThat(response.status, equalTo(SEE_OTHER))
-        assertThat(response.header("Location"), equalTo(login))
-        assertThat(response.bodyString(), equalTo("Multiple user fields are not allowed"))
-    }
+            assertThat(response.status, equalTo(SEE_OTHER))
+            assertThat(response.header("Location"), equalTo(login))
+            assertThat(response.bodyString(), equalTo("Multiple user fields are not allowed"))
+        }
 
-    @Test
-    fun `user field cannot be empty`() {
-        val request = Request(Method.POST, login)
-            .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
-            .form("user", "")
-            .form("password", System.getenv("BANDAGE_PASSWORD"))
+        @Test
+        fun `user field cannot be empty`() {
+            val request = Request(Method.POST, login)
+                .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+                .form("user", "")
+                .form("password", System.getenv("BANDAGE_PASSWORD"))
 
-        val response = authentication.authenticateUser(request)
+            val response = authentication.authenticateUser(request)
 
-        assertThat(response.status, equalTo(SEE_OTHER))
-        assertThat(response.header("Location"), equalTo(login))
-        assertThat(response.bodyString(), equalTo("User not provided"))
-    }
+            assertThat(response.status, equalTo(SEE_OTHER))
+            assertThat(response.header("Location"), equalTo(login))
+            assertThat(response.bodyString(), equalTo("User not provided"))
+        }
 
-    @Test
-    fun `ensure only one password field is provided`() {
-        val request = Request(Method.POST, login)
-            .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
-            .form("user", "1")
-            .form("password", System.getenv("BANDAGE_PASSWORD"))
-            .form("password", "hunter2")
+        @Test
+        fun `ensure only one password field is provided`() {
+            val request = Request(Method.POST, login)
+                .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+                .form("user", "1")
+                .form("password", System.getenv("BANDAGE_PASSWORD"))
+                .form("password", "hunter2")
 
-        val response = authentication.authenticateUser(request)
+            val response = authentication.authenticateUser(request)
 
-        assertThat(response.status, equalTo(SEE_OTHER))
-        assertThat(response.header("Location"), equalTo(login))
-        assertThat(response.bodyString(), equalTo("Multiple password fields are not allowed"))
-    }
+            assertThat(response.status, equalTo(SEE_OTHER))
+            assertThat(response.header("Location"), equalTo(login))
+            assertThat(response.bodyString(), equalTo("Multiple password fields are not allowed"))
+        }
 
-    @Test
-    fun `invalid user ID cannot be logged in`() {
-        val request = Request(Method.POST, login)
-            .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
-            .form("user", "1")
-            .form("password", System.getenv("BANDAGE_PASSWORD"))
+        @Test
+        fun `invalid user ID cannot be logged in`() {
+            val request = Request(Method.POST, login)
+                .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+                .form("user", "1")
+                .form("password", System.getenv("BANDAGE_PASSWORD"))
 
-        val noUsers = UserManagement(emptyList())
-        val response = Authentication(noUsers).authenticateUser(request)
+            val noUsers = UserManagement(emptyList())
+            val response = Authentication(noUsers).authenticateUser(request)
 
-        assertThat(response.status, equalTo(SEE_OTHER))
-        assertThat(response.header("Location"), equalTo(login))
-        assertThat(response.bodyString(), equalTo("Unknown user ID 1"))
+            assertThat(response.status, equalTo(SEE_OTHER))
+            assertThat(response.header("Location"), equalTo(login))
+            assertThat(response.bodyString(), equalTo("Unknown user ID 1"))
+        }
     }
 
     @Test
