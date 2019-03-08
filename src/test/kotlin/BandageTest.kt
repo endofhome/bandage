@@ -44,6 +44,15 @@ class BandageTest {
         assertThat(driver.manage().cookies, equalTo(emptySet()))
         assertThat(driver.currentUrl, equalTo(login))
     }
+    
+    @Test
+    fun `cannot access dashboard page if not logged in`() {
+        driver.navigate().to(dashboard)
+
+        assertThat(driver.status, equalTo(OK))
+        assertThat(driver.manage().cookies, equalTo(emptySet()))
+        assertThat(driver.currentUrl, equalTo(login))
+    }
 
     private fun userLogsIn(): User {
         driver.navigate().to(login)

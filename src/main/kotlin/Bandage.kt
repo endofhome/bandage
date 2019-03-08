@@ -35,13 +35,14 @@ object Bandage {
 
     private val userManagement = UserManagement()
     private val authentication = Authentication(userManagement)
+    private val renderDashboard = Dashboard(view, authentication)
 
     val routes = routes(
             index       bind GET  to { Response(SEE_OTHER).header("Location", login) },
             login       bind GET  to { Login(view, userManagement) },
             login       bind POST to { request -> authentication.authenticateUser(request) },
             logout      bind GET  to { authentication.logout() },
-            dashboard   bind GET  to { Dashboard(view) },
+            dashboard   bind GET  to { request -> renderDashboard(request) },
 
             "/public" bind static(ResourceLoader.Directory("public"))
         )
