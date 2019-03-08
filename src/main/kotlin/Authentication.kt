@@ -26,6 +26,13 @@ class Authentication(private val users: UserManagement) {
     fun logout(): Response =
         Response(Status.SEE_OTHER).header("Location", login).invalidateCookie(loginCookieName)
 
+    fun Request.ifAuthenticated(handle: (Request) -> Response): Response =
+        if (cookie(loginCookieName).isValid()) {
+            handle(this)
+        } else {
+            Response(Status.SEE_OTHER).header("Location", login).body("User not authenticated")
+        }
+
     private fun Request.authenticatedUser(): Result<Error, User> {
         val formAsMap: Map<String, List<String?>> = formAsMap()
         val user = formAsMap["user"]
@@ -53,6 +60,16 @@ class Authentication(private val users: UserManagement) {
             secure = false,
             httpOnly = true
         )
+
+    private fun Cookie?.isValid(): Boolean {
+        if (this == null) return false
+
+        val (apiKey, user) = this.value.split("_")
+        return when {
+            apiKey == System.getenv("BANDAGE_API_KEY") && users.findUser(user) is Success -> true
+            else                                                                          -> false
+        }
+    }
 
     private fun List<String?>.firstOrFailure() =
         first()?.let { Success(it) } ?: Failure(Error("User field was empty"))

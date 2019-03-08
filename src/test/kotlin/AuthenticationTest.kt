@@ -1,3 +1,4 @@
+import Authentication.Companion.loginCookieName
 import RouteMappings.dashboard
 import RouteMappings.login
 import com.natpryce.hamkrest.assertion.assertThat
@@ -5,9 +6,13 @@ import com.natpryce.hamkrest.equalTo
 import org.http4k.core.ContentType
 import org.http4k.core.Method
 import org.http4k.core.Request
+import org.http4k.core.Response
+import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Status.Companion.SEE_OTHER
+import org.http4k.core.Uri
 import org.http4k.core.body.form
 import org.http4k.core.cookie.Cookie
+import org.http4k.core.cookie.cookie
 import org.http4k.core.cookie.cookies
 import org.http4k.core.with
 import org.http4k.lens.Header
@@ -34,7 +39,7 @@ class AuthenticationTest {
         assertThat(response.header("Location"), equalTo(dashboard))
         assertThat(response.cookies(), equalTo(listOf(
             Cookie(
-                name = Authentication.loginCookieName,
+                name = loginCookieName,
                 value = "${System.getenv("BANDAGE_API_KEY")}_$userId",
                 maxAge = Long.MAX_VALUE,
                 expires = null,
@@ -147,7 +152,7 @@ class AuthenticationTest {
     @Test
     fun `handles logout, removing login cookie`() {
         val invalidatedCookie = Cookie(
-            name = Authentication.loginCookieName,
+            name = loginCookieName,
             value = "",
             maxAge = 0,
             expires = LocalDateTime.ofInstant(EPOCH, ZoneId.of("GMT"))
@@ -159,4 +164,37 @@ class AuthenticationTest {
         assertThat(response.header("Location"), equalTo(login))
         assertThat(response.cookies(), equalTo(listOf(invalidatedCookie)))
     }
+
+    @Test
+    fun `can ensure unauthenticated user is returned to login when handling requests`() {
+        val unauthenticatedRequest = Request(Method.GET, Uri.of("www.someuri.com"))
+        val handlerWithAuthentication = { request: Request -> with(authentication) { request.ifAuthenticated { Response(OK) } } }
+        val response = handlerWithAuthentication(unauthenticatedRequest)
+
+        assertThat(response.status, equalTo(SEE_OTHER))
+        assertThat(response.header("Location"), equalTo(login))
+        assertThat(response.cookies(), equalTo(emptyList()))
+    }
+
+    @Test
+    fun `can ensure authenticated user has their request handled`() {
+        val validCookie = cookieFor(userManagement.users.last())
+        val authenticatedRequest = Request(Method.GET, Uri.of("www.someuri.com")).cookie(validCookie)
+        val handlerWithAuthentication = { request: Request -> with(authentication) { request.ifAuthenticated { Response(OK) } } }
+        val response = handlerWithAuthentication(authenticatedRequest)
+
+        assertThat(response.status, equalTo(OK))
+    }
+
+    private fun cookieFor(user: User): Cookie =
+        Cookie(
+            name = loginCookieName,
+            value = "${System.getenv("BANDAGE_API_KEY")}_${user.userId}",
+            maxAge = Long.MAX_VALUE,
+            expires = null,
+            domain = null,
+            path = "login",
+            secure = false,
+            httpOnly = true
+        )
 }
