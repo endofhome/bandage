@@ -6,8 +6,11 @@ import RouteMappings.login
 import RouteMappings.logout
 import org.http4k.core.Body
 import org.http4k.core.ContentType
+import org.http4k.core.Filter
+import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
+import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.routing.ResourceLoader
@@ -21,7 +24,7 @@ import org.http4k.template.view
 
 fun main(args: Array<String>) {
     val port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
-    Bandage.routes.asServer(Jetty(port)).start()
+    Bandage.routes.withFilter(EnforceHttpsOnHeroku()).asServer(Jetty(port)).start()
 
     println("Bandage has started on http://localhost:$port")
 }
@@ -46,4 +49,20 @@ object Bandage {
             "/public" bind static(ResourceLoader.Directory("public"))
         )
     }
+}
+
+object EnforceHttpsOnHeroku {
+    operator fun invoke(): Filter = Filter { next -> { enforceHttps(next, it) } }
+
+    private fun enforceHttps(handle: HttpHandler, request: Request): Response =
+        if (request.header("X-Forwarded-Proto")?.startsWith("https")?.not() == true) {
+
+            // TODO host and port are unavailable in HTTP4K requests so hard-code for now.
+            // Try to find a nicer way to do this.
+            val host = "band-age.herokuapp.com"
+
+            Response(SEE_OTHER).header("Location", request.uri.copy(scheme = "https", host = host).toString())
+        } else {
+            handle(request)
+        }
 }
