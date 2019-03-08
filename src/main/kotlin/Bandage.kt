@@ -1,7 +1,9 @@
 import Bandage.Config.defaultPort
 import Bandage.Config.view
+import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
+import RouteMappings.logout
 import org.http4k.core.Body
 import org.http4k.core.ContentType
 import org.http4k.core.Method.GET
@@ -42,8 +44,8 @@ object Bandage {
             index       bind GET  to { Response(SEE_OTHER).header("Location", login) },
             login       bind GET  to { Login(view, userManagement) },
             login       bind POST to { request -> authentication.authenticateUser(request) },
-            "logout"    bind GET  to { authentication.logout() },
-            "dashboard" bind GET  to { Dashboard(view) },
+            logout      bind GET  to { authentication.logout() },
+            dashboard   bind GET  to { Dashboard(view) },
 
             "/public" bind static(ResourceLoader.Directory("public"))
         )
