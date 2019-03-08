@@ -26,9 +26,9 @@ class Authentication(private val users: UserManagement) {
     fun logout(): Response =
         Response(Status.SEE_OTHER).header("Location", login).invalidateCookie(loginCookieName)
 
-    fun Request.ifAuthenticated(handle: (Request) -> Response): Response =
-        if (cookie(loginCookieName).isValid()) {
-            handle(this)
+    fun ifAuthenticated(request: Request, handle: (Request) -> Response): Response =
+        if (request.cookie(loginCookieName).isValid()) {
+            handle(request)
         } else {
             Response(Status.SEE_OTHER).header("Location", login).body("User not authenticated")
         }

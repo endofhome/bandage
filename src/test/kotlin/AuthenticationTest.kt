@@ -168,7 +168,7 @@ class AuthenticationTest {
     @Test
     fun `can ensure unauthenticated user is returned to login when handling requests`() {
         val unauthenticatedRequest = Request(Method.GET, Uri.of("www.someuri.com"))
-        val handlerWithAuthentication = { request: Request -> with(authentication) { request.ifAuthenticated { Response(OK) } } }
+        val handlerWithAuthentication = { request: Request -> with(authentication) { ifAuthenticated(request) { Response(OK) } } }
         val response = handlerWithAuthentication(unauthenticatedRequest)
 
         assertThat(response.status, equalTo(SEE_OTHER))
@@ -180,7 +180,7 @@ class AuthenticationTest {
     fun `can ensure authenticated user has their request handled`() {
         val validCookie = cookieFor(userManagement.users.last())
         val authenticatedRequest = Request(Method.GET, Uri.of("www.someuri.com")).cookie(validCookie)
-        val handlerWithAuthentication = { request: Request -> with(authentication) { request.ifAuthenticated { Response(OK) } } }
+        val handlerWithAuthentication = { request: Request -> with(authentication) { ifAuthenticated(request) { Response(OK) } } }
         val response = handlerWithAuthentication(authenticatedRequest)
 
         assertThat(response.status, equalTo(OK))

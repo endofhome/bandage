@@ -41,7 +41,7 @@ object Bandage {
             login       bind GET  to { Login(view, userManagement) },
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },
-            dashboard   bind GET  to { request -> request.ifAuthenticated { Dashboard(view) } },
+            dashboard   bind GET  to { request -> ifAuthenticated(request) { Dashboard(view) } },
 
             "/public" bind static(ResourceLoader.Directory("public"))
         )
