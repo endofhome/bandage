@@ -36,21 +36,20 @@ class AuthenticationTest {
             .form("password", System.getenv("BANDAGE_PASSWORD"))
 
         val response = authentication.authenticateUser(request)
+        val validCookie = Cookie(
+            name = loginCookieName,
+            value = "${System.getenv("BANDAGE_API_KEY")}_$userId",
+            maxAge = Long.MAX_VALUE,
+            expires = null,
+            domain = null,
+            path = "login",
+            secure = false,
+            httpOnly = true
+        )
 
         assertThat(response.status, equalTo(SEE_OTHER))
         assertThat(response.header("Location"), equalTo(dashboard))
-        assertThat(response.cookies(), equalTo(listOf(
-            Cookie(
-                name = loginCookieName,
-                value = "${System.getenv("BANDAGE_API_KEY")}_$userId",
-                maxAge = Long.MAX_VALUE,
-                expires = null,
-                domain = null,
-                path = "login",
-                secure = false,
-                httpOnly = true
-            )
-        )))
+        assertThat(response.cookies(), equalTo(listOf(validCookie)))
     }
 
     @Test
@@ -188,6 +187,7 @@ class AuthenticationTest {
         fun `can ensure authenticated user has their request handled`() {
             val validCookie = cookieFor(userManagement.users.last())
             val authenticatedRequest = unauthenticatedRequest.cookie(validCookie)
+
             val response = handlerWithAuthentication(authenticatedRequest)
 
             assertThat(response.status, equalTo(OK))
