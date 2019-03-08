@@ -16,6 +16,8 @@ import org.http4k.core.cookie.cookie
 import org.http4k.core.cookie.cookies
 import org.http4k.core.with
 import org.http4k.lens.Header
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.Instant.EPOCH
 import java.time.LocalDateTime
@@ -165,29 +167,31 @@ class AuthenticationTest {
         assertThat(response.cookies(), equalTo(listOf(invalidatedCookie)))
     }
 
-    @Test
-    fun `can ensure unauthenticated user is returned to login when handling requests`() {
-        val unauthenticatedRequest = Request(Method.GET, Uri.of("www.someuri.com"))
-        val handlerWithAuthentication = { request: Request ->
+    @Nested
+    @DisplayName("Authenticating requests")
+    inner class AuthenticatingRequests {
+        private val unauthenticatedRequest = Request(Method.GET, Uri.of("www.someuri.com"))
+        private val handlerWithAuthentication = { request: Request ->
             authentication.ifAuthenticated(request) { Response(OK) }
         }
-        val response = handlerWithAuthentication(unauthenticatedRequest)
 
-        assertThat(response.status, equalTo(SEE_OTHER))
-        assertThat(response.header("Location"), equalTo(login))
-        assertThat(response.cookies(), equalTo(emptyList()))
-    }
+        @Test
+        fun `can ensure unauthenticated user is returned to login when handling requests`() {
+            val response = handlerWithAuthentication(unauthenticatedRequest)
 
-    @Test
-    fun `can ensure authenticated user has their request handled`() {
-        val validCookie = cookieFor(userManagement.users.last())
-        val authenticatedRequest = Request(Method.GET, Uri.of("www.someuri.com")).cookie(validCookie)
-        val handlerWithAuthentication = { request: Request ->
-            authentication.ifAuthenticated(request) { Response(OK) }
+            assertThat(response.status, equalTo(SEE_OTHER))
+            assertThat(response.header("Location"), equalTo(login))
+            assertThat(response.cookies(), equalTo(emptyList()))
         }
-        val response = handlerWithAuthentication(authenticatedRequest)
 
-        assertThat(response.status, equalTo(OK))
+        @Test
+        fun `can ensure authenticated user has their request handled`() {
+            val validCookie = cookieFor(userManagement.users.last())
+            val authenticatedRequest = unauthenticatedRequest.cookie(validCookie)
+            val response = handlerWithAuthentication(authenticatedRequest)
+
+            assertThat(response.status, equalTo(OK))
+        }
     }
 
     private fun cookieFor(user: User): Cookie =
