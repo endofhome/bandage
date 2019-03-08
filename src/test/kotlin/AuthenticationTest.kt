@@ -1,5 +1,6 @@
 import Authentication.Companion.loginCookieName
 import RouteMappings.dashboard
+import RouteMappings.index
 import RouteMappings.login
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -42,10 +43,10 @@ class AuthenticationTest {
             val validCookie = Cookie(
                 name = loginCookieName,
                 value = "${System.getenv("BANDAGE_API_KEY")}_$userId",
-                maxAge = Long.MAX_VALUE,
+                maxAge = 94608000L,
                 expires = null,
                 domain = null,
-                path = "login",
+                path = index,
                 secure = false,
                 httpOnly = true
             )

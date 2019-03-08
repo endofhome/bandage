@@ -1,6 +1,7 @@
 import Result.Failure
 import Result.Success
 import RouteMappings.dashboard
+import RouteMappings.index
 import RouteMappings.login
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -53,10 +54,10 @@ class Authentication(private val users: UserManagement) {
         Cookie(
             name = loginCookieName,
             value = "${System.getenv("BANDAGE_API_KEY")}_${user.userId}",
-            maxAge = Long.MAX_VALUE,
+            maxAge = 94608000L,
             expires = null,
             domain = null,
-            path = "login",
+            path = index,
             secure = false,
             httpOnly = true
         )
