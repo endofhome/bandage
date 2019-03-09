@@ -55,14 +55,15 @@ object EnforceHttpsOnHeroku {
     operator fun invoke(): Filter = Filter { next -> { enforceHttps(next, it) } }
 
     private fun enforceHttps(handle: HttpHandler, request: Request): Response =
-        if (request.header("X-Forwarded-Proto")?.startsWith("https")?.not() == true) {
-
-            // TODO host and port are unavailable in HTTP4K requests so hard-code for now.
-            // Try to find a nicer way to do this.
-            val host = "band-age.herokuapp.com"
-
-            Response(SEE_OTHER).header("Location", request.uri.copy(scheme = "https", host = host).toString())
+        if (insecureHttp(request) && probablyOnHeroku) {
+            val herokuHost = "band-age.herokuapp.com"
+            Response(SEE_OTHER).header("Location", request.uri.copy(scheme = "https", host = herokuHost).toString())
         } else {
             handle(request)
         }
+
+    private fun insecureHttp(request: Request) =
+        request.header("X-Forwarded-Proto")?.startsWith("https")?.not() == true
+
+    private val probablyOnHeroku = System.getenv("DYNO") != null
 }
