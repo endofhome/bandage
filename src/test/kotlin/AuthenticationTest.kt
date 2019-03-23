@@ -176,7 +176,7 @@ class AuthenticationTest {
     inner class AuthenticatingRequests {
         private val unauthenticatedRequest = Request(Method.GET, Uri.of("www.someuri.com"))
         private val handlerWithAuthentication = { request: Request ->
-            authentication.ifAuthenticated(request) { Response(OK) }
+            authentication.ifAuthenticated(request, { Response(OK) })
         }
 
         @Test
