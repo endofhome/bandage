@@ -12,6 +12,7 @@ import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
 import org.http4k.core.Request
 import org.http4k.core.Response
+import org.http4k.core.Status
 import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.routing.ResourceLoader
 import org.http4k.routing.bind
@@ -40,7 +41,7 @@ object Bandage {
     private val authentication = Authentication(userManagement)
 
     val routes = with(authentication) { routes(
-            index       bind GET  to { Response(SEE_OTHER).header("Location", login) },
+            index       bind GET  to { request -> ifAuthenticated(request) { Response(Status.SEE_OTHER).header("Location", dashboard) } },
             login       bind GET  to { Login(view, userManagement) },
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },

@@ -54,6 +54,17 @@ class BandageTest {
         assertThat(driver.currentUrl, equalTo(login))
     }
 
+    @Test
+    fun `accessing index page with a logged in cookie redirects to dashboard page`() {
+        val loggedInUser = userLogsIn()
+        driver.navigate().to(index)
+        val expectedCookie = Cookie(Authentication.loginCookieName, "${System.getenv("BANDAGE_API_KEY")}_${loggedInUser.userId}", "login")
+
+        assertThat(driver.status, equalTo(OK))
+        assertThat(driver.currentUrl, equalTo(dashboard))
+        assertThat(driver.manage().cookies, equalTo(setOf(expectedCookie)))
+    }
+
     private fun userLogsIn(): User {
         driver.navigate().to(login)
 
