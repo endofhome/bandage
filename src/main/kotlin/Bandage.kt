@@ -38,11 +38,11 @@ object Bandage {
 
     private val userManagement = UserManagement()
     private val authentication = Authentication(userManagement)
+    private fun redirectTo(location: String): (Request) -> Response = { Response(SEE_OTHER).header("Location", location) }
 
-    private val redirectToDashboard: (Request) -> Response = { Response(SEE_OTHER).header("Location", dashboard) }
     val routes = with(authentication) { routes(
-            index       bind GET  to { request -> ifAuthenticated(request, redirectToDashboard) },
-            login       bind GET  to { request -> ifAuthenticated(request, redirectToDashboard, orElse = Login(view, userManagement)) },
+            index       bind GET  to { request -> ifAuthenticated(request, redirectTo(dashboard)) },
+            login       bind GET  to { request -> ifAuthenticated(request, redirectTo(index), orElse = Login(view, userManagement)) },
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },
             dashboard   bind GET  to { request -> ifAuthenticated(request, { Dashboard(view) }) },
