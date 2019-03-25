@@ -11,8 +11,13 @@ import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.oneeyedmen.okeydoke.Approver
+import org.http4k.core.HttpHandler
+import org.http4k.core.Response
+import org.http4k.core.Status
+import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
+import org.http4k.core.with
 import org.http4k.webdriver.Http4kWebDriver
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
@@ -94,6 +99,18 @@ class BandageTest {
         assertThat(driver.status, equalTo(NOT_FOUND))
         assertThat(driver.currentUrl, equalTo("/not-found"))
         approver.assertApproved(driver.pageSource)
+    }
+
+    @Test
+    fun `static 500 page is served on 500 response`(approver: Approver) {
+        val internalServerError: HttpHandler = { Response(Status.INTERNAL_SERVER_ERROR) }
+        val localDriver = Http4kWebDriver(internalServerError.with(Bandage.Config.filters))
+
+        localDriver.navigate().to("/will-blow-up")
+
+        assertThat(localDriver.status, equalTo(INTERNAL_SERVER_ERROR))
+        assertThat(localDriver.currentUrl, equalTo("/will-blow-up"))
+        approver.assertApproved(localDriver.pageSource)
     }
 
     private fun userLogsIn(): User {
