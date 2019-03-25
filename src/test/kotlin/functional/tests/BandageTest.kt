@@ -86,7 +86,7 @@ class BandageTest {
         driver.navigate().to(login)
 
         assertThat(driver.status, equalTo(OK))
-        assertThat(driver.title, equalTo("Bandage: Please log in"))
+        assertThat(driver.title, equalTo("Bandage"))
 
         val usernameField = driver.findElement(By.cssSelector("#user")) ?: fail("username field not found")
         val lastUser = UserManagement().users.last()
