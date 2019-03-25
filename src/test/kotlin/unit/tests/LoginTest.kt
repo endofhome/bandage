@@ -1,4 +1,9 @@
+package unit.tests
+
 import Bandage.Config.view
+import Login
+import User
+import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.http4k.core.Status.Companion.OK

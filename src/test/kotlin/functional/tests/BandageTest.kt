@@ -1,6 +1,12 @@
+package functional.tests
+
+import Authentication
+import Bandage
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
+import User
+import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.http4k.core.Status.Companion.OK

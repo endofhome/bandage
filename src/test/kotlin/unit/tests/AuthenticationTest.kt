@@ -1,7 +1,12 @@
+package unit.tests
+
+import Authentication
 import Authentication.Companion.loginCookieName
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
+import User
+import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.http4k.core.ContentType
