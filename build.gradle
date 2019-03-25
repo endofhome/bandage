@@ -24,6 +24,7 @@ dependencies {
     implementation group: "org.http4k", name: "http4k-core", version: http4kVersion
     implementation group: "org.http4k", name: "http4k-server-jetty", version: http4kVersion
     implementation group: "org.http4k", name: "http4k-template-handlebars", version: http4kVersion
+    implementation group: 'org.slf4j', name: 'slf4j-nop', version: '1.7.26'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:' + junitVersion
     testImplementation "com.natpryce:hamkrest:1.6.0.0"
