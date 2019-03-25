@@ -41,11 +41,11 @@ object Bandage {
     private fun redirectTo(location: String): (Request) -> Response = { Response(SEE_OTHER).header("Location", location) }
 
     val routes = with(authentication) { routes(
-            index       bind GET  to { request -> ifAuthenticated(request, redirectTo(dashboard)) },
-            login       bind GET  to { request -> ifAuthenticated(request, redirectTo(index), orElse = Login(view, userManagement)) },
+            index       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(dashboard)) },
+            login       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(index), otherwise = Login(view, userManagement)) },
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },
-            dashboard   bind GET  to { request -> ifAuthenticated(request, { Dashboard(view) }) },
+            dashboard   bind GET  to { request -> ifAuthenticated(request, then = { Dashboard(view) }) },
 
             "/public" bind static(ResourceLoader.Directory("public"))
         )
