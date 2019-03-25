@@ -1,10 +1,14 @@
-import Bandage.Config.defaultPort
-import Bandage.Config.filters
-import Bandage.Config.view
+import Bandage.StaticConfig.defaultPort
+import Bandage.StaticConfig.filters
+import Bandage.StaticConfig.view
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
 import RouteMappings.logout
+import config.BandageConfig
+import config.Configuration
+import config.Configurator
+import config.RequiredConfig
 import org.http4k.core.Body
 import org.http4k.core.ContentType
 import org.http4k.core.Filter
@@ -24,23 +28,31 @@ import org.http4k.server.Jetty
 import org.http4k.server.asServer
 import org.http4k.template.HandlebarsTemplates
 import org.http4k.template.view
+import java.nio.file.Paths
 
 fun main(args: Array<String>) {
     val port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
-    Bandage.app.asServer(Jetty(port)).start()
+    Bandage.init(BandageConfig()).app.asServer(Jetty(port)).start()
 
     println("Bandage has started on http://localhost:$port")
 }
 
-object Bandage {
-    object Config {
+class Bandage(dynamicConfig: Configuration) {
+    object StaticConfig {
         private val renderer = HandlebarsTemplates().HotReload("src/main/resources")
         val view = Body.view(renderer, ContentType.TEXT_HTML)
         val filters = EnforceHttpsOnHeroku().then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
         const val defaultPort = 7000
     }
 
-    private val userManagement = UserManagement()
+    companion object {
+        fun init(requiredConfig: RequiredConfig): Bandage {
+            val config = Configurator(requiredConfig, Paths.get("credentials"))
+            return Bandage(config)
+        }
+    }
+
+    private val userManagement = UserManagement(dynamicConfig)
     private val authentication = Authentication(userManagement)
     private fun redirectTo(location: String): (Request) -> Response = { Response(SEE_OTHER).header("Location", location) }
 

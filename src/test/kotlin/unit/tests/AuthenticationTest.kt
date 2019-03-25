@@ -9,6 +9,10 @@ import User
 import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import config.BandageConfig
+import config.BandageConfigItem.API_KEY
+import config.BandageConfigItem.PASSWORD
+import config.Configurator
 import org.http4k.core.ContentType
 import org.http4k.core.Method
 import org.http4k.core.Request
@@ -30,7 +34,8 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 
 class AuthenticationTest {
-    private val userManagement = UserManagement()
+    private val config = Configurator(requiredConfig = BandageConfig(), configDir = null)
+    private val userManagement = UserManagement(config)
     private val authentication = Authentication(userManagement)
 
     @Nested
@@ -42,12 +47,12 @@ class AuthenticationTest {
             val request = Request(Method.POST, login)
                 .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
                 .form("user", userId)
-                .form("password", System.getenv("BANDAGE_PASSWORD"))
+                .form("password", config.get(PASSWORD()))
 
             val response = authentication.authenticateUser(request)
             val validCookie = Cookie(
                 name = loginCookieName,
-                value = "${System.getenv("BANDAGE_API_KEY")}_$userId",
+                value = "${config.get(API_KEY())}_$userId",
                 maxAge = 94608000L,
                 expires = null,
                 domain = null,
@@ -106,7 +111,7 @@ class AuthenticationTest {
                 .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
                 .form("user", "1")
                 .form("user", "2")
-                .form("password", System.getenv("BANDAGE_PASSWORD"))
+                .form("password", config.get(PASSWORD()))
 
             val response = authentication.authenticateUser(request)
 
@@ -120,7 +125,7 @@ class AuthenticationTest {
             val request = Request(Method.POST, login)
                 .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
                 .form("user", "")
-                .form("password", System.getenv("BANDAGE_PASSWORD"))
+                .form("password", config.get(PASSWORD()))
 
             val response = authentication.authenticateUser(request)
 
@@ -134,7 +139,7 @@ class AuthenticationTest {
             val request = Request(Method.POST, login)
                 .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
                 .form("user", "1")
-                .form("password", System.getenv("BANDAGE_PASSWORD"))
+                .form("password", config.get(PASSWORD()))
                 .form("password", "hunter2")
 
             val response = authentication.authenticateUser(request)
@@ -149,9 +154,9 @@ class AuthenticationTest {
             val request = Request(Method.POST, login)
                 .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
                 .form("user", "1")
-                .form("password", System.getenv("BANDAGE_PASSWORD"))
+                .form("password", config.get(PASSWORD()))
 
-            val noUsers = UserManagement(emptyList())
+            val noUsers = UserManagement(config, emptyList())
             val response = Authentication(noUsers).authenticateUser(request)
 
             assertThat(response.status, equalTo(SEE_OTHER))

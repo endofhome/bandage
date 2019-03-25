@@ -1,11 +1,13 @@
 package unit.tests
 
-import Bandage.Config.view
+import Bandage.StaticConfig.view
 import Login
 import User
 import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import config.BandageConfig
+import config.Configurator
 import org.http4k.core.Status.Companion.OK
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
@@ -13,9 +15,10 @@ import org.junit.jupiter.api.Test
 
 class LoginTest {
 
+    private val config = Configurator(BandageConfig(), null)
     private val someUsers = listOf(
-        User("17", "Some full name", "Some"),
-        User("An ID", "Another full name", "Another")
+        User("17", "Some full name"),
+        User("An ID", "Another full name")
     )
 
     @Test
@@ -41,7 +44,7 @@ class LoginTest {
     }
 
     private fun renderPageAndSelectOptions(): Elements {
-        val userManagement = UserManagement(someUsers)
+        val userManagement = UserManagement(config, someUsers)
 
         val response = Login(view, userManagement)
         assertThat(response.status, equalTo(OK))

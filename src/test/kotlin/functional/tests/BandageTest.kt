@@ -11,6 +11,10 @@ import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.oneeyedmen.okeydoke.Approver
+import config.BandageConfig
+import config.BandageConfigItem.API_KEY
+import config.BandageConfigItem.PASSWORD
+import config.Configurator
 import org.http4k.core.HttpHandler
 import org.http4k.core.Response
 import org.http4k.core.Status
@@ -28,7 +32,8 @@ import org.openqa.selenium.Cookie
 @ExtendWith(OkeyDokeExtension::class)
 class BandageTest {
 
-    private val driver = Http4kWebDriver(Bandage.app)
+    private val config = Configurator(requiredConfig = BandageConfig(), configDir = null)
+    private val driver = Http4kWebDriver(Bandage(config).app)
 
     @Test
     fun `index redirects to login`() {
@@ -43,7 +48,7 @@ class BandageTest {
         val loggedInUser = userLogsIn()
 
         val loginCookie = driver.manage().getCookieNamed(Authentication.loginCookieName) ?: fail("login cookie not set")
-        val expectedCookie = Cookie(Authentication.loginCookieName, "${System.getenv("BANDAGE_API_KEY")}_${loggedInUser.userId}", "login")
+        val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY())}_${loggedInUser.userId}", "login")
 
         assertThat(loginCookie, equalTo(expectedCookie))
         assertThat(driver.currentUrl, equalTo(dashboard))
@@ -74,7 +79,7 @@ class BandageTest {
     fun `accessing index page with a logged in cookie redirects to dashboard page`() {
         val loggedInUser = userLogsIn()
         driver.navigate().to(index)
-        val expectedCookie = Cookie(Authentication.loginCookieName, "${System.getenv("BANDAGE_API_KEY")}_${loggedInUser.userId}", "login")
+        val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY())}_${loggedInUser.userId}", "login")
 
         assertThat(driver.status, equalTo(OK))
         assertThat(driver.currentUrl, equalTo(dashboard))
@@ -85,7 +90,7 @@ class BandageTest {
     fun `accessing login page with a logged in cookie redirects to dashboard page`() {
         val loggedInUser = userLogsIn()
         driver.navigate().to(login)
-        val expectedCookie = Cookie(Authentication.loginCookieName, "${System.getenv("BANDAGE_API_KEY")}_${loggedInUser.userId}", "login")
+        val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY())}_${loggedInUser.userId}", "login")
 
         assertThat(driver.status, equalTo(OK))
         assertThat(driver.currentUrl, equalTo(dashboard))
@@ -104,7 +109,7 @@ class BandageTest {
     @Test
     fun `static 500 page is served on 500 response`(approver: Approver) {
         val internalServerError: HttpHandler = { Response(Status.INTERNAL_SERVER_ERROR) }
-        val localDriver = Http4kWebDriver(internalServerError.with(Bandage.Config.filters))
+        val localDriver = Http4kWebDriver(internalServerError.with(Bandage.StaticConfig.filters))
 
         localDriver.navigate().to("/will-blow-up")
 
@@ -120,13 +125,13 @@ class BandageTest {
         assertThat(driver.title, equalTo("Bandage"))
 
         val usernameField = driver.findElement(By.cssSelector("#user")) ?: fail("username field not found")
-        val lastUser = UserManagement().users.last()
+        val lastUser = UserManagement(config).users.last()
         val option = usernameField.findElement(By.cssSelector("option:contains(${lastUser.initials})"))
             ?: fail("option ${lastUser.initials} is not available")
         option.click()
 
         val passwordField = driver.findElement(By.cssSelector("#password")) ?: fail("password field not found")
-        passwordField.sendKeys(System.getenv("BANDAGE_PASSWORD"))
+        passwordField.sendKeys(config.get(PASSWORD()))
 
         val loginButton = driver.findElement(By.cssSelector("button[type=\"submit\"][name=\"login\"]"))
             ?: fail("login button not found")
