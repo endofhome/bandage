@@ -29,7 +29,8 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:' + junitVersion
     testImplementation "com.natpryce:hamkrest:1.6.0.0"
     testImplementation group: "org.http4k", name: "http4k-testing-webdriver", version: http4kVersion
-    
+    testImplementation "com.oneeyedmen:okeydoke:1.1.0"
+
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:' + junitVersion
 }
 

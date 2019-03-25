@@ -1,4 +1,5 @@
 import Bandage.Config.defaultPort
+import Bandage.Config.filters
 import Bandage.Config.view
 import RouteMappings.dashboard
 import RouteMappings.index
@@ -13,6 +14,8 @@ import org.http4k.core.Method.POST
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.SEE_OTHER
+import org.http4k.core.then
+import org.http4k.filter.ServerFilters.ReplaceResponseContentsWithStaticFile
 import org.http4k.routing.ResourceLoader
 import org.http4k.routing.bind
 import org.http4k.routing.routes
@@ -24,7 +27,7 @@ import org.http4k.template.view
 
 fun main(args: Array<String>) {
     val port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
-    Bandage.routes.withFilter(EnforceHttpsOnHeroku()).asServer(Jetty(port)).start()
+    Bandage.app.asServer(Jetty(port)).start()
 
     println("Bandage has started on http://localhost:$port")
 }
@@ -33,6 +36,7 @@ object Bandage {
     object Config {
         private val renderer = HandlebarsTemplates().HotReload("src/main/resources")
         val view = Body.view(renderer, ContentType.TEXT_HTML)
+        val filters = EnforceHttpsOnHeroku().then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
         const val defaultPort = 7000
     }
 
@@ -40,7 +44,7 @@ object Bandage {
     private val authentication = Authentication(userManagement)
     private fun redirectTo(location: String): (Request) -> Response = { Response(SEE_OTHER).header("Location", location) }
 
-    val routes = with(authentication) { routes(
+    private val routes = with(authentication) { routes(
             index       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(dashboard)) },
             login       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(index), otherwise = Login(view, userManagement)) },
             login       bind POST to { request -> authenticateUser(request) },
@@ -50,6 +54,8 @@ object Bandage {
             "/public" bind static(ResourceLoader.Directory("public"))
         )
     }
+
+    val app = routes.withFilter(filters)
 }
 
 object EnforceHttpsOnHeroku {

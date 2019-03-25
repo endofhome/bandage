@@ -2,6 +2,7 @@ package functional.tests
 
 import Authentication
 import Bandage
+import OkeyDokeExtension
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
@@ -9,16 +10,20 @@ import User
 import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.oneeyedmen.okeydoke.Approver
+import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.webdriver.Http4kWebDriver
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.openqa.selenium.By
 import org.openqa.selenium.Cookie
 
+@ExtendWith(OkeyDokeExtension::class)
 class BandageTest {
 
-    private val driver = Http4kWebDriver(Bandage.routes)
+    private val driver = Http4kWebDriver(Bandage.app)
 
     @Test
     fun `index redirects to login`() {
@@ -80,6 +85,15 @@ class BandageTest {
         assertThat(driver.status, equalTo(OK))
         assertThat(driver.currentUrl, equalTo(dashboard))
         assertThat(driver.manage().cookies, equalTo(setOf(expectedCookie)))
+    }
+
+    @Test
+    fun `static 404 page is served on 404 response`(approver: Approver) {
+        driver.navigate().to("/not-found")
+
+        assertThat(driver.status, equalTo(NOT_FOUND))
+        assertThat(driver.currentUrl, equalTo("/not-found"))
+        approver.assertApproved(driver.pageSource)
     }
 
     private fun userLogsIn(): User {
