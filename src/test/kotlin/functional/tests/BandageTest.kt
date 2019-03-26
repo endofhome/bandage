@@ -14,7 +14,7 @@ import com.oneeyedmen.okeydoke.Approver
 import config.BandageConfig
 import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.PASSWORD
-import config.Configurator
+import config.ValidateConfig
 import org.http4k.core.HttpHandler
 import org.http4k.core.Response
 import org.http4k.core.Status
@@ -32,7 +32,7 @@ import org.openqa.selenium.Cookie
 @ExtendWith(OkeyDokeExtension::class)
 class BandageTest {
 
-    private val config = Configurator(requiredConfig = BandageConfig(), configDir = null)
+    private val config = ValidateConfig(requiredConfig = BandageConfig(), configDir = null)
     private val driver = Http4kWebDriver(Bandage(config).app)
 
     @Test

@@ -7,8 +7,8 @@ import RouteMappings.login
 import RouteMappings.logout
 import config.BandageConfig
 import config.Configuration
-import config.Configurator
 import config.RequiredConfig
+import config.ValidateConfig
 import org.http4k.core.Body
 import org.http4k.core.ContentType
 import org.http4k.core.Filter
@@ -38,18 +38,16 @@ fun main(args: Array<String>) {
 }
 
 class Bandage(dynamicConfig: Configuration) {
+    companion object {
+        fun init(requiredConfig: RequiredConfig): Bandage =
+            Bandage(ValidateConfig(requiredConfig, Paths.get("configuration")))
+    }
+
     object StaticConfig {
         private val renderer = HandlebarsTemplates().HotReload("src/main/resources")
         val view = Body.view(renderer, ContentType.TEXT_HTML)
         val filters = EnforceHttpsOnHeroku().then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
         const val defaultPort = 7000
-    }
-
-    companion object {
-        fun init(requiredConfig: RequiredConfig): Bandage {
-            val config = Configurator(requiredConfig, Paths.get("credentials"))
-            return Bandage(config)
-        }
     }
 
     private val userManagement = UserManagement(dynamicConfig)

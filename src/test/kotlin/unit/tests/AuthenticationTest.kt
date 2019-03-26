@@ -12,7 +12,7 @@ import com.natpryce.hamkrest.equalTo
 import config.BandageConfig
 import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.PASSWORD
-import config.Configurator
+import config.ValidateConfig
 import org.http4k.core.ContentType
 import org.http4k.core.Method
 import org.http4k.core.Request
@@ -34,7 +34,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 
 class AuthenticationTest {
-    private val config = Configurator(requiredConfig = BandageConfig(), configDir = null)
+    private val config = ValidateConfig(requiredConfig = BandageConfig(), configDir = null)
     private val userManagement = UserManagement(config)
     private val authentication = Authentication(userManagement)
 

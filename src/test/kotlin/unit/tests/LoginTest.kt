@@ -7,7 +7,7 @@ import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import config.BandageConfig
-import config.Configurator
+import config.ValidateConfig
 import org.http4k.core.Status.Companion.OK
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test
 
 class LoginTest {
 
-    private val config = Configurator(BandageConfig(), null)
+    private val config = ValidateConfig(BandageConfig(), null)
     private val someUsers = listOf(
         User("17", "Some full name"),
         User("An ID", "Another full name")

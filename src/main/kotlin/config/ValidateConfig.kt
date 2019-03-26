@@ -38,7 +38,7 @@ abstract class RequiredConfig {
     abstract fun values(): Set<RequiredConfigItem>
 }
 
-object Configurator {
+object ValidateConfig {
 
     operator fun invoke(requiredConfig: RequiredConfig, configDir: Path?): Configuration {
 
