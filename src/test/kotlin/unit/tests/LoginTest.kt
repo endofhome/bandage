@@ -5,8 +5,7 @@ import User
 import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import config.BandageConfig
-import config.ValidateConfig
+import config.dummyConfiguration
 import org.http4k.core.Status.Companion.OK
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
@@ -15,7 +14,7 @@ import views.Login
 
 class LoginTest {
 
-    private val config = ValidateConfig(BandageConfig, null)
+    private val config = dummyConfiguration()
     private val someUsers = listOf(
         User("17", "Some full name"),
         User("An ID", "Another full name")
