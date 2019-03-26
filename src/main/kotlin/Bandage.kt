@@ -46,7 +46,8 @@ class Bandage(dynamicConfig: Configuration) {
     object StaticConfig {
         private val renderer = HandlebarsTemplates().HotReload("src/main/resources")
         val view = Body.view(renderer, ContentType.TEXT_HTML)
-        val filters = EnforceHttpsOnHeroku().then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
+        val filters = EnforceHttpsOnHeroku()
+                .then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
         const val defaultPort = 7000
     }
 
