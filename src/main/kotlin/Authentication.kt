@@ -11,6 +11,7 @@ import org.http4k.core.body.formAsMap
 import org.http4k.core.cookie.Cookie
 import org.http4k.core.cookie.cookie
 import org.http4k.core.cookie.invalidateCookie
+import org.slf4j.LoggerFactory
 import result.Error
 import result.Result
 import result.Result.Failure
@@ -25,10 +26,21 @@ class Authentication(private val config: Configuration, private val users: UserM
         const val loginCookieName = "bandage_login"
     }
 
+    private val logger = LoggerFactory.getLogger(Authentication::class.java)
+
     fun authenticateUser(request: Request): Response =
         request.authenticatedUser().map { user ->
+            logger.info("User ${user.userId} was successfully logged in")
+
+            logger.trace("TEST: Hello World!");
+            logger.debug("TEST: How are you today?");
+            logger.info("TEST: I am fine.");
+            logger.warn("TEST: I love programming.");
+            logger.error("TEST: I am programming.");
+
             Response(Status.SEE_OTHER).header("Location", dashboard).withBandageCookieFor(user)
         }.orElse { error ->
+            logger.info("Unsuccessful login attempt: ${error.message}")
             Response(Status.SEE_OTHER).header("Location", login).body(error.message)
         }
 

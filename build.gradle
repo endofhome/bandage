@@ -19,12 +19,15 @@ test {
 dependencies {
     def http4kVersion = "3.112.1"
     def junitVersion = "5.4.0"
+    def logbackVersion = "1.2.3"
 
     implementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jdk8" 
     implementation group: "org.http4k", name: "http4k-core", version: http4kVersion
     implementation group: "org.http4k", name: "http4k-server-jetty", version: http4kVersion
     implementation group: "org.http4k", name: "http4k-template-handlebars", version: http4kVersion
-    implementation group: "org.slf4j", name: "slf4j-nop", version: "1.7.26"
+    implementation group: "org.slf4j", name: "slf4j-api", version: "1.7.26"
+    implementation group: "ch.qos.logback", name: "logback-classic", version: logbackVersion
+    implementation group: "ch.qos.logback", name: "logback-core", version: logbackVersion
 
     testImplementation group: "org.junit.jupiter", name: "junit-jupiter-api", version: junitVersion
     testImplementation group: "com.natpryce", name: "hamkrest", version: "1.6.0.0"
