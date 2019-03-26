@@ -29,15 +29,18 @@ import org.http4k.server.Jetty
 import org.http4k.server.asServer
 import org.http4k.template.HandlebarsTemplates
 import org.http4k.template.view
+import org.slf4j.LoggerFactory
 import views.Dashboard
 import views.Login
 import java.nio.file.Paths
+
+private val logger = LoggerFactory.getLogger(Bandage::class.java)
 
 fun main(args: Array<String>) {
     val port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
     Bandage.init(BandageConfig).app.asServer(Jetty(port)).start()
 
-    println("Bandage has started on http://localhost:$port")
+    logger.info("Bandage has started on http://localhost:$port")
 }
 
 class Bandage(systemConfig: Configuration) {
