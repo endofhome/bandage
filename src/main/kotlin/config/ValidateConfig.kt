@@ -29,17 +29,11 @@ interface RequiredConfigItem: Comparable<RequiredConfigItem> {
     val name: String get() = this.javaClass.simpleName
 }
 
-fun <T : RequiredConfigItem> MutableMap<T, String>.removeAndSet(configItem: T, value: String) {
-    remove(this.filter { it.key.name == configItem.name }.keys.first())
-    set(configItem, value)
-}
-
 abstract class RequiredConfig {
     abstract fun values(): Set<RequiredConfigItem>
 }
 
 object ValidateConfig {
-
     operator fun invoke(requiredConfig: RequiredConfig, configDir: Path?): Configuration {
 
         val foundConfig = requiredConfig.values().map { required ->

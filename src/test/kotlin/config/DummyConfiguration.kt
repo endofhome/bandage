@@ -13,3 +13,8 @@ fun dummyConfiguration(): Configuration {
     @Suppress("UNCHECKED_CAST")
     return Configuration(configValues as Map<RequiredConfigItem, String>, BandageConfig, null)
 }
+
+fun <T : RequiredConfigItem> MutableMap<T, String>.removeAndSet(configItem: T, value: String) {
+    remove(this.filter { it.key.name == configItem.name }.keys.first())
+    set(configItem, value)
+}
