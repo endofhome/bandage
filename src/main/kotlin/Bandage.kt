@@ -1,3 +1,4 @@
+import Bandage.StaticConfig.configurationFilesDir
 import Bandage.StaticConfig.defaultPort
 import Bandage.StaticConfig.filters
 import Bandage.StaticConfig.view
@@ -42,7 +43,7 @@ fun main(args: Array<String>) {
 class Bandage(dynamicConfig: Configuration) {
     companion object {
         fun init(requiredConfig: RequiredConfig): Bandage =
-            Bandage(ValidateConfig(requiredConfig, Paths.get("configuration")))
+            Bandage(ValidateConfig(requiredConfig, Paths.get(configurationFilesDir)))
     }
 
     object StaticConfig {
@@ -51,6 +52,7 @@ class Bandage(dynamicConfig: Configuration) {
         val filters = EnforceHttpsOnHeroku()
                 .then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
         const val defaultPort = 7000
+        const val configurationFilesDir = "configuration"
     }
 
     private val userManagement = UserManagement(dynamicConfig)
