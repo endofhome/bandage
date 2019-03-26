@@ -9,10 +9,9 @@ import User
 import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import config.BandageConfig
 import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.PASSWORD
-import config.ValidateConfig
+import config.dummyConfiguration
 import org.http4k.core.ContentType
 import org.http4k.core.Method
 import org.http4k.core.Request
@@ -34,9 +33,9 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 
 class AuthenticationTest {
-    private val config = ValidateConfig(requiredConfig = BandageConfig, configDir = null)
+    private val config = dummyConfiguration()
     private val userManagement = UserManagement(config)
-    private val authentication = Authentication(userManagement)
+    private val authentication = Authentication(config, userManagement)
 
     @Nested
     @DisplayName("Authenticating user at login")
@@ -157,7 +156,7 @@ class AuthenticationTest {
                 .form("password", config.get(PASSWORD))
 
             val noUsers = UserManagement(config, emptyList())
-            val response = Authentication(noUsers).authenticateUser(request)
+            val response = Authentication(config, noUsers).authenticateUser(request)
 
             assertThat(response.status, equalTo(SEE_OTHER))
             assertThat(response.header("Location"), equalTo(login))
@@ -212,7 +211,7 @@ class AuthenticationTest {
     private fun cookieFor(user: User): Cookie =
         Cookie(
             name = loginCookieName,
-            value = "${System.getenv("BANDAGE_API_KEY")}_${user.userId}",
+            value = "${config.get(API_KEY)}_${user.userId}",
             maxAge = Long.MAX_VALUE,
             expires = null,
             domain = null,

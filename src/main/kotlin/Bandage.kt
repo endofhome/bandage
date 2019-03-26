@@ -40,7 +40,7 @@ fun main(args: Array<String>) {
     println("Bandage has started on http://localhost:$port")
 }
 
-class Bandage(dynamicConfig: Configuration) {
+class Bandage(systemConfig: Configuration) {
     companion object {
         fun init(requiredConfig: RequiredConfig): Bandage =
             Bandage(ValidateConfig(requiredConfig, Paths.get(configurationFilesDir)))
@@ -55,8 +55,8 @@ class Bandage(dynamicConfig: Configuration) {
         const val configurationFilesDir = "configuration"
     }
 
-    private val userManagement = UserManagement(dynamicConfig)
-    private val authentication = Authentication(userManagement)
+    private val userManagement = UserManagement(systemConfig)
+    private val authentication = Authentication(systemConfig, userManagement)
     private fun redirectTo(location: String): (Request) -> Response = { Response(SEE_OTHER).header("Location", location) }
 
     private val routes = with(authentication) { routes(

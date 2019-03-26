@@ -1,6 +1,9 @@
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
+import config.BandageConfigItem.API_KEY
+import config.BandageConfigItem.PASSWORD
+import config.Configuration
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
@@ -16,7 +19,7 @@ import result.flatMap
 import result.map
 import result.orElse
 
-class Authentication(private val users: UserManagement) {
+class Authentication(private val config: Configuration, private val users: UserManagement) {
 
     companion object {
         const val loginCookieName = "bandage_login"
@@ -52,7 +55,7 @@ class Authentication(private val users: UserManagement) {
             password == null                                      -> Failure(Error("Password not provided"))
             user.size > 1                                         -> Failure(Error("Multiple user fields are not allowed"))
             password.size > 1                                     -> Failure(Error("Multiple password fields are not allowed"))
-            password.first() != System.getenv("BANDAGE_PASSWORD") -> Failure(Error("Incorrect password"))
+            password.first() != config.get(PASSWORD)              -> Failure(Error("Incorrect password"))
             else                                                  -> user.firstOrFailure().flatMap { users.findUser(it) }
         }
     }
@@ -62,7 +65,7 @@ class Authentication(private val users: UserManagement) {
     private fun cookieFor(user: User): Cookie =
         Cookie(
             name = loginCookieName,
-            value = "${System.getenv("BANDAGE_API_KEY")}_${user.userId}",
+            value = "${config.get(API_KEY)}_${user.userId}",
             maxAge = 94608000L,
             expires = null,
             domain = null,
@@ -76,7 +79,7 @@ class Authentication(private val users: UserManagement) {
 
         val (apiKey, user) = this.value.split("_")
         return when {
-            apiKey == System.getenv("BANDAGE_API_KEY") && users.findUser(user) is Success -> true
+            apiKey == config.get(API_KEY) && users.findUser(user) is Success -> true
             else                                                                          -> false
         }
     }
