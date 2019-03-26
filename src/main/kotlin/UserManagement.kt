@@ -8,9 +8,9 @@ import config.Configuration
 class UserManagement(config: Configuration, users: List<User>? = null) {
 
     val users: List<User> = users ?: listOf(
-        User("1", config.get(USER_ONE_FULL_NAME())),
-        User("2", config.get(USER_TWO_FULL_NAME())),
-        User("3", config.get(USER_THREE_FULL_NAME()))
+        User("1", config.get(USER_ONE_FULL_NAME)),
+        User("2", config.get(USER_TWO_FULL_NAME)),
+        User("3", config.get(USER_THREE_FULL_NAME))
     )
 
     fun findUser(userId: String): Result<Error, User> {

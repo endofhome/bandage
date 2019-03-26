@@ -32,7 +32,7 @@ import java.nio.file.Paths
 
 fun main(args: Array<String>) {
     val port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
-    Bandage.init(BandageConfig()).app.asServer(Jetty(port)).start()
+    Bandage.init(BandageConfig).app.asServer(Jetty(port)).start()
 
     println("Bandage has started on http://localhost:$port")
 }

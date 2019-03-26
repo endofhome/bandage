@@ -32,7 +32,7 @@ import org.openqa.selenium.Cookie
 @ExtendWith(OkeyDokeExtension::class)
 class BandageTest {
 
-    private val config = ValidateConfig(requiredConfig = BandageConfig(), configDir = null)
+    private val config = ValidateConfig(requiredConfig = BandageConfig, configDir = null)
     private val driver = Http4kWebDriver(Bandage(config).app)
 
     @Test
@@ -48,7 +48,7 @@ class BandageTest {
         val loggedInUser = userLogsIn()
 
         val loginCookie = driver.manage().getCookieNamed(Authentication.loginCookieName) ?: fail("login cookie not set")
-        val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY())}_${loggedInUser.userId}", "login")
+        val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${loggedInUser.userId}", "login")
 
         assertThat(loginCookie, equalTo(expectedCookie))
         assertThat(driver.currentUrl, equalTo(dashboard))
@@ -79,7 +79,7 @@ class BandageTest {
     fun `accessing index page with a logged in cookie redirects to dashboard page`() {
         val loggedInUser = userLogsIn()
         driver.navigate().to(index)
-        val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY())}_${loggedInUser.userId}", "login")
+        val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${loggedInUser.userId}", "login")
 
         assertThat(driver.status, equalTo(OK))
         assertThat(driver.currentUrl, equalTo(dashboard))
@@ -90,7 +90,7 @@ class BandageTest {
     fun `accessing login page with a logged in cookie redirects to dashboard page`() {
         val loggedInUser = userLogsIn()
         driver.navigate().to(login)
-        val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY())}_${loggedInUser.userId}", "login")
+        val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${loggedInUser.userId}", "login")
 
         assertThat(driver.status, equalTo(OK))
         assertThat(driver.currentUrl, equalTo(dashboard))
@@ -131,7 +131,7 @@ class BandageTest {
         option.click()
 
         val passwordField = driver.findElement(By.cssSelector("#password")) ?: fail("password field not found")
-        passwordField.sendKeys(config.get(PASSWORD()))
+        passwordField.sendKeys(config.get(PASSWORD))
 
         val loginButton = driver.findElement(By.cssSelector("button[type=\"submit\"][name=\"login\"]"))
             ?: fail("login button not found")

@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test
 
 class LoginTest {
 
-    private val config = ValidateConfig(BandageConfig(), null)
+    private val config = ValidateConfig(BandageConfig, null)
     private val someUsers = listOf(
         User("17", "Some full name"),
         User("An ID", "Another full name")
