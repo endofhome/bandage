@@ -3,6 +3,7 @@ package config
 import java.nio.file.Path
 
 data class Configuration(private val config: Map<RequiredConfigItem, String?>, val requiredConfig: RequiredConfig, val configDir: Path?) {
+    private val osNewline: String = System.getProperty("line.separator")
 
     init {
         validate(requiredConfig.values().toSet(), config)
@@ -30,8 +31,8 @@ data class Configuration(private val config: Map<RequiredConfigItem, String?>, v
             )
         }
     }
+
+    private fun String.newlines(numberOf: Int) = this + (1..numberOf).map { osNewline }.joinToString("")
 }
 
-val osNewline: String = System.getProperty("line.separator")
-fun String.newlines(numberOf: Int) = this + (1..numberOf).map { osNewline }.joinToString("")
 class ConfigurationException(override val message: String) : RuntimeException()
