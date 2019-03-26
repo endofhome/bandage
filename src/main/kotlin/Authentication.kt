@@ -1,5 +1,3 @@
-import Result.Failure
-import Result.Success
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
@@ -10,6 +8,13 @@ import org.http4k.core.body.formAsMap
 import org.http4k.core.cookie.Cookie
 import org.http4k.core.cookie.cookie
 import org.http4k.core.cookie.invalidateCookie
+import result.Error
+import result.Result
+import result.Result.Failure
+import result.Result.Success
+import result.flatMap
+import result.map
+import result.orElse
 
 class Authentication(private val users: UserManagement) {
 

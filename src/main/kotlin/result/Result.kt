@@ -1,5 +1,7 @@
-import Result.Failure
-import Result.Success
+package result
+
+import result.Result.Failure
+import result.Result.Success
 
 sealed class Result<out F, out S> {
     data class Success<out S>(val value: S) : Result<Nothing, S>()

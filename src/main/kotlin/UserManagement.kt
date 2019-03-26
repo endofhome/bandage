@@ -1,9 +1,11 @@
-import Result.Failure
-import Result.Success
 import config.BandageConfigItem.USER_ONE_FULL_NAME
 import config.BandageConfigItem.USER_THREE_FULL_NAME
 import config.BandageConfigItem.USER_TWO_FULL_NAME
 import config.Configuration
+import result.Error
+import result.Result
+import result.Result.Failure
+import result.Result.Success
 
 class UserManagement(config: Configuration, users: List<User>? = null) {
 
