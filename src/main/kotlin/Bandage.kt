@@ -61,11 +61,7 @@ class Bandage(systemConfig: Configuration) {
 
     private val routes = with(authentication) { routes(
             index       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(dashboard)) },
-            login       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(index), otherwise = Login(
-                view,
-                userManagement
-            )
-            ) },
+            login       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(index), otherwise = Login(view, userManagement)) },
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },
             dashboard   bind GET  to { request -> ifAuthenticated(request, then = { Dashboard(view) }) },
