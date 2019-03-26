@@ -1,3 +1,5 @@
+package views
+
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with

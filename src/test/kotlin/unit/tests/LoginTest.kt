@@ -1,7 +1,6 @@
 package unit.tests
 
 import Bandage.StaticConfig.view
-import Login
 import User
 import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
@@ -12,6 +11,7 @@ import org.http4k.core.Status.Companion.OK
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
 import org.junit.jupiter.api.Test
+import views.Login
 
 class LoginTest {
 

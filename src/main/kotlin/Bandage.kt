@@ -28,6 +28,8 @@ import org.http4k.server.Jetty
 import org.http4k.server.asServer
 import org.http4k.template.HandlebarsTemplates
 import org.http4k.template.view
+import views.Dashboard
+import views.Login
 import java.nio.file.Paths
 
 fun main(args: Array<String>) {
@@ -57,7 +59,11 @@ class Bandage(dynamicConfig: Configuration) {
 
     private val routes = with(authentication) { routes(
             index       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(dashboard)) },
-            login       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(index), otherwise = Login(view, userManagement)) },
+            login       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(index), otherwise = Login(
+                view,
+                userManagement
+            )
+            ) },
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },
             dashboard   bind GET  to { request -> ifAuthenticated(request, then = { Dashboard(view) }) },
