@@ -7,10 +7,16 @@
         </encoder>
     </appender>
 
-    <logger name="bandage" level="TRACE"/>
+    <appender name="Sentry" class="io.sentry.logback.SentryAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
 
+    <logger name="bandage" level="TRACE"/>
 
     <root level="info">
         <appender-ref ref="STDOUT" />
+        <appender-ref ref="Sentry" />
     </root>
 </configuration>

@@ -31,16 +31,9 @@ class Authentication(private val config: Configuration, private val users: UserM
     fun authenticateUser(request: Request): Response =
         request.authenticatedUser().map { user ->
             logger.info("User ${user.userId} was successfully logged in")
-
-            logger.trace("TEST: Hello World!");
-            logger.debug("TEST: How are you today?");
-            logger.info("TEST: I am fine.");
-            logger.warn("TEST: I love programming.");
-            logger.error("TEST: I am programming.");
-
             Response(Status.SEE_OTHER).header("Location", dashboard).withBandageCookieFor(user)
         }.orElse { error ->
-            logger.info("Unsuccessful login attempt: ${error.message}")
+            logger.warn("Unsuccessful login attempt: ${error.message}")
             Response(Status.SEE_OTHER).header("Location", login).body(error.message)
         }
 

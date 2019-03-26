@@ -28,6 +28,7 @@ dependencies {
     implementation group: "org.slf4j", name: "slf4j-api", version: "1.7.26"
     implementation group: "ch.qos.logback", name: "logback-classic", version: logbackVersion
     implementation group: "ch.qos.logback", name: "logback-core", version: logbackVersion
+    implementation group: "io.sentry", name: "sentry-logback", version: "1.7.16"
 
     testImplementation group: "org.junit.jupiter", name: "junit-jupiter-api", version: junitVersion
     testImplementation group: "com.natpryce", name: "hamkrest", version: "1.6.0.0"
