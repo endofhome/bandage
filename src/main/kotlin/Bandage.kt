@@ -32,6 +32,7 @@ import org.http4k.template.view
 import org.slf4j.LoggerFactory
 import views.Dashboard
 import views.Login
+import java.nio.file.Path
 import java.nio.file.Paths
 
 private val logger = LoggerFactory.getLogger(Bandage::class.java)
@@ -46,7 +47,7 @@ fun main(args: Array<String>) {
 class Bandage(systemConfig: Configuration) {
     companion object {
         fun init(requiredConfig: RequiredConfig): Bandage =
-            Bandage(ValidateConfig(requiredConfig, Paths.get(configurationFilesDir)))
+            Bandage(ValidateConfig(requiredConfig, configurationFilesDir))
     }
 
     object StaticConfig {
@@ -54,8 +55,8 @@ class Bandage(systemConfig: Configuration) {
         val view = Body.view(renderer, ContentType.TEXT_HTML)
         val filters = EnforceHttpsOnHeroku()
                 .then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
+        val configurationFilesDir: Path = Paths.get("configuration")
         const val defaultPort = 7000
-        const val configurationFilesDir = "configuration"
     }
 
     private val userManagement = UserManagement(systemConfig)
