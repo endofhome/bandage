@@ -17,7 +17,7 @@ test {
 }
 
 dependencies {
-    def http4kVersion = "3.112.1"
+    def http4kVersion = "3.127.0"
     def junitVersion = "5.4.0"
     def logbackVersion = "1.2.3"
 

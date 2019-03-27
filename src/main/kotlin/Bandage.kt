@@ -28,7 +28,7 @@ import org.http4k.routing.static
 import org.http4k.server.Jetty
 import org.http4k.server.asServer
 import org.http4k.template.HandlebarsTemplates
-import org.http4k.template.view
+import org.http4k.template.viewModel
 import org.slf4j.LoggerFactory
 import views.Dashboard
 import views.Login
@@ -52,7 +52,7 @@ class Bandage(systemConfig: Configuration) {
 
     object StaticConfig {
         private val renderer = HandlebarsTemplates().HotReload("src/main/resources")
-        val view = Body.view(renderer, ContentType.TEXT_HTML)
+        val view = Body.viewModel(renderer, ContentType.TEXT_HTML).toLens()
         val filters = EnforceHttpsOnHeroku()
                 .then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
         val configurationFilesDir: Path = Paths.get("configuration")
