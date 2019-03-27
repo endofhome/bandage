@@ -33,7 +33,7 @@ dependencies {
     testImplementation group: "org.junit.jupiter", name: "junit-jupiter-api", version: junitVersion
     testImplementation group: "com.natpryce", name: "hamkrest", version: "1.6.0.0"
     testImplementation group: "org.http4k", name: "http4k-testing-webdriver", version: http4kVersion
-    testImplementation group: "com.oneeyedmen", name: "okeydoke", version: "1.1.0"
+    testImplementation group: "org.http4k", name: "http4k-testing-approval", version: http4kVersion
 
     testRuntimeOnly group: "org.junit.jupiter", name: "junit-jupiter-engine", version: junitVersion
 }

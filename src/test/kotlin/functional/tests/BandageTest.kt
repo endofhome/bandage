@@ -2,7 +2,6 @@ package functional.tests
 
 import Authentication
 import Bandage
-import OkeyDokeExtension
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
@@ -10,17 +9,21 @@ import User
 import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.oneeyedmen.okeydoke.Approver
 import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.PASSWORD
 import config.dummyConfiguration
 import org.http4k.core.HttpHandler
+import org.http4k.core.Method.GET
+import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
 import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
+import org.http4k.testing.ApprovalTest
+import org.http4k.testing.Approver
+import org.http4k.testing.assertApproved
 import org.http4k.webdriver.Http4kWebDriver
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
@@ -28,11 +31,12 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.openqa.selenium.By
 import org.openqa.selenium.Cookie
 
-@ExtendWith(OkeyDokeExtension::class)
+@ExtendWith(ApprovalTest::class)
 class BandageTest {
 
     private val config = dummyConfiguration()
-    private val driver = Http4kWebDriver(Bandage(config).app)
+    private val bandage = Bandage(config).app
+    private val driver = Http4kWebDriver(bandage)
 
     @Test
     fun `index redirects to login`() {
@@ -98,23 +102,20 @@ class BandageTest {
 
     @Test
     fun `static 404 page is served on 404 response`(approver: Approver) {
-        driver.navigate().to("/not-found")
+        val request = Request(GET, "not-found")
+        val response = bandage(request)
 
-        assertThat(driver.status, equalTo(NOT_FOUND))
-        assertThat(driver.currentUrl, equalTo("/not-found"))
-        approver.assertApproved(driver.pageSource)
+        approver.assertApproved(response, NOT_FOUND)
     }
 
     @Test
     fun `static 500 page is served on 500 response`(approver: Approver) {
         val internalServerError: HttpHandler = { Response(Status.INTERNAL_SERVER_ERROR) }
-        val localDriver = Http4kWebDriver(internalServerError.with(Bandage.StaticConfig.filters))
+        val handlerWithFilters = internalServerError.with(Bandage.StaticConfig.filters)
+        val request = Request(GET, "/will-blow-up")
+        val response = handlerWithFilters(request)
 
-        localDriver.navigate().to("/will-blow-up")
-
-        assertThat(localDriver.status, equalTo(INTERNAL_SERVER_ERROR))
-        assertThat(localDriver.currentUrl, equalTo("/will-blow-up"))
-        approver.assertApproved(localDriver.pageSource)
+        approver.assertApproved(response, INTERNAL_SERVER_ERROR)
     }
 
     private fun userLogsIn(): User {
