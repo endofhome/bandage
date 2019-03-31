@@ -1,6 +1,7 @@
 import Bandage.StaticConfig.configurationFilesDir
 import Bandage.StaticConfig.defaultPort
 import Bandage.StaticConfig.filters
+import Bandage.StaticConfig.logger
 import Bandage.StaticConfig.view
 import RouteMappings.dashboard
 import RouteMappings.index
@@ -10,10 +11,10 @@ import config.BandageConfig
 import config.Configuration
 import config.RequiredConfig
 import config.ValidateConfig
+import http.Filters.CatchAll
+import http.Filters.EnforceHttpsOnHeroku
 import org.http4k.core.Body
 import org.http4k.core.ContentType
-import org.http4k.core.Filter
-import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
 import org.http4k.core.Request
@@ -29,13 +30,12 @@ import org.http4k.server.Jetty
 import org.http4k.server.asServer
 import org.http4k.template.HandlebarsTemplates
 import org.http4k.template.viewModel
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import views.Dashboard
 import views.Login
 import java.nio.file.Path
 import java.nio.file.Paths
-
-private val logger = LoggerFactory.getLogger(Bandage::class.java)
 
 fun main(args: Array<String>) {
     val port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
@@ -55,8 +55,10 @@ class Bandage(systemConfig: Configuration) {
         val view = Body.viewModel(renderer, ContentType.TEXT_HTML).toLens()
         val filters = EnforceHttpsOnHeroku()
                 .then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
+                .then(CatchAll())
         val configurationFilesDir: Path = Paths.get("configuration")
         const val defaultPort = 7000
+        val logger: Logger = LoggerFactory.getLogger(Bandage::class.java)
     }
 
     private val userManagement = UserManagement(systemConfig)
@@ -75,21 +77,4 @@ class Bandage(systemConfig: Configuration) {
     }
 
     val app = routes.withFilter(filters)
-}
-
-object EnforceHttpsOnHeroku {
-    operator fun invoke(): Filter = Filter { next -> { enforceHttps(next, it) } }
-
-    private fun enforceHttps(handle: HttpHandler, request: Request): Response =
-        if (insecureHttp(request) && probablyOnHeroku) {
-            val herokuHost = "band-age.herokuapp.com"
-            Response(SEE_OTHER).header("Location", request.uri.copy(scheme = "https", host = herokuHost).toString())
-        } else {
-            handle(request)
-        }
-
-    private fun insecureHttp(request: Request) =
-        request.header("X-Forwarded-Proto")?.startsWith("https")?.not() == true
-
-    private val probablyOnHeroku = System.getenv("DYNO") != null
 }
