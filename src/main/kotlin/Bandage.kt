@@ -51,6 +51,7 @@ class Bandage(systemConfig: Configuration) {
     }
 
     object StaticConfig {
+        const val appName = "BANDAGE"
         private val renderer = HandlebarsTemplates().HotReload("src/main/resources")
         val view = Body.viewModel(renderer, ContentType.TEXT_HTML).toLens()
         val filters = EnforceHttpsOnHeroku()
