@@ -30,12 +30,17 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.openqa.selenium.By
 import org.openqa.selenium.Cookie
+import storage.AudioFileMetadata
+import storage.DummyMetadataStorage
+import storage.Duration
+import storage.StubMetadataStorage
+import java.util.*
 
 @ExtendWith(ApprovalTest::class)
 class BandageTest {
 
     private val config = dummyConfiguration()
-    private val bandage = Bandage(config).app
+    private val bandage = Bandage(config, DummyMetadataStorage).app
     private val driver = Http4kWebDriver(bandage)
 
     @Test
@@ -48,7 +53,7 @@ class BandageTest {
 
     @Test
     fun `can log in via login page`() {
-        val loggedInUser = userLogsIn()
+        val loggedInUser = driver.userLogsIn()
 
         val loginCookie = driver.manage().getCookieNamed(Authentication.loginCookieName) ?: fail("login cookie not set")
         val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${loggedInUser.userId}", "login")
@@ -60,7 +65,7 @@ class BandageTest {
 
     @Test
     fun `can log out`() {
-        userLogsIn()
+        driver.userLogsIn()
         val logoutLink = driver.findElement(By.cssSelector("a[data-test=\"logout\"]")) ?: fail("Logout link is unavailable")
         logoutLink.click()
 
@@ -80,7 +85,7 @@ class BandageTest {
 
     @Test
     fun `accessing index page with a logged in cookie redirects to dashboard page`() {
-        val loggedInUser = userLogsIn()
+        val loggedInUser = driver.userLogsIn()
         driver.navigate().to(index)
         val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${loggedInUser.userId}", "login")
 
@@ -91,7 +96,7 @@ class BandageTest {
 
     @Test
     fun `accessing login page with a logged in cookie redirects to dashboard page`() {
-        val loggedInUser = userLogsIn()
+        val loggedInUser = driver.userLogsIn()
         driver.navigate().to(login)
         val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${loggedInUser.userId}", "login")
 
@@ -118,25 +123,65 @@ class BandageTest {
         approver.assertApproved(response, INTERNAL_SERVER_ERROR)
     }
 
-    private fun userLogsIn(): User {
-        driver.navigate().to(login)
+    @Test
+    fun `list of audio tracks are available in dashboard`() {
+        val metadataWithNullValues = exampleAudioFileMetadata.copy(
+            uuid = UUID.fromString("f8ab4da2-7ace-4e62-9db0-430af0ba4876"),
+            duration = null,
+            title = "track with null duration",
+            format = "wav"
+        )
+        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioFileMetadata, metadataWithNullValues))
+        val bandage = Bandage(config, metadataStorage).app
+        val driver = Http4kWebDriver(bandage)
 
-        assertThat(driver.status, equalTo(OK))
-        assertThat(driver.title, equalTo("Bandage"))
+        driver.userLogsIn()
+        driver.navigate().to(dashboard)
 
-        val usernameField = driver.findElement(By.cssSelector("#user")) ?: fail("username field not found")
+        val folderh4 = driver.findElement(By.cssSelector("h4[data-test=\"[folder-my_folder]\"]")) ?: fail("FolderViewModel h4 is unavailable")
+        assertThat(folderh4.text, equalTo("my_folder"))
+
+        val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[file-68ab4da2-7ace-4e62-9db0-430af0ba487f]\"]")) ?: fail("First file div is unavailable")
+        assertThat(firstFile.text, equalTo("some title | 0:21 | mp3"))
+
+        val fileWithNullDuration = driver.findElement(By.cssSelector("div[data-test=\"[file-f8ab4da2-7ace-4e62-9db0-430af0ba4876]\"]")) ?: fail("First file div is unavailable")
+        assertThat(fileWithNullDuration.text, equalTo("track with null duration | wav"))
+    }
+
+    private fun Http4kWebDriver.userLogsIn(): User {
+        this.navigate().to(login)
+
+        assertThat(this.status, equalTo(OK))
+        assertThat(this.title, equalTo("Bandage"))
+
+        val usernameField = this.findElement(By.cssSelector("#user")) ?: fail("username field not found")
         val lastUser = UserManagement(config).users.last()
         val option = usernameField.findElement(By.cssSelector("option:contains(${lastUser.initials})"))
             ?: fail("option ${lastUser.initials} is not available")
         option.click()
 
-        val passwordField = driver.findElement(By.cssSelector("#password")) ?: fail("password field not found")
+        val passwordField = this.findElement(By.cssSelector("#password")) ?: fail("password field not found")
         passwordField.sendKeys(config.get(PASSWORD))
 
-        val loginButton = driver.findElement(By.cssSelector("button[type=\"submit\"][name=\"login\"]"))
+        val loginButton = this.findElement(By.cssSelector("button[type=\"submit\"][name=\"login\"]"))
             ?: fail("login button not found")
         loginButton.click()
 
         return lastUser
     }
+
+    private val exampleAudioFileMetadata = AudioFileMetadata(
+        UUID.fromString("68ab4da2-7ace-4e62-9db0-430af0ba487f"),
+        "some artist",
+        "some album",
+        "some title",
+        "mp3",
+        "320000",
+        Duration("21"),
+        12345,
+        "10000",
+        "https://www.passwordprotectedlink.com",
+        "/my_folder/my_file",
+        "someamazinghashstring"
+    )
 }

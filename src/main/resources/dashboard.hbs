@@ -3,6 +3,15 @@
 <div class="container-fluid d-flex h-100">
     <div class="justify-content-center align-self-center mx-auto" id="login-container">
         <a href="/logout" data-test="logout">Logout</a>
+        {{#each folders}}
+            <h4 data-test="[folder-{{name}}]">{{name}}</h4>
+            {{#each files}}
+                <div data-test="[file-{{uuid}}]">
+                    {{title}} | {{#if duration}}{{duration}} | {{/if}}{{format}}<br>
+                </div>
+            {{/each}}
+            <br>
+        {{/each}}
     </div>
 </div>
 

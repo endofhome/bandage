@@ -32,6 +32,8 @@ import org.http4k.template.HandlebarsTemplates
 import org.http4k.template.viewModel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import storage.CsvMetadataStorage
+import storage.MetadataStorage
 import views.Dashboard
 import views.Login
 import java.nio.file.Path
@@ -39,15 +41,15 @@ import java.nio.file.Paths
 
 fun main(args: Array<String>) {
     val port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
-    Bandage.init(BandageConfig).app.asServer(Jetty(port)).start()
+    Bandage.init(BandageConfig, CsvMetadataStorage).app.asServer(Jetty(port)).start()
 
     logger.info("Bandage has started on http://localhost:$port")
 }
 
-class Bandage(systemConfig: Configuration) {
+class Bandage(systemConfig: Configuration, metadataStorage: MetadataStorage) {
     companion object {
-        fun init(requiredConfig: RequiredConfig): Bandage =
-            Bandage(ValidateConfig(requiredConfig, configurationFilesDir))
+        fun init(requiredConfig: RequiredConfig, metadataStorage: MetadataStorage): Bandage =
+            Bandage(ValidateConfig(requiredConfig, configurationFilesDir), metadataStorage)
     }
 
     object StaticConfig {
@@ -71,7 +73,7 @@ class Bandage(systemConfig: Configuration) {
             login       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(index), otherwise = Login(view, userManagement)) },
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },
-            dashboard   bind GET  to { request -> ifAuthenticated(request, then = { Dashboard(view) }) },
+            dashboard   bind GET  to { request -> ifAuthenticated(request, then = { Dashboard(view, metadataStorage) }) },
 
             "/public" bind static(ResourceLoader.Directory("public"))
         )

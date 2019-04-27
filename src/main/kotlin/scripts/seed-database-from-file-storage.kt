@@ -12,11 +12,13 @@ import config.ValidateConfig
 import result.expectSuccess
 import result.map
 import result.orElse
+import storage.AudioFileMetadata
 import storage.CsvMetadataStorage
 import storage.DropboxFileStorage
 import storage.FileStoragePermission.PasswordProtected
 import storage.HttpDropboxClient
 import storage.MetadataStorage
+import storage.toDuration
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.security.MessageDigest
@@ -43,15 +45,15 @@ fun seedDatabase(metadataStorage: MetadataStorage) {
 
                 val ffprobeInfo: FfprobeInfo = jacksonObjectMapper().readValue(fileInfoJsonString)
 
-                BandageFileMetadata(
+                AudioFileMetadata(
                     uuid = UUID.randomUUID(),
                     artist = ffprobeInfo.format.tags?.artist.orEmpty(),
                     album = ffprobeInfo.format.tags?.album.orEmpty(),
                     title = ffprobeInfo.format.tags?.title ?: file.name.replaceAfterLast(".", "").dropLast(1),
                     format = ffprobeInfo.format.format_name,
                     bitRate = ffprobeInfo.format.bit_rate,
-                    duration = ffprobeInfo.format.duration,
-                    fileSize = ffprobeInfo.format.size,
+                    duration = ffprobeInfo.format.duration?.toDuration(),
+                    fileSize = ffprobeInfo.format.size.toInt(),
                     recordedDate = ffprobeInfo.format.tags?.date.orEmpty(),
                     passwordProtectedLink = fileStorage.publicLink(file.path, PasswordProtected(config.get(DROPBOX_LINK_PASSWORD))).expectSuccess(),
                     path = file.path,
@@ -83,21 +85,6 @@ private fun hashFile(file: ByteArray): String {
         String.format("%02x", byte)
     }.joinToString("")
 }
-
-data class BandageFileMetadata(
-    val uuid: UUID,
-    val artist: String,
-    val album: String,
-    val title: String,
-    val format: String,
-    val bitRate: String,
-    val duration: String?,
-    val fileSize: String,
-    val recordedDate: String,
-    val passwordProtectedLink: String,
-    val path: String,
-    val hash: String
-)
 
 data class FfprobeInfo(
     val format: Format

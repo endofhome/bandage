@@ -1,23 +1,64 @@
 package storage
 
-import scripts.BandageFileMetadata
+import java.io.FileReader
 import java.io.FileWriter
+import java.util.*
+
+data class AudioFileMetadata(
+    val uuid: UUID,
+    val artist: String,
+    val album: String,
+    val title: String,
+    val format: String,
+    val bitRate: String,
+    val duration: Duration?,
+    val fileSize: Int,
+    val recordedDate: String,
+    val passwordProtectedLink: String,
+    val path: String,
+    val hash: String
+)
+
+class Duration(val value: String)
+fun String.toDuration() = Duration(this)
 
 interface MetadataStorage {
-    fun write(metadata: List<BandageFileMetadata>)
+    fun all(): List<AudioFileMetadata>
+    fun write(newMetadata: List<AudioFileMetadata>)
 }
 
 object CsvMetadataStorage : MetadataStorage {
-    private const val outputFileName = "seed-data.txt"
-    private val fileWriter = FileWriter(outputFileName, true)
+    private const val flatFileName = "seed-data.csv"
+
+    private val fileWriter = FileWriter(flatFileName, true)
     private val lineSeparator = System.lineSeparator()
     private val headerLine =
         "ID,Artist,Album,Title,Format,Bitrate,Duration,Size,Recorded date,Password protected link,Path,SHA-256$lineSeparator"
 
-    override fun write(metadata: List<BandageFileMetadata>) {
+    override fun all(): List<AudioFileMetadata> =
+        FileReader(flatFileName).readLines().dropHeader().map { line ->
+            line.split(",").run {
+                AudioFileMetadata(
+                    UUID.fromString(this[0]),
+                    this[1],
+                    this[2],
+                    this[3],
+                    this[4],
+                    this[5],
+                    this[6].toDuration(),
+                    this[7].toInt(),
+                    this[8],
+                    this[9],
+                    this[10],
+                    this[11]
+                )
+            }
+        }
+
+    override fun write(newMetadata: List<AudioFileMetadata>) {
         fileWriter.append(headerLine)
 
-        metadata.forEach { singleFileMetadata ->
+        newMetadata.forEach { singleFileMetadata ->
             fileWriter.append(singleFileMetadata.run {
                 "$uuid,$artist,$album,$title,$format,$bitRate,$duration,$fileSize,$recordedDate,$passwordProtectedLink,$path,$hash$lineSeparator"
             })
@@ -26,4 +67,19 @@ object CsvMetadataStorage : MetadataStorage {
         fileWriter.flush()
         fileWriter.close()
     }
+
+    private fun List<String>.dropHeader() = if (this[0] == headerLine.removeSuffix(lineSeparator)) drop(1) else this
+}
+
+class StubMetadataStorage(private val metadata: MutableList<AudioFileMetadata>): MetadataStorage {
+    override fun all(): List<AudioFileMetadata> = metadata
+
+    override fun write(newMetadata: List<AudioFileMetadata>) {
+        metadata += newMetadata
+    }
+}
+
+object DummyMetadataStorage : MetadataStorage {
+    override fun all() = emptyList<AudioFileMetadata>()
+    override fun write(newMetadata: List<AudioFileMetadata>) = TODO("not implemented")
 }
