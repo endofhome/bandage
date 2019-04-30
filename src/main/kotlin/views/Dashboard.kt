@@ -1,16 +1,16 @@
 package views
 
+import Bandage.StaticConfig.view
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
-import org.http4k.lens.BiDiBodyLens
 import org.http4k.template.ViewModel
 import storage.AudioFileMetadata
 import storage.Duration
 import storage.MetadataStorage
 
 object Dashboard {
-    operator fun invoke(view: BiDiBodyLens<ViewModel>, metadataStorage: MetadataStorage): Response {
+    operator fun invoke(metadataStorage: MetadataStorage): Response {
         val folders = metadataStorage.all().groupBy { file ->
             file.path.drop(1).substringBefore("/")
         }.map { folder ->

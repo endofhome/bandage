@@ -2,7 +2,6 @@ import Bandage.StaticConfig.configurationFilesDir
 import Bandage.StaticConfig.defaultPort
 import Bandage.StaticConfig.filters
 import Bandage.StaticConfig.logger
-import Bandage.StaticConfig.view
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
@@ -73,10 +72,10 @@ class Bandage(systemConfig: Configuration, metadataStorage: MetadataStorage) {
 
     private val routes = with(authentication) { routes(
             index       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(dashboard)) },
-            login       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(index), otherwise = Login(view, userManagement)) },
+            login       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(index), otherwise = Login(userManagement)) },
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },
-            dashboard   bind GET  to { request -> ifAuthenticated(request, then = { Dashboard(view, metadataStorage) }) },
+            dashboard   bind GET  to { request -> ifAuthenticated(request, then = { Dashboard(metadataStorage) }) },
 
             "/public" bind static(ResourceLoader.Directory("public"))
         )

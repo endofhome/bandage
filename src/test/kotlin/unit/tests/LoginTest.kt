@@ -1,6 +1,5 @@
 package unit.tests
 
-import Bandage.StaticConfig.view
 import User
 import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.Test
 import views.Login
 
 class LoginTest {
-
     private val config = dummyConfiguration()
     private val someUsers = listOf(
         User("17", "Some full name"),
@@ -45,7 +43,7 @@ class LoginTest {
     private fun renderPageAndSelectOptions(): Elements {
         val userManagement = UserManagement(config, someUsers)
 
-        val response = Login(view, userManagement)
+        val response = Login(userManagement)
         assertThat(response.status, equalTo(OK))
 
         val document = Jsoup.parse(response.bodyString())
