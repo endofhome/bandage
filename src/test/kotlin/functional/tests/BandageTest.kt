@@ -34,7 +34,7 @@ import storage.AudioFileMetadata
 import storage.DummyMetadataStorage
 import storage.Duration
 import storage.StubMetadataStorage
-import java.util.*
+import java.util.UUID
 
 @ExtendWith(ApprovalTest::class)
 class BandageTest {

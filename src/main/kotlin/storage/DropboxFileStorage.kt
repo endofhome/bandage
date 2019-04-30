@@ -25,7 +25,7 @@ import result.map
 import result.orElse
 import result.partition
 import java.io.InputStream
-import java.util.*
+import java.util.Date
 
 class DropboxFileStorage(private val dropboxClient: SimpleDropboxClient) : FileStorage {
     override fun listFiles(): Result<Error, List<File>> =

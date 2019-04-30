@@ -22,7 +22,7 @@ import storage.toDuration
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.security.MessageDigest
-import java.util.*
+import java.util.UUID
 
 
 fun seedDatabase(metadataStorage: MetadataStorage) {
