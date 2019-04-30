@@ -13,10 +13,10 @@ import result.expectSuccess
 import result.map
 import result.orElse
 import storage.AudioFileMetadata
-import storage.CsvMetadataStorage
 import storage.DropboxFileStorage
 import storage.FileStoragePermission.PasswordProtected
 import storage.HttpDropboxClient
+import storage.LocalCsvMetadataStorage
 import storage.MetadataStorage
 import storage.toDuration
 import java.io.BufferedReader
@@ -115,5 +115,5 @@ data class Tags(
 )
 
 fun main() {
-    seedDatabase(CsvMetadataStorage)
+    seedDatabase(LocalCsvMetadataStorage)
 }
