@@ -56,9 +56,8 @@ class BandageTest {
         val loggedInUser = driver.userLogsIn()
 
         val loginCookie = driver.manage().getCookieNamed(Authentication.loginCookieName) ?: fail("login cookie not set")
-        val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${loggedInUser.userId}", "login")
 
-        assertThat(loginCookie, equalTo(expectedCookie))
+        assertThat(loginCookie, equalTo(validCookieFor(loggedInUser)))
         assertThat(driver.currentUrl, equalTo(dashboard))
         assertThat(driver.title, equalTo("Bandage"))
     }
@@ -87,22 +86,20 @@ class BandageTest {
     fun `accessing index page with a logged in cookie redirects to dashboard page`() {
         val loggedInUser = driver.userLogsIn()
         driver.navigate().to(index)
-        val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${loggedInUser.userId}", "login")
 
         assertThat(driver.status, equalTo(OK))
         assertThat(driver.currentUrl, equalTo(dashboard))
-        assertThat(driver.manage().cookies, equalTo(setOf(expectedCookie)))
+        assertThat(driver.manage().cookies, equalTo(setOf(validCookieFor(loggedInUser))))
     }
 
     @Test
     fun `accessing login page with a logged in cookie redirects to dashboard page`() {
         val loggedInUser = driver.userLogsIn()
         driver.navigate().to(login)
-        val expectedCookie = Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${loggedInUser.userId}", "login")
 
         assertThat(driver.status, equalTo(OK))
         assertThat(driver.currentUrl, equalTo(dashboard))
-        assertThat(driver.manage().cookies, equalTo(setOf(expectedCookie)))
+        assertThat(driver.manage().cookies, equalTo(setOf(validCookieFor(loggedInUser))))
     }
 
     @Test
@@ -169,6 +166,9 @@ class BandageTest {
 
         return lastUser
     }
+
+    private fun validCookieFor(loggedInUser: User) =
+        Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${loggedInUser.userId}", "login")
 
     private val exampleAudioFileMetadata = AudioFileMetadata(
         UUID.fromString("68ab4da2-7ace-4e62-9db0-430af0ba487f"),
