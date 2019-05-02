@@ -6,6 +6,7 @@ import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
 import RouteMappings.logout
+import RouteMappings.play
 import config.BandageConfig
 import config.Configuration
 import config.RequiredConfig
@@ -18,6 +19,8 @@ import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
 import org.http4k.core.Request
 import org.http4k.core.Response
+import org.http4k.core.Status.Companion.FORBIDDEN
+import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.core.then
 import org.http4k.filter.ServerFilters.ReplaceResponseContentsWithStaticFile
@@ -32,6 +35,8 @@ import org.http4k.template.viewModel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import storage.DropboxCsvMetadataStorageFactory
+import storage.DummyFileStorage
+import storage.FileStorage
 import storage.MetadataStorage
 import storage.MetadataStorageFactory
 import views.Dashboard
@@ -46,11 +51,11 @@ fun main(args: Array<String>) {
     logger.info("Bandage has started on http://localhost:$port")
 }
 
-class Bandage(systemConfig: Configuration, metadataStorage: MetadataStorage) {
+class Bandage(systemConfig: Configuration, metadataStorage: MetadataStorage, fileStorage: FileStorage) {
     companion object {
         fun init(requiredConfig: RequiredConfig, metadataStorageFactory: MetadataStorageFactory): Bandage =
             ValidateConfig(requiredConfig, configurationFilesDir).run {
-                Bandage(this, metadataStorageFactory(this))
+                Bandage(this, metadataStorageFactory(this), DummyFileStorage)
             }
     }
 
@@ -76,6 +81,7 @@ class Bandage(systemConfig: Configuration, metadataStorage: MetadataStorage) {
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },
             dashboard   bind GET  to { request -> ifAuthenticated(request, then = { Dashboard(metadataStorage) }) },
+            play        bind GET to { request -> ifAuthenticated(request, then = { Response(OK) }, otherwise = Response(FORBIDDEN)) },
 
             "/public" bind static(ResourceLoader.Directory("public"))
         )

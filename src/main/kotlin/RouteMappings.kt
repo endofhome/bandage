@@ -3,4 +3,5 @@ object RouteMappings {
     const val login = "/login"
     const val logout = "logout"
     const val dashboard = "/dashboard"
+    const val play = "/play"
 }

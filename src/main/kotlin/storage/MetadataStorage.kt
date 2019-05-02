@@ -14,7 +14,7 @@ data class AudioFileMetadata(
     val format: String,
     val bitRate: String,
     val duration: Duration?,
-    val fileSize: Int,
+    val size: Int,
     val recordedDate: String,
     val passwordProtectedLink: String,
     val path: String,
@@ -97,7 +97,7 @@ object LocalCsvMetadataStorage : MetadataStorage {
 
         newMetadata.forEach { singleFileMetadata ->
             fileWriter.append(singleFileMetadata.run {
-                "$uuid,$artist,$album,$title,$format,$bitRate,$duration,$fileSize,$recordedDate,$passwordProtectedLink,$path,$hash$lineSeparator"
+                "$uuid,$artist,$album,$title,$format,$bitRate,$duration,$size,$recordedDate,$passwordProtectedLink,$path,$hash$lineSeparator"
             })
         }
 

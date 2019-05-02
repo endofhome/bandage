@@ -30,9 +30,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.openqa.selenium.By
 import org.openqa.selenium.Cookie
-import storage.AudioFileMetadata
+import storage.DummyFileStorage
 import storage.DummyMetadataStorage
-import storage.Duration
 import storage.StubMetadataStorage
 import java.util.UUID
 
@@ -40,7 +39,7 @@ import java.util.UUID
 class BandageTest {
 
     private val config = dummyConfiguration()
-    private val bandage = Bandage(config, DummyMetadataStorage).app
+    private val bandage = Bandage(config, DummyMetadataStorage, DummyFileStorage).app
     private val driver = Http4kWebDriver(bandage)
 
     @Test
@@ -129,7 +128,7 @@ class BandageTest {
             format = "wav"
         )
         val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioFileMetadata, metadataWithNullValues))
-        val bandage = Bandage(config, metadataStorage).app
+        val bandage = Bandage(config, metadataStorage, DummyFileStorage).app
         val driver = Http4kWebDriver(bandage)
 
         driver.userLogsIn()
@@ -169,19 +168,4 @@ class BandageTest {
 
     private fun validCookieFor(loggedInUser: User) =
         Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${loggedInUser.userId}", "login")
-
-    private val exampleAudioFileMetadata = AudioFileMetadata(
-        UUID.fromString("68ab4da2-7ace-4e62-9db0-430af0ba487f"),
-        "some artist",
-        "some album",
-        "some title",
-        "mp3",
-        "320000",
-        Duration("21"),
-        12345,
-        "10000",
-        "https://www.passwordprotectedlink.com",
-        "/my_folder/my_file",
-        "someamazinghashstring"
-    )
 }
