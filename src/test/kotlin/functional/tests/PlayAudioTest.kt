@@ -7,6 +7,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import config.BandageConfigItem.API_KEY
 import config.dummyConfiguration
+import org.http4k.core.Headers
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
 import org.http4k.core.Status.Companion.FORBIDDEN
@@ -72,8 +73,14 @@ class PlayAudioTest {
         val response = bandage(Request(GET, play)
             .query("id", exampleAudioFileMetadata.uuid.toString())
             .cookie(Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${1}", path = "login")))
+        val expectedHeaders: Headers = listOf(
+            "Accept-Ranges" to "bytes",
+            "Content-Length" to "12345",
+            "Content-Range" to "bytes 0-12344/12345"
+        )
 
         assertThat(response.status, equalTo(OK))
+        assertThat(response.headers, equalTo(expectedHeaders))
         val streamedData = String(response.body.stream.readAllBytes())
         assertThat(streamedData, equalTo("some test data"))
     }
