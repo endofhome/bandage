@@ -45,6 +45,17 @@ class PlayAudioTest {
         assertThat(response.status, equalTo(NOT_FOUND))
     }
 
+    @Test
+    fun `returns NOT FOUND when authenticated but file is not present in file storage`() {
+        val emptyFileStorage = StubFileStorage(emptyMap())
+        val bandage = Bandage(config, metadataStorage, emptyFileStorage).app
+        val response = bandage(Request(GET, play)
+            .query("id", exampleAudioFileMetadata.uuid.toString())
+            .cookie(Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${1}", path = "login")))
+
+        assertThat(response.status, equalTo(NOT_FOUND))
+    }
+
     @Disabled
     @Test
     fun `can access audio stream if logged in`() {
