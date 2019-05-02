@@ -20,7 +20,6 @@ import org.http4k.core.Method.POST
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.FORBIDDEN
-import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.core.then
 import org.http4k.filter.ServerFilters.ReplaceResponseContentsWithStaticFile
@@ -81,7 +80,7 @@ class Bandage(systemConfig: Configuration, metadataStorage: MetadataStorage, fil
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },
             dashboard   bind GET  to { request -> ifAuthenticated(request, then = { Dashboard(metadataStorage) }) },
-            play        bind GET to { request -> ifAuthenticated(request, then = { Response(NOT_FOUND) }, otherwise = Response(FORBIDDEN)) },
+            play        bind GET to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(FORBIDDEN)) },
 
             "/public" bind static(ResourceLoader.Directory("public"))
         )

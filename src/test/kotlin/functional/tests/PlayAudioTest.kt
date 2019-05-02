@@ -14,7 +14,6 @@ import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.cookie.Cookie
 import org.http4k.core.cookie.cookie
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import storage.DummyFileStorage
 import storage.StubFileStorage
@@ -65,7 +64,6 @@ class PlayAudioTest {
         assertThat(response.status, equalTo(NOT_FOUND))
     }
 
-    @Disabled
     @Test
     fun `can access audio stream if logged in`() {
         val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioFileMetadata))

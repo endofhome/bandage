@@ -1,0 +1,24 @@
+import org.http4k.core.Request
+import org.http4k.core.Response
+import org.http4k.core.Status.Companion.NOT_FOUND
+import org.http4k.core.Status.Companion.OK
+import result.map
+import result.orElse
+import storage.FileStorage
+import storage.MetadataStorage
+import java.util.UUID
+
+object Play {
+    operator fun invoke(
+        request: Request,
+        metadataStorage: MetadataStorage,
+        fileStorage: FileStorage
+    ): Response {
+        val uuid = request.query("id") ?: return Response(NOT_FOUND)
+        val metadata = metadataStorage.find(UUID.fromString(uuid)) ?: return Response(NOT_FOUND)
+
+        return fileStorage.stream(metadata.passwordProtectedLink).map { audioStream ->
+            Response(OK).body(audioStream)
+        }.orElse { Response(NOT_FOUND) }
+    }
+}

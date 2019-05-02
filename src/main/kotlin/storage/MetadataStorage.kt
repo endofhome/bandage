@@ -27,6 +27,7 @@ fun String.toDuration() = Duration(this)
 
 interface MetadataStorage {
     fun all(): List<AudioFileMetadata>
+    fun find(uuid: UUID): AudioFileMetadata?
     fun write(newMetadata: List<AudioFileMetadata>)
 }
 
@@ -59,6 +60,9 @@ class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataSt
 
     override fun all(): List<AudioFileMetadata> = store
 
+    override fun find(uuid: UUID): AudioFileMetadata? =
+        store.find { audioFileMetadata -> audioFileMetadata.uuid == uuid }
+
     override fun write(newMetadata: List<AudioFileMetadata>) = TODO("not yet implemented")
 
     private fun List<String>.dropHeader() = if (this[0] == headerLine.removeSuffix(lineSeparator)) drop(1) else this
@@ -66,31 +70,34 @@ class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataSt
 
 object LocalCsvMetadataStorage : MetadataStorage {
     private const val flatFileName = "seed-data.csv"
-
     private val fileWriter = FileWriter(flatFileName, true)
     private val lineSeparator = System.lineSeparator()
     private val headerLine =
         "ID,Artist,Album,Title,Format,Bitrate,Duration,Size,Recorded date,Password protected link,Path,SHA-256$lineSeparator"
 
-    override fun all(): List<AudioFileMetadata> =
-        FileReader(flatFileName).readLines().dropHeader().map { line ->
-            line.split(",").run {
-                AudioFileMetadata(
-                    UUID.fromString(this[0]),
-                    this[1],
-                    this[2],
-                    this[3],
-                    this[4],
-                    this[5],
-                    this[6].toDuration(),
-                    this[7].toInt(),
-                    this[8],
-                    this[9],
-                    this[10],
-                    this[11]
-                )
-            }
+    private val store = FileReader(flatFileName).readLines().dropHeader().map { line ->
+        line.split(",").run {
+            AudioFileMetadata(
+                UUID.fromString(this[0]),
+                this[1],
+                this[2],
+                this[3],
+                this[4],
+                this[5],
+                this[6].toDuration(),
+                this[7].toInt(),
+                this[8],
+                this[9],
+                this[10],
+                this[11]
+            )
         }
+    }
+
+    override fun all(): List<AudioFileMetadata> = store
+
+    override fun find(uuid: UUID): AudioFileMetadata? =
+        store.find { audioFileMetadata -> audioFileMetadata.uuid == uuid }
 
     override fun write(newMetadata: List<AudioFileMetadata>) {
         fileWriter.append(headerLine)
@@ -111,6 +118,9 @@ object LocalCsvMetadataStorage : MetadataStorage {
 class StubMetadataStorage(private val metadata: MutableList<AudioFileMetadata>) : MetadataStorage {
     override fun all(): List<AudioFileMetadata> = metadata
 
+    override fun find(uuid: UUID): AudioFileMetadata? =
+        metadata.find { audioFileMetadata -> audioFileMetadata.uuid == uuid }
+
     override fun write(newMetadata: List<AudioFileMetadata>) {
         metadata += newMetadata
     }
@@ -118,5 +128,6 @@ class StubMetadataStorage(private val metadata: MutableList<AudioFileMetadata>) 
 
 object DummyMetadataStorage : MetadataStorage {
     override fun all() = emptyList<AudioFileMetadata>()
+    override fun find(uuid: UUID): AudioFileMetadata? = null
     override fun write(newMetadata: List<AudioFileMetadata>) = TODO("not implemented")
 }
