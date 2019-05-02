@@ -35,6 +35,15 @@ class PlayAudioTest {
     }
 
     @Test
+    fun `returns NOT FOUND when no ID query parameter is present`() {
+        val bandage = Bandage(config, metadataStorage, fileStorage).app
+        val response = bandage(Request(GET, play)
+            .cookie(Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${1}", path = "login")))
+
+        assertThat(response.status, equalTo(NOT_FOUND))
+    }
+
+    @Test
     fun `returns NOT FOUND when authenticated but file is not present in metadata storage`() {
         val emptyMetadataStorage = StubMetadataStorage(mutableListOf())
         val bandage = Bandage(config, emptyMetadataStorage, fileStorage).app
