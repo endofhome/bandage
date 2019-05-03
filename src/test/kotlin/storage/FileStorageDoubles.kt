@@ -40,4 +40,3 @@ class StubFileStorageFactory(private val files: Map<FileUrl, FileStringData>): D
 open class DummyFileStorageFactory: FileStorageFactory {
     override operator fun invoke(config: Configuration): FileStorage = DummyFileStorage()
 }
-

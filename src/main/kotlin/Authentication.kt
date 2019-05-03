@@ -56,12 +56,12 @@ class Authentication(private val config: Configuration, private val users: UserM
         val user = formAsMap["user"]
         val password = formAsMap["password"]
         return when {
-            user == null || user.first() == ""                    -> Failure(Error("User not provided"))
-            password == null                                      -> Failure(Error("Password not provided"))
-            user.size > 1                                         -> Failure(Error("Multiple user fields are not allowed"))
-            password.size > 1                                     -> Failure(Error("Multiple password fields are not allowed"))
-            password.first() != config.get(PASSWORD)              -> Failure(Error("Incorrect password"))
-            else                                                  -> user.firstOrFailure().flatMap { users.findUser(it) }
+            user == null || user.first() == ""       -> Failure(Error("User not provided"))
+            password == null                         -> Failure(Error("Password not provided"))
+            user.size > 1                            -> Failure(Error("Multiple user fields are not allowed"))
+            password.size > 1                        -> Failure(Error("Multiple password fields are not allowed"))
+            password.first() != config.get(PASSWORD) -> Failure(Error("Incorrect password"))
+            else                                     -> user.firstOrFailure().flatMap { users.findUser(it) }
         }
     }
 
