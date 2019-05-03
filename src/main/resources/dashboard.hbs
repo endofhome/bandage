@@ -7,7 +7,7 @@
             <h4 data-test="[folder-{{name}}]">{{name}}</h4>
             {{#each files}}
                 <div data-test="[file-{{uuid}}]">
-                    {{title}} | {{#if duration}}{{duration}} | {{/if}}{{format}}<br>
+                    {{title}} | {{#if duration}}{{duration}} | {{/if}}{{format}} | <a href="?id={{uuid}}">[ play ]</a><br>
                 </div>
             {{/each}}
             <br>
@@ -16,4 +16,4 @@
 </div>
 
 </body>
-{{> footer}}
+{{> footer nowPlaying}}

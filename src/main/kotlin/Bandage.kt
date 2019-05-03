@@ -81,7 +81,7 @@ class Bandage(systemConfig: Configuration, metadataStorage: MetadataStorage, fil
             login       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(index), otherwise = Login(userManagement)) },
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },
-            dashboard   bind GET  to { request -> ifAuthenticated(request, then = { Dashboard(metadataStorage) }) },
+            dashboard   bind GET  to { request -> ifAuthenticated(request, then = { Dashboard(request, metadataStorage) }) },
             play        bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(FORBIDDEN)) },
 
             "/public"   bind static(ResourceLoader.Directory("public"))

@@ -138,10 +138,25 @@ class BandageTest {
         assertThat(folderh4.text, equalTo("my_folder"))
 
         val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[file-68ab4da2-7ace-4e62-9db0-430af0ba487f]\"]")) ?: fail("First file div is unavailable")
-        assertThat(firstFile.text, equalTo("some title | 0:21 | mp3"))
+        assertThat(firstFile.text, equalTo("some title | 0:21 | mp3 | [ play ]"))
 
         val fileWithNullDuration = driver.findElement(By.cssSelector("div[data-test=\"[file-f8ab4da2-7ace-4e62-9db0-430af0ba4876]\"]")) ?: fail("First file div is unavailable")
-        assertThat(fileWithNullDuration.text, equalTo("track with null duration | wav"))
+        assertThat(fileWithNullDuration.text, equalTo("track with null duration | wav | [ play ]"))
+    }
+
+    @Test
+    fun `audio tracks can be played via dashboard`() {
+        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioFileMetadata))
+        val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
+        val driver = Http4kWebDriver(bandage)
+
+        driver.userLogsIn()
+        driver.navigate().to(dashboard)
+        val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[file-68ab4da2-7ace-4e62-9db0-430af0ba487f]\"]")) ?: fail("First file div is unavailable")
+        val playLink = firstFile.findElement(By.cssSelector("a[href=\"?id=68ab4da2-7ace-4e62-9db0-430af0ba487f\"]")) ?: fail("Play link is unavailable")
+        playLink.click()
+
+        driver.findElement(By.cssSelector("audio[data-test=\"[play_file-68ab4da2-7ace-4e62-9db0-430af0ba487f]\"]")) ?: fail("Audio player footer is unavailable")
     }
 
     private fun Http4kWebDriver.userLogsIn(): User {

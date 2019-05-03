@@ -1,1 +1,10 @@
+{{#if title}}
+    <footer class="footer fixed-bottom top">
+        <span id="audio player">
+            <audio controls autoplay preload="metadata" data-test="[play_file-{{uuid}}]">
+                <source src="/play?id={{uuid}}" type="audio/{{format}}">
+            </audio>
+        </span>
+    </footer>
+{{/if}}
 </html>

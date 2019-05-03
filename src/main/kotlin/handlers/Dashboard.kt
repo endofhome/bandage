@@ -1,6 +1,7 @@
 package handlers
 
 import Bandage.StaticConfig.view
+import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
@@ -8,18 +9,23 @@ import org.http4k.template.ViewModel
 import storage.AudioFileMetadata
 import storage.Duration
 import storage.MetadataStorage
+import java.util.UUID
 
 object Dashboard {
-    operator fun invoke(metadataStorage: MetadataStorage): Response {
+    operator fun invoke(request: Request, metadataStorage: MetadataStorage): Response {
+        val nowPlaying = request.query("id")?.let {
+            metadataStorage.find(UUID.fromString(it))
+        }
+
         val folders = metadataStorage.all().groupBy { file ->
             file.path.drop(1).substringBefore("/")
         }.map { folder ->
             ViewModels.Folder(folder.key, folder.value.map { audioFile -> audioFile.viewModel() })
         }
-        return Response(OK).with(view of DashboardPage(folders))
+        return Response(OK).with(view of DashboardPage(folders, nowPlaying))
     }
 
-    data class DashboardPage(val folders: List<ViewModels.Folder>) : ViewModel {
+    data class DashboardPage(val folders: List<ViewModels.Folder>, val nowPlaying: AudioFileMetadata? = null) : ViewModel {
         override fun template() = "dashboard"
     }
 
