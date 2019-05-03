@@ -18,6 +18,7 @@ import org.http4k.core.cookie.Cookie
 import org.http4k.core.cookie.cookie
 import org.junit.jupiter.api.Test
 import storage.DummyFileStorage
+import storage.DummyMetadataStorage
 import storage.StubFileStorage
 import storage.StubMetadataStorage
 
@@ -29,7 +30,7 @@ class PlayAudioTest {
 
     @Test
     fun `returns FORBIDDEN if not logged in`() {
-        val bandage = Bandage(config, metadataStorage, DummyFileStorage).app
+        val bandage = Bandage(config, DummyMetadataStorage(), DummyFileStorage()).app
         val response = bandage(Request(GET, play).query("id", exampleAudioFileMetadata.uuid.toString()))
 
         assertThat(response.status, equalTo(FORBIDDEN))
@@ -37,7 +38,7 @@ class PlayAudioTest {
 
     @Test
     fun `returns BAD REQUEST when no ID query parameter is present`() {
-        val bandage = Bandage(config, metadataStorage, fileStorage).app
+        val bandage = Bandage(config, DummyMetadataStorage(), DummyFileStorage()).app
         val response = bandage(Request(GET, play)
             .cookie(Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${1}", path = "login")))
 

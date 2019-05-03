@@ -114,20 +114,3 @@ object LocalCsvMetadataStorage : MetadataStorage {
 
     private fun List<String>.dropHeader() = if (this[0] == headerLine.removeSuffix(lineSeparator)) drop(1) else this
 }
-
-class StubMetadataStorage(private val metadata: MutableList<AudioFileMetadata>) : MetadataStorage {
-    override fun all(): List<AudioFileMetadata> = metadata
-
-    override fun find(uuid: UUID): AudioFileMetadata? =
-        metadata.find { audioFileMetadata -> audioFileMetadata.uuid == uuid }
-
-    override fun write(newMetadata: List<AudioFileMetadata>) {
-        metadata += newMetadata
-    }
-}
-
-object DummyMetadataStorage : MetadataStorage {
-    override fun all() = emptyList<AudioFileMetadata>()
-    override fun find(uuid: UUID): AudioFileMetadata? = null
-    override fun write(newMetadata: List<AudioFileMetadata>) = TODO("not implemented")
-}

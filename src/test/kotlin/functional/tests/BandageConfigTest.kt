@@ -10,6 +10,6 @@ class BandageConfigTest {
 
     @Test
     fun `application is configured correctly`() {
-        Bandage.init(BandageConfig, DummyMetadataStorageFactory, DummyFileStorageFactory)
+        Bandage.init(BandageConfig, DummyMetadataStorageFactory(), DummyFileStorageFactory())
     }
 }

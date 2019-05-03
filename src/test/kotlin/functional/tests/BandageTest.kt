@@ -39,7 +39,7 @@ import java.util.UUID
 class BandageTest {
 
     private val config = dummyConfiguration()
-    private val bandage = Bandage(config, DummyMetadataStorage, DummyFileStorage).app
+    private val bandage = Bandage(config, DummyMetadataStorage(), DummyFileStorage()).app
     private val driver = Http4kWebDriver(bandage)
 
     @Test
@@ -128,7 +128,7 @@ class BandageTest {
             format = "wav"
         )
         val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioFileMetadata, metadataWithNullValues))
-        val bandage = Bandage(config, metadataStorage, DummyFileStorage).app
+        val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
         val driver = Http4kWebDriver(bandage)
 
         driver.userLogsIn()

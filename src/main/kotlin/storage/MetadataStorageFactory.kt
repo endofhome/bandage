@@ -16,11 +16,3 @@ object DropboxCsvMetadataStorageFactory: MetadataStorageFactory {
 object LocalCsvMetadataStorageFactory: MetadataStorageFactory {
     override operator fun invoke(config: Configuration): MetadataStorage = LocalCsvMetadataStorage
 }
-
-class StubMetadataStorageFactory(private val metadata: MutableList<AudioFileMetadata>): MetadataStorageFactory {
-    override fun invoke(config: Configuration): MetadataStorage = StubMetadataStorage(metadata)
-}
-
-object DummyMetadataStorageFactory: MetadataStorageFactory {
-    override operator fun invoke(config: Configuration): MetadataStorage = DummyMetadataStorage
-}
