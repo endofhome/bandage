@@ -1,4 +1,4 @@
-package views
+package handlers
 
 import Bandage.StaticConfig.view
 import org.http4k.core.Response

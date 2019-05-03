@@ -11,6 +11,9 @@ import config.BandageConfig
 import config.Configuration
 import config.RequiredConfig
 import config.ValidateConfig
+import handlers.Dashboard
+import handlers.Login
+import handlers.Play
 import http.Filters.CatchAll
 import http.Filters.EnforceHttpsOnHeroku
 import org.http4k.core.Body
@@ -39,8 +42,6 @@ import storage.FileStorage
 import storage.FileStorageFactory
 import storage.MetadataStorage
 import storage.MetadataStorageFactory
-import views.Dashboard
-import views.Login
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -81,7 +82,13 @@ class Bandage(systemConfig: Configuration, metadataStorage: MetadataStorage, fil
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },
             dashboard   bind GET  to { request -> ifAuthenticated(request, then = { Dashboard(metadataStorage) }) },
-            play        bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(FORBIDDEN)) },
+            play        bind GET  to { request -> ifAuthenticated(request, then = {
+                Play(
+                    request,
+                    metadataStorage,
+                    fileStorage
+                )
+            }, otherwise = Response(FORBIDDEN)) },
 
             "/public"   bind static(ResourceLoader.Directory("public"))
         )

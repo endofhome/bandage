@@ -5,11 +5,11 @@ import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import config.dummyConfiguration
+import handlers.Login
 import org.http4k.core.Status.Companion.OK
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
 import org.junit.jupiter.api.Test
-import views.Login
 
 class LoginTest {
     private val config = dummyConfiguration()
