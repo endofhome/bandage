@@ -12,11 +12,3 @@ object DropboxFileStorageFactory: FileStorageFactory {
     override operator fun invoke(config: Configuration): FileStorage =
         DropboxFileStorage(HttpDropboxClient(appName, config.get(DROPBOX_ACCESS_TOKEN)))
 }
-
-class StubFileStorageFactory(private val files: Map<FileUrl, FileStringData>): FileStorageFactory {
-    override fun invoke(config: Configuration): FileStorage = StubFileStorage(files)
-}
-
-object DummyFileStorageFactory: FileStorageFactory {
-    override operator fun invoke(config: Configuration): FileStorage = DummyFileStorage
-}
