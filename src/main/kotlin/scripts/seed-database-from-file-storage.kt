@@ -24,7 +24,7 @@ import java.io.InputStreamReader
 import java.security.MessageDigest
 import java.util.UUID
 
-
+// requires ffprobe (https://www.ffmpeg.org/)
 fun seedDatabase(metadataStorage: MetadataStorage) {
     val config = ValidateConfig(BandageConfig, Bandage.StaticConfig.configurationFilesDir)
     val dropboxClient = HttpDropboxClient(
