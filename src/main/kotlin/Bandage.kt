@@ -34,8 +34,9 @@ import org.http4k.template.viewModel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import storage.DropboxCsvMetadataStorageFactory
-import storage.DummyFileStorage
+import storage.DropboxFileStorageFactory
 import storage.FileStorage
+import storage.FileStorageFactory
 import storage.MetadataStorage
 import storage.MetadataStorageFactory
 import views.Dashboard
@@ -45,16 +46,16 @@ import java.nio.file.Paths
 
 fun main(args: Array<String>) {
     val port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
-    Bandage.init(BandageConfig, DropboxCsvMetadataStorageFactory).app.asServer(Jetty(port)).start()
+    Bandage.init(BandageConfig, DropboxCsvMetadataStorageFactory, DropboxFileStorageFactory).app.asServer(Jetty(port)).start()
 
     logger.info("Bandage has started on http://localhost:$port")
 }
 
 class Bandage(systemConfig: Configuration, metadataStorage: MetadataStorage, fileStorage: FileStorage) {
     companion object {
-        fun init(requiredConfig: RequiredConfig, metadataStorageFactory: MetadataStorageFactory): Bandage =
+        fun init(requiredConfig: RequiredConfig, metadataStorageFactory: MetadataStorageFactory, fileStorageFactory: FileStorageFactory): Bandage =
             ValidateConfig(requiredConfig, configurationFilesDir).run {
-                Bandage(this, metadataStorageFactory(this), DummyFileStorage)
+                Bandage(this, metadataStorageFactory(this), fileStorageFactory(this))
             }
     }
 
@@ -80,9 +81,9 @@ class Bandage(systemConfig: Configuration, metadataStorage: MetadataStorage, fil
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },
             dashboard   bind GET  to { request -> ifAuthenticated(request, then = { Dashboard(metadataStorage) }) },
-            play        bind GET to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(FORBIDDEN)) },
+            play        bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(FORBIDDEN)) },
 
-            "/public" bind static(ResourceLoader.Directory("public"))
+            "/public"   bind static(ResourceLoader.Directory("public"))
         )
     }
 
