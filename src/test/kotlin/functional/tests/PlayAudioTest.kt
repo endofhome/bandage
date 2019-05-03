@@ -10,6 +10,7 @@ import config.dummyConfiguration
 import org.http4k.core.Headers
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
+import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.FORBIDDEN
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
@@ -27,7 +28,7 @@ class PlayAudioTest {
     private val fileStorage = StubFileStorage(mapOf(exampleAudioFileMetadata.passwordProtectedLink to "some test data"))
 
     @Test
-    fun `cannot access audio stream if not logged in`() {
+    fun `returns FORBIDDEN if not logged in`() {
         val bandage = Bandage(config, metadataStorage, DummyFileStorage).app
         val response = bandage(Request(GET, play).query("id", exampleAudioFileMetadata.uuid.toString()))
 
@@ -35,12 +36,12 @@ class PlayAudioTest {
     }
 
     @Test
-    fun `returns NOT FOUND when no ID query parameter is present`() {
+    fun `returns BAD REQUEST when no ID query parameter is present`() {
         val bandage = Bandage(config, metadataStorage, fileStorage).app
         val response = bandage(Request(GET, play)
             .cookie(Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${1}", path = "login")))
 
-        assertThat(response.status, equalTo(NOT_FOUND))
+        assertThat(response.status, equalTo(BAD_REQUEST))
     }
 
     @Test
