@@ -18,6 +18,7 @@ import storage.FileStoragePermission.PasswordProtected
 import storage.HttpDropboxClient
 import storage.LocalCsvMetadataStorage
 import storage.MetadataStorage
+import storage.toBitRate
 import storage.toDuration
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -51,7 +52,7 @@ fun seedDatabase(metadataStorage: MetadataStorage) {
                     album = ffprobeInfo.format.tags?.album.orEmpty(),
                     title = ffprobeInfo.format.tags?.title ?: file.name.replaceAfterLast(".", "").dropLast(1),
                     format = ffprobeInfo.format.format_name,
-                    bitRate = ffprobeInfo.format.bit_rate,
+                    bitRate = ffprobeInfo.format.bit_rate.toBitRate(),
                     duration = ffprobeInfo.format.duration?.toDuration(),
                     size = ffprobeInfo.format.size.toInt(),
                     recordedDate = ffprobeInfo.format.tags?.date.orEmpty(),

@@ -7,6 +7,7 @@ import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
 import org.http4k.template.ViewModel
 import storage.AudioFileMetadata
+import storage.BitRate
 import storage.Duration
 import storage.MetadataStorage
 import java.util.UUID
@@ -15,7 +16,7 @@ object Dashboard {
     operator fun invoke(request: Request, metadataStorage: MetadataStorage): Response {
         val nowPlaying = request.query("id")?.let {
             metadataStorage.find(UUID.fromString(it))
-        }
+        }?.viewModel()
 
         val folders = metadataStorage.all().groupBy { file ->
             file.path.drop(1).substringBefore("/")
@@ -25,7 +26,7 @@ object Dashboard {
         return Response(OK).with(view of DashboardPage(folders, nowPlaying))
     }
 
-    data class DashboardPage(val folders: List<ViewModels.Folder>, val nowPlaying: AudioFileMetadata? = null) : ViewModel {
+    data class DashboardPage(val folders: List<ViewModels.Folder>, val nowPlaying: ViewModels.AudioFileMetadata? = null) : ViewModel {
         override fun template() = "dashboard"
     }
 
@@ -43,10 +44,13 @@ object Dashboard {
             return "$hours$minutes:$seconds"
         }
 
+        fun BitRate.presentationFormat(): String = (this.value.toInt() / 1000).toString()
+
         return ViewModels.AudioFileMetadata(
             this.uuid.toString(),
             this.title,
             this.format,
+            this.bitRate.presentationFormat(),
             this.duration?.presentationFormat()
         )
     }
@@ -57,6 +61,7 @@ object Dashboard {
             val uuid: String,
             val title: String,
             val format: String,
+            val bitRate: String,
             val duration: String?
         )
     }

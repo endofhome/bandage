@@ -5,3 +5,12 @@
 #http-error-container {
     margin-top: 8%;
 }
+
+.footer {
+    width: 100%;
+    background-color: whitesmoke;
+}
+
+.top > * {
+    vertical-align: top;
+}

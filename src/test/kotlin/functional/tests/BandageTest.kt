@@ -157,6 +157,8 @@ class BandageTest {
         playLink.click()
 
         driver.findElement(By.cssSelector("audio[data-test=\"[play_file-68ab4da2-7ace-4e62-9db0-430af0ba487f]\"]")) ?: fail("Audio player footer is unavailable")
+        val playerMetadata = driver.findElement(By.cssSelector("span[data-test=\"[audio-player-metadata]\"]")) ?: fail("Audio player metadata is unavailable")
+        assertThat(playerMetadata.text, equalTo("${exampleAudioFileMetadata.title} | 0:21 | ${exampleAudioFileMetadata.format} (320 kbps)"))
     }
 
     private fun Http4kWebDriver.userLogsIn(): User {

@@ -12,7 +12,7 @@ data class AudioFileMetadata(
     val album: String,
     val title: String,
     val format: String,
-    val bitRate: String,
+    val bitRate: BitRate,
     val duration: Duration?,
     val size: Int,
     val recordedDate: String,
@@ -21,8 +21,10 @@ data class AudioFileMetadata(
     val hash: String
 )
 
+class BitRate(val value: String)
 class Duration(val value: String)
 
+fun String.toBitRate() = BitRate(this)
 fun String.toDuration() = Duration(this)
 
 interface MetadataStorage {
@@ -46,7 +48,7 @@ class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataSt
                     this[2],
                     this[3],
                     this[4],
-                    this[5],
+                    this[5].toBitRate(),
                     this[6].toDuration(),
                     this[7].toInt(),
                     this[8],
@@ -83,7 +85,7 @@ object LocalCsvMetadataStorage : MetadataStorage {
                 this[2],
                 this[3],
                 this[4],
-                this[5],
+                this[5].toBitRate(),
                 this[6].toDuration(),
                 this[7].toInt(),
                 this[8],

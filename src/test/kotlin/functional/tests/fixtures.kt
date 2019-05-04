@@ -1,6 +1,7 @@
 package functional.tests
 
 import storage.AudioFileMetadata
+import storage.BitRate
 import storage.Duration
 import java.util.UUID
 
@@ -10,7 +11,7 @@ val exampleAudioFileMetadata = AudioFileMetadata(
     "some album",
     "some title",
     "mp3",
-    "320000",
+    BitRate("320000"),
     Duration("21"),
     12345,
     "10000",
