@@ -122,7 +122,7 @@ class BandageTest {
     @Test
     fun `list of audio tracks are available in dashboard`() {
         val metadataWithNullValues = exampleAudioFileMetadata.copy(
-            uuid = UUID.fromString("f8ab4da2-7ace-4e62-9db0-430af0ba4876"),
+            uuid = UUID.fromString(exampleAudioFileMetadata.uuid.toString().reversed()),
             duration = null,
             title = "track with null duration",
             format = "wav"
@@ -137,11 +137,11 @@ class BandageTest {
         val folderh4 = driver.findElement(By.cssSelector("h4[data-test=\"[folder-my_folder]\"]")) ?: fail("FolderViewModel h4 is unavailable")
         assertThat(folderh4.text, equalTo("my_folder"))
 
-        val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[file-68ab4da2-7ace-4e62-9db0-430af0ba487f]\"]")) ?: fail("First file div is unavailable")
-        assertThat(firstFile.text, equalTo("some title | 0:21 | mp3 | play"))
+        val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[file-${exampleAudioFileMetadata.uuid}]\"]")) ?: fail("First file div is unavailable")
+        assertThat(firstFile.text, equalTo("${exampleAudioFileMetadata.title} | 0:21 | ${exampleAudioFileMetadata.format} | play"))
 
-        val fileWithNullDuration = driver.findElement(By.cssSelector("div[data-test=\"[file-f8ab4da2-7ace-4e62-9db0-430af0ba4876]\"]")) ?: fail("First file div is unavailable")
-        assertThat(fileWithNullDuration.text, equalTo("track with null duration | wav | play"))
+        val fileWithNullDuration = driver.findElement(By.cssSelector("div[data-test=\"[file-${metadataWithNullValues.uuid}]\"]")) ?: fail("First file div is unavailable")
+        assertThat(fileWithNullDuration.text, equalTo("${metadataWithNullValues.title} | ${metadataWithNullValues.format} | play"))
     }
 
     @Test
@@ -152,11 +152,11 @@ class BandageTest {
 
         driver.userLogsIn()
         driver.navigate().to(dashboard)
-        val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[file-68ab4da2-7ace-4e62-9db0-430af0ba487f]\"]")) ?: fail("First file div is unavailable")
+        val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[file-${exampleAudioFileMetadata.uuid}]\"]")) ?: fail("First file div is unavailable")
         val playLink = firstFile.findElement(By.cssSelector("a[data-test=\"[play-audio-link]\"]")) ?: fail("Play link is unavailable")
         playLink.click()
 
-        driver.findElement(By.cssSelector("audio[data-test=\"[play_file-68ab4da2-7ace-4e62-9db0-430af0ba487f]\"]")) ?: fail("Audio player footer is unavailable")
+        driver.findElement(By.cssSelector("audio[data-test=\"[play_file-${exampleAudioFileMetadata.uuid}]\"]")) ?: fail("Audio player footer is unavailable")
         val playerMetadata = driver.findElement(By.cssSelector("span[data-test=\"[audio-player-metadata]\"]")) ?: fail("Audio player metadata is unavailable")
         assertThat(playerMetadata.text, equalTo("${exampleAudioFileMetadata.title} | 0:21 | ${exampleAudioFileMetadata.format} (320 kbps)"))
         assertThat(driver.currentUrl, equalTo("/dashboard?id=${exampleAudioFileMetadata.uuid}#${exampleAudioFileMetadata.uuid}"))
