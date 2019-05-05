@@ -36,10 +36,10 @@ import org.http4k.template.HandlebarsTemplates
 import org.http4k.template.viewModel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import storage.DropboxCsvMetadataStorageFactory
 import storage.DropboxFileStorageFactory
 import storage.FileStorage
 import storage.FileStorageFactory
+import storage.LocalCsvMetadataStorageFactory
 import storage.MetadataStorage
 import storage.MetadataStorageFactory
 import java.nio.file.Path
@@ -47,7 +47,7 @@ import java.nio.file.Paths
 
 fun main(args: Array<String>) {
     val port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
-    Bandage.init(BandageConfig, DropboxCsvMetadataStorageFactory, DropboxFileStorageFactory).app.asServer(Jetty(port)).start()
+    Bandage.init(BandageConfig, LocalCsvMetadataStorageFactory, DropboxFileStorageFactory).app.asServer(Jetty(port)).start()
 
     logger.info("Bandage has started on http://localhost:$port")
 }

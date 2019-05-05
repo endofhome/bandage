@@ -1,5 +1,6 @@
 package handlers
 
+import AuthenticatedUser
 import Bandage.StaticConfig.view
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -23,10 +24,11 @@ object Dashboard {
         }.map { folder ->
             ViewModels.Folder(folder.key, folder.value.map { audioFile -> audioFile.viewModel() })
         }
-        return Response(OK).with(view of DashboardPage(folders, nowPlaying))
+
+        return Response(OK).with(view of DashboardPage(AuthenticatedUser, folders, nowPlaying))
     }
 
-    data class DashboardPage(val folders: List<ViewModels.Folder>, val nowPlaying: ViewModels.AudioFileMetadata? = null) : ViewModel {
+    data class DashboardPage(val loggedInUser: AuthenticatedUser, val folders: List<ViewModels.Folder>, val nowPlaying: ViewModels.AudioFileMetadata? = null) : ViewModel {
         override fun template() = "dashboard"
     }
 

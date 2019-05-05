@@ -7,3 +7,10 @@
     <link href="public/style.css" rel="stylesheet" type="text/css">
     <link href="public/favicon-96x96.png" rel="icon" type="image/png" sizes="96x96">
 </head>
+{{#if loggedInUser}}
+    <nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
+        <div class="navbar-contents">
+            <a href="/logout" data-test="logout" id="logout">Logout</a>
+        </div>
+    </nav>
+{{/if}}

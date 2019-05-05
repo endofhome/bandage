@@ -92,3 +92,5 @@ class Authentication(private val config: Configuration, private val users: UserM
     private fun List<String?>.firstOrFailure() =
         first()?.let { Success(it) } ?: Failure(Error("User field was empty"))
 }
+
+object AuthenticatedUser
