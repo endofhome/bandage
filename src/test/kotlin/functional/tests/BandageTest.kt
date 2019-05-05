@@ -138,10 +138,10 @@ class BandageTest {
         assertThat(folderh4.text, equalTo("my_folder"))
 
         val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[file-68ab4da2-7ace-4e62-9db0-430af0ba487f]\"]")) ?: fail("First file div is unavailable")
-        assertThat(firstFile.text, equalTo("some title | 0:21 | mp3 | [ play ]"))
+        assertThat(firstFile.text, equalTo("some title | 0:21 | mp3 | play"))
 
         val fileWithNullDuration = driver.findElement(By.cssSelector("div[data-test=\"[file-f8ab4da2-7ace-4e62-9db0-430af0ba4876]\"]")) ?: fail("First file div is unavailable")
-        assertThat(fileWithNullDuration.text, equalTo("track with null duration | wav | [ play ]"))
+        assertThat(fileWithNullDuration.text, equalTo("track with null duration | wav | play"))
     }
 
     @Test
