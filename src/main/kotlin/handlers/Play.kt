@@ -25,7 +25,10 @@ object Play {
             val headers: Headers = listOf(
                 "Accept-Ranges" to "bytes",
                 "Content-Length" to metadata.size.toString(),
-                "Content-Range" to "bytes 0-${metadata.size - 1}/${metadata.size}"
+                "Content-Range" to "bytes 0-${metadata.size - 1}/${metadata.size}",
+                "content-disposition" to "attachment; filename=${
+                    listOf(metadata.path.removePrefix("/").substringBefore('/'), metadata.title).joinToString(" - ")
+                }.${metadata.format}"
             )
             Response(OK).body(audioStream).headers(headers)
         }.orElse { Response(NOT_FOUND) }

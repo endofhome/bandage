@@ -78,7 +78,10 @@ class PlayAudioTest {
         val expectedHeaders: Headers = listOf(
             "Accept-Ranges" to "bytes",
             "Content-Length" to "12345",
-            "Content-Range" to "bytes 0-12344/12345"
+            "Content-Range" to "bytes 0-12344/12345",
+            "content-disposition" to "attachment; filename=${
+                listOf(exampleAudioFileMetadata.path.removePrefix("/").substringBefore('/'), exampleAudioFileMetadata.title).joinToString(" - ")
+            }.${exampleAudioFileMetadata.format}"
         )
 
         assertThat(response.status, equalTo(OK))
