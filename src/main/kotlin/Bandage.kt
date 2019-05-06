@@ -7,6 +7,8 @@ import RouteMappings.index
 import RouteMappings.login
 import RouteMappings.logout
 import RouteMappings.play
+import com.github.jknack.handlebars.Handlebars
+import com.github.jknack.handlebars.helper.ConditionalHelpers
 import config.BandageConfig
 import config.Configuration
 import config.RequiredConfig
@@ -36,18 +38,19 @@ import org.http4k.template.HandlebarsTemplates
 import org.http4k.template.viewModel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import storage.DropboxCsvMetadataStorageFactory
 import storage.DropboxFileStorageFactory
 import storage.FileStorage
 import storage.FileStorageFactory
-import storage.LocalCsvMetadataStorageFactory
 import storage.MetadataStorage
 import storage.MetadataStorageFactory
 import java.nio.file.Path
 import java.nio.file.Paths
 
+
 fun main(args: Array<String>) {
     val port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
-    Bandage.init(BandageConfig, LocalCsvMetadataStorageFactory, DropboxFileStorageFactory).app.asServer(Jetty(port)).start()
+    Bandage.init(BandageConfig, DropboxCsvMetadataStorageFactory, DropboxFileStorageFactory).app.asServer(Jetty(port)).start()
 
     logger.info("Bandage has started on http://localhost:$port")
 }
@@ -62,7 +65,9 @@ class Bandage(systemConfig: Configuration, metadataStorage: MetadataStorage, fil
 
     object StaticConfig {
         const val appName = "BANDAGE"
-        private val renderer = HandlebarsTemplates().HotReload("src/main/resources")
+        private val registerHelpers = fun (handlebars: Handlebars): Handlebars = handlebars.apply { handlebars.registerHelper("eq", ConditionalHelpers.eq) }
+        private val renderer = HandlebarsTemplates(registerHelpers).HotReload("src/main/resources")
+
         val view = Body.viewModel(renderer, ContentType.TEXT_HTML).toLens()
         val filters = EnforceHttpsOnHeroku()
                 .then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))

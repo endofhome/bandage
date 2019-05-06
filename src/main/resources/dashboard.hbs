@@ -5,7 +5,7 @@
         {{#each folders}}
             <h4 data-test="[folder-{{name}}]">{{name}}</h4>
             {{#each files}}
-                <div id={{uuid}} data-test="[file-{{uuid}}]">
+                <div id={{uuid}} {{#eq uuid nowPlaying.uuid}}class="highlighted"{{/eq}} data-test="[file-{{uuid}}]">
                     {{title}} | {{#if duration}}{{duration}} | {{/if}}{{format}} | <a href="?id={{uuid}}#{{uuid}}" data-test="[play-audio-link]">play</a>
                     <br>
                 </div>

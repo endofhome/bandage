@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.openqa.selenium.By
 import org.openqa.selenium.Cookie
+import org.openqa.selenium.WebElement
 import storage.DummyFileStorage
 import storage.DummyMetadataStorage
 import storage.StubMetadataStorage
@@ -150,16 +151,39 @@ class BandageTest {
         val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
         val driver = Http4kWebDriver(bandage)
 
-        driver.userLogsIn()
-        driver.navigate().to(dashboard)
-        val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[file-${exampleAudioFileMetadata.uuid}]\"]")) ?: fail("First file div is unavailable")
-        val playLink = firstFile.findElement(By.cssSelector("a[data-test=\"[play-audio-link]\"]")) ?: fail("Play link is unavailable")
-        playLink.click()
+        driver.userLogsInAndPlaysATrack()
 
         driver.findElement(By.cssSelector("audio[data-test=\"[play_file-${exampleAudioFileMetadata.uuid}]\"]")) ?: fail("Audio player footer is unavailable")
         val playerMetadata = driver.findElement(By.cssSelector("span[data-test=\"[audio-player-metadata]\"]")) ?: fail("Audio player metadata is unavailable")
         assertThat(playerMetadata.text, equalTo("${exampleAudioFileMetadata.title} | 0:21 | ${exampleAudioFileMetadata.format} (320 kbps)"))
         assertThat(driver.currentUrl, equalTo("/dashboard?id=${exampleAudioFileMetadata.uuid}#${exampleAudioFileMetadata.uuid}"))
+    }
+
+    @Test
+    fun `currently playing track is highlighted`() {
+        val unplayedTrackOne = exampleAudioFileMetadata.copy(uuid = UUID.randomUUID())
+        val unplayedTrackTwo = exampleAudioFileMetadata.copy(uuid = UUID.randomUUID())
+        val metadataStorage = StubMetadataStorage(mutableListOf(unplayedTrackOne, exampleAudioFileMetadata, unplayedTrackTwo))
+        val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
+        val driver = Http4kWebDriver(bandage)
+
+        val trackToPlay = driver.userLogsInAndPlaysATrack()
+
+        val highlightedElements = driver.findElements(By.cssSelector(".highlighted")) ?: fail("No highlighted elements")
+        assertThat(highlightedElements.single().getAttribute("data-test"), equalTo(trackToPlay.getAttribute("data-test")))
+    }
+
+    private fun Http4kWebDriver.userLogsInAndPlaysATrack(): WebElement {
+        this.userLogsIn()
+        this.navigate().to(dashboard)
+
+        val trackToPlay = findElement(By.cssSelector("div[data-test=\"[file-${exampleAudioFileMetadata.uuid}]\"]"))
+            ?: fail("Div for track to play is unavailable")
+        val playLink = trackToPlay.findElement(By.cssSelector("a[data-test=\"[play-audio-link]\"]"))
+            ?: fail("Play link is unavailable")
+        playLink.click()
+
+        return trackToPlay
     }
 
     private fun Http4kWebDriver.userLogsIn(): User {
