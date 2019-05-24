@@ -4,6 +4,11 @@ import Bandage.StaticConfig.appName
 import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.DROPBOX_ACCESS_TOKEN
 import config.BandageConfigItem.DROPBOX_LINK_PASSWORD
+import config.BandageConfigItem.METADATA_DB_HOST
+import config.BandageConfigItem.METADATA_DB_NAME
+import config.BandageConfigItem.METADATA_DB_PASSWORD
+import config.BandageConfigItem.METADATA_DB_PORT
+import config.BandageConfigItem.METADATA_DB_USER
 import config.BandageConfigItem.PASSWORD
 import config.BandageConfigItem.SENTRY_DSN
 import config.BandageConfigItem.USER_ONE_FULL_NAME
@@ -16,6 +21,11 @@ sealed class BandageConfigItem(override val name: String) : RequiredConfigItem {
     object USER_ONE_FULL_NAME : BandageConfigItem("${appName}_USER_ONE_FULL_NAME")
     object USER_TWO_FULL_NAME : BandageConfigItem("${appName}_USER_TWO_FULL_NAME")
     object USER_THREE_FULL_NAME : BandageConfigItem("${appName}_USER_THREE_FULL_NAME")
+    object METADATA_DB_HOST : BandageConfigItem("${appName}_METADATA_DB_HOST")
+    object METADATA_DB_PORT : BandageConfigItem("${appName}_METADATA_DB_PORT")
+    object METADATA_DB_NAME : BandageConfigItem("${appName}_METADATA_DB_NAME")
+    object METADATA_DB_USER : BandageConfigItem("${appName}_METADATA_DB_USER")
+    object METADATA_DB_PASSWORD : BandageConfigItem("${appName}_METADATA_DB_PASSWORD")
     object DROPBOX_ACCESS_TOKEN : BandageConfigItem("${appName}_DROPBOX_ACCESS_TOKEN")
     object DROPBOX_LINK_PASSWORD : BandageConfigItem("${appName}_DROPBOX_LINK_PASSWORD")
     object SENTRY_DSN : BandageConfigItem("${appName}_SENTRY_DSN")
@@ -28,6 +38,11 @@ object BandageConfig : RequiredConfig() {
         USER_ONE_FULL_NAME,
         USER_TWO_FULL_NAME,
         USER_THREE_FULL_NAME,
+        METADATA_DB_HOST,
+        METADATA_DB_PORT,
+        METADATA_DB_NAME,
+        METADATA_DB_USER,
+        METADATA_DB_PASSWORD,
         DROPBOX_ACCESS_TOKEN,
         DROPBOX_LINK_PASSWORD,
         SENTRY_DSN
