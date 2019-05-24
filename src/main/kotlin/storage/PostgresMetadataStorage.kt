@@ -19,6 +19,7 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
         databaseName = config.get(METADATA_DB_NAME)
         user = config.get(METADATA_DB_USER)
         password = config.get(METADATA_DB_PASSWORD)
+        sslMode = "require"
     }
 
     override fun all(): List<AudioFileMetadata> =

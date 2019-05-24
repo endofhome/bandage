@@ -48,3 +48,20 @@ object BandageConfig : RequiredConfig() {
         SENTRY_DSN
     )
 }
+
+fun Configuration.withDynamicDatabaseUrlFrom(urlString: String?): Configuration =
+    urlString?.let { databaseUrl ->
+
+        val protocol = databaseUrl.substringBefore("://")
+        val user = databaseUrl.substringAfter("$protocol://").substringBefore(":")
+        val password = databaseUrl.substringAfter("$user:").substringBefore("@")
+        val host = databaseUrl.substringAfter("$password@").substringBefore(":")
+        val port = databaseUrl.substringAfter("$host:").substringBefore("/")
+        val database = databaseUrl.substringAfter("$port/")
+
+        this.withOverride(METADATA_DB_HOST, host)
+            .withOverride(METADATA_DB_PORT, port)
+            .withOverride(METADATA_DB_NAME, database)
+            .withOverride(METADATA_DB_USER, user)
+            .withOverride(METADATA_DB_PASSWORD, password)
+    } ?: this

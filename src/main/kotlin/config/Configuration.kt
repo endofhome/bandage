@@ -15,6 +15,9 @@ data class Configuration(private val config: Map<RequiredConfigItem, String?>, v
         throw ConfigurationException("${item.name} was not available during get")
     }
 
+    fun withOverride(item: RequiredConfigItem, value: String): Configuration =
+        this.copy(config = config.plus(item to value))
+
     private fun validate(required: Set<RequiredConfigItem>, provided: Map<RequiredConfigItem, String?>) {
         fun pluralise(missingConfig: List<RequiredConfigItem>): String = when {
             missingConfig.size > 1 -> "s"
