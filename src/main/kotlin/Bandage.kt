@@ -13,6 +13,7 @@ import config.BandageConfig
 import config.Configuration
 import config.RequiredConfig
 import config.ValidateConfig
+import config.withDynamicDatabaseUrlFrom
 import handlers.Dashboard
 import handlers.Login
 import handlers.Play
@@ -38,19 +39,19 @@ import org.http4k.template.HandlebarsTemplates
 import org.http4k.template.viewModel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import storage.DropboxCsvMetadataStorageFactory
 import storage.DropboxFileStorageFactory
 import storage.FileStorage
 import storage.FileStorageFactory
 import storage.MetadataStorage
 import storage.MetadataStorageFactory
+import storage.PostgresMetadataStorageFactory
 import java.nio.file.Path
 import java.nio.file.Paths
 
 
 fun main(args: Array<String>) {
     val port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
-    Bandage.init(BandageConfig, DropboxCsvMetadataStorageFactory, DropboxFileStorageFactory).app.asServer(Jetty(port)).start()
+    Bandage.init(BandageConfig, PostgresMetadataStorageFactory, DropboxFileStorageFactory).app.asServer(Jetty(port)).start()
 
     logger.info("Bandage has started on http://localhost:$port")
 }
@@ -58,7 +59,7 @@ fun main(args: Array<String>) {
 class Bandage(systemConfig: Configuration, metadataStorage: MetadataStorage, fileStorage: FileStorage) {
     companion object {
         fun init(requiredConfig: RequiredConfig, metadataStorageFactory: MetadataStorageFactory, fileStorageFactory: FileStorageFactory): Bandage =
-            ValidateConfig(requiredConfig, configurationFilesDir).run {
+            ValidateConfig(requiredConfig, configurationFilesDir).withDynamicDatabaseUrlFrom(System.getenv("DATABASE_URL")).run {
                 Bandage(this, metadataStorageFactory(this), fileStorageFactory(this))
             }
     }
