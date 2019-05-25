@@ -24,6 +24,12 @@ audio {
     background-color: whitesmoke;
 }
 
+/* styling for Chrome HTML5 audio player using pseudo selector */
+audio::-webkit-media-controls-panel {
+    background-color: whitesmoke;
+}
+
+
 #audio-player-metadata {
     margin-left: 15px;
 }
