@@ -6,6 +6,10 @@
     margin-top: 8%;
 }
 
+audio {
+    width: 75%;
+}
+
 .navbar-contents {
     width: 100%;
 }
