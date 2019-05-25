@@ -8,6 +8,7 @@ import config.BandageConfigItem.METADATA_DB_HOST
 import config.BandageConfigItem.METADATA_DB_NAME
 import config.BandageConfigItem.METADATA_DB_PASSWORD
 import config.BandageConfigItem.METADATA_DB_PORT
+import config.BandageConfigItem.METADATA_DB_SSL_MODE
 import config.BandageConfigItem.METADATA_DB_USER
 import config.BandageConfigItem.PASSWORD
 import config.BandageConfigItem.SENTRY_DSN
@@ -26,6 +27,7 @@ sealed class BandageConfigItem(override val name: String) : RequiredConfigItem {
     object METADATA_DB_NAME : BandageConfigItem("${appName}_METADATA_DB_NAME")
     object METADATA_DB_USER : BandageConfigItem("${appName}_METADATA_DB_USER")
     object METADATA_DB_PASSWORD : BandageConfigItem("${appName}_METADATA_DB_PASSWORD")
+    object METADATA_DB_SSL_MODE : BandageConfigItem("${appName}_METADATA_DB_SSL_MODE")
     object DROPBOX_ACCESS_TOKEN : BandageConfigItem("${appName}_DROPBOX_ACCESS_TOKEN")
     object DROPBOX_LINK_PASSWORD : BandageConfigItem("${appName}_DROPBOX_LINK_PASSWORD")
     object SENTRY_DSN : BandageConfigItem("${appName}_SENTRY_DSN")
@@ -43,6 +45,7 @@ object BandageConfig : RequiredConfig() {
         METADATA_DB_NAME,
         METADATA_DB_USER,
         METADATA_DB_PASSWORD,
+        METADATA_DB_SSL_MODE,
         DROPBOX_ACCESS_TOKEN,
         DROPBOX_LINK_PASSWORD,
         SENTRY_DSN
@@ -51,7 +54,6 @@ object BandageConfig : RequiredConfig() {
 
 fun Configuration.withDynamicDatabaseUrlFrom(urlString: String?): Configuration =
     urlString?.let { databaseUrl ->
-
         val protocol = databaseUrl.substringBefore("://")
         val user = databaseUrl.substringAfter("$protocol://").substringBefore(":")
         val password = databaseUrl.substringAfter("$user:").substringBefore("@")

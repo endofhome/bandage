@@ -6,6 +6,7 @@ import config.BandageConfigItem.METADATA_DB_HOST
 import config.BandageConfigItem.METADATA_DB_NAME
 import config.BandageConfigItem.METADATA_DB_PASSWORD
 import config.BandageConfigItem.METADATA_DB_PORT
+import config.BandageConfigItem.METADATA_DB_SSL_MODE
 import config.BandageConfigItem.METADATA_DB_USER
 import config.Configuration
 import org.postgresql.ds.PGSimpleDataSource
@@ -19,7 +20,7 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
         databaseName = config.get(METADATA_DB_NAME)
         user = config.get(METADATA_DB_USER)
         password = config.get(METADATA_DB_PASSWORD)
-        sslMode = "require"
+        sslMode = config.get(METADATA_DB_SSL_MODE)
     }
 
     override fun all(): List<AudioFileMetadata> =
