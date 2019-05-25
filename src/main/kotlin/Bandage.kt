@@ -56,7 +56,7 @@ fun main(args: Array<String>) {
     logger.info("Bandage has started on http://localhost:$port")
 }
 
-class Bandage(systemConfig: Configuration, metadataStorage: MetadataStorage, fileStorage: FileStorage) {
+class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, fileStorage: FileStorage) {
     companion object {
         fun init(requiredConfig: RequiredConfig, metadataStorageFactory: MetadataStorageFactory, fileStorageFactory: FileStorageFactory): Bandage =
             ValidateConfig(requiredConfig, configurationFilesDir).withDynamicDatabaseUrlFrom(System.getenv("DATABASE_URL")).run {
@@ -66,20 +66,20 @@ class Bandage(systemConfig: Configuration, metadataStorage: MetadataStorage, fil
 
     object StaticConfig {
         const val appName = "BANDAGE"
+        const val defaultPort = 7000
         private val registerHelpers = fun (handlebars: Handlebars): Handlebars = handlebars.apply { handlebars.registerHelper("eq", ConditionalHelpers.eq) }
-        private val renderer = HandlebarsTemplates(registerHelpers).HotReload("src/main/resources")
 
+        private val renderer = HandlebarsTemplates(registerHelpers).HotReload("src/main/resources")
         val view = Body.viewModel(renderer, ContentType.TEXT_HTML).toLens()
         val filters = EnforceHttpsOnHeroku()
                 .then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
                 .then(CatchAll())
         val configurationFilesDir: Path = Paths.get("configuration")
-        const val defaultPort = 7000
         val logger: Logger = LoggerFactory.getLogger(Bandage::class.java)
     }
 
-    private val userManagement = UserManagement(systemConfig)
-    private val authentication = Authentication(systemConfig, userManagement)
+    private val userManagement = UserManagement(providedConfig)
+    private val authentication = Authentication(providedConfig, userManagement)
     private fun redirectTo(location: String): (Request) -> Response = { Response(SEE_OTHER).header("Location", location) }
 
     private val routes = with(authentication) { routes(

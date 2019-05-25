@@ -21,7 +21,7 @@ object Dashboard {
 
         val folders = metadataStorage.all().groupBy { file ->
             file.path.drop(1).substringBefore("/")
-        }.map { folder ->
+         }.toSortedMap().map { folder ->
             ViewModels.Folder(folder.key, folder.value.map { audioFile -> audioFile.viewModel() })
         }
 
