@@ -154,7 +154,7 @@ class BandageTest {
         driver.userLogsInAndPlaysATrack()
 
         driver.findElement(By.cssSelector("audio[data-test=\"[play_file-${exampleAudioFileMetadata.uuid}]\"]")) ?: fail("Audio player footer is unavailable")
-        val playerMetadata = driver.findElement(By.cssSelector("span[data-test=\"[audio-player-metadata]\"]")) ?: fail("Audio player metadata is unavailable")
+        val playerMetadata = driver.findElement(By.cssSelector("div[data-test=\"[audio-player-metadata]\"]")) ?: fail("Audio player metadata is unavailable")
         assertThat(playerMetadata.text, equalTo("${exampleAudioFileMetadata.title} | 0:21 | ${exampleAudioFileMetadata.format} (320 kbps)"))
         assertThat(driver.currentUrl, equalTo("/dashboard?id=${exampleAudioFileMetadata.uuid}#${exampleAudioFileMetadata.uuid}"))
     }

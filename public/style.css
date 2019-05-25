@@ -7,7 +7,7 @@
 }
 
 audio {
-    width: 75%;
+    width: 100%;
 }
 
 .navbar-contents {
@@ -21,6 +21,10 @@ audio {
 .footer {
     width: 100%;
     background-color: whitesmoke;
+}
+
+#audio-player-metadata {
+    margin-left: 15px;
 }
 
 .highlighted {

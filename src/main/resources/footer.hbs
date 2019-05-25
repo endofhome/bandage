@@ -1,13 +1,13 @@
 {{#if title}}
     <footer class="footer fixed-bottom top">
-        <span id="audio-player">
+        <div id="audio-player-metadata" data-test="[audio-player-metadata]">
+            {{title}} | {{duration}} | {{format}} ({{bitRate}} kbps)
+        </div>
+        <div id="audio-player">
             <audio controls autoplay preload="metadata" data-test="[play_file-{{uuid}}]">
                 <source src="/play?id={{uuid}}" type="audio/{{format}}">
             </audio>
-        </span>
-        <span id="audio-player-metadata" data-test="[audio-player-metadata]">
-            {{title}} | {{duration}} | {{format}} ({{bitRate}} kbps)
-        </span>
+        </div>
     </footer>
 {{/if}}
 </html>
