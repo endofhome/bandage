@@ -22,9 +22,10 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
         password = config.get(METADATA_DB_PASSWORD)
         sslMode = config.get(METADATA_DB_SSL_MODE)
     }
+    private val connection = datasource.connection
 
     override fun all(): List<AudioFileMetadata> =
-        datasource.connection.prepareStatement("SELECT * FROM public.tracks")
+        connection.prepareStatement("SELECT * FROM public.tracks")
             .use { statement ->
                 statement.executeQuery()
                     .use { resultSet ->
@@ -35,7 +36,7 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
             }
 
     override fun find(uuid: UUID): AudioFileMetadata? =
-        datasource.connection.prepareStatement("SELECT * FROM public.tracks WHERE id = '$uuid'")
+        connection.prepareStatement("SELECT * FROM public.tracks WHERE id = '$uuid'")
             .use { statement ->
                 statement.executeQuery()
                     .use { resultSet ->
@@ -44,7 +45,7 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
             }
 
     override fun write(newMetadata: List<AudioFileMetadata>) {
-        val preparedStatement = datasource.connection.prepareStatement("""
+        val preparedStatement = connection.prepareStatement("""
                 INSERT INTO tracks VALUES ${newMetadata.joinToString(",") { "(?::uuid, ?::jsonb)" }};
             """.trimIndent())
 
@@ -62,7 +63,7 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
 
     override fun update(updatedMetadata: AudioFileMetadata) {
         find(updatedMetadata.uuid)?.let {
-            val preparedStatement = datasource.connection.prepareStatement("""
+            val preparedStatement = connection.prepareStatement("""
                 UPDATE tracks SET metadata = ?::jsonb WHERE id = '${updatedMetadata.uuid}';
             """.trimIndent())
 
