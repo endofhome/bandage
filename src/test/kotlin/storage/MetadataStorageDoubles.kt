@@ -18,6 +18,7 @@ open class DummyMetadataStorage : MetadataStorage {
     override fun all() = emptyList<AudioFileMetadata>()
     override fun find(uuid: UUID): AudioFileMetadata? = null
     override fun write(newMetadata: List<AudioFileMetadata>): Unit = TODO("not implemented")
+    override fun update(updatedMetadata: AudioFileMetadata) = TODO("not implemented")
 }
 
 

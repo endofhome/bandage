@@ -51,28 +51,43 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
         val uuidIndexes = 1..newMetadata.size * 2 step 2
 
         newMetadata.zip(uuidIndexes).forEach { (audioFileMetadata, uuidIndex) ->
-            val metadataJsonString = """{
-                    "artist": "${audioFileMetadata.artist}",
-                    "album": "${audioFileMetadata.album}",
-                    "title": "${audioFileMetadata.title}",
-                    "format": "${audioFileMetadata.format}",
-                    "bitrate": "${audioFileMetadata.bitRate.value}",
-                    ${audioFileMetadata.duration?.let { duration -> """"duration": "${duration.value}",""" }}
-                    "size": "${audioFileMetadata.size}",
-                    "recordedDate": "${audioFileMetadata.recordedDate}",
-                    "passwordProtectedLink": "${audioFileMetadata.passwordProtectedLink}",
-                    "path": "${audioFileMetadata.path}",
-                    "sha256": "${audioFileMetadata.hash}"
-                }""".trimIndent()
-
             preparedStatement.setString(uuidIndex, audioFileMetadata.uuid.toString())
-            preparedStatement.setString(uuidIndex + 1, metadataJsonString)
+            preparedStatement.setString(uuidIndex + 1, audioFileMetadata.toJsonString())
         }
 
         preparedStatement.use { statement ->
             statement.executeUpdate()
         }
     }
+
+    override fun update(updatedMetadata: AudioFileMetadata) {
+        find(updatedMetadata.uuid)?.let {
+            val preparedStatement = datasource.connection.prepareStatement("""
+                UPDATE tracks SET metadata = ?::jsonb WHERE id = '${updatedMetadata.uuid}';
+            """.trimIndent())
+
+            preparedStatement.setString(1, updatedMetadata.toJsonString())
+
+            preparedStatement.use { statement ->
+                statement.executeUpdate()
+            }
+        } ?: throw RuntimeException("UUID ${updatedMetadata.uuid} not found.")
+    }
+
+    private fun AudioFileMetadata.toJsonString(): String =
+        """{
+            "artist": "$artist",
+            "album": "$album",
+            "title": "$title",
+            "format": "$format",
+            ${bitRate?.let { bitRate -> """"bitrate": "${bitRate.value}",""" }}
+            ${duration?.let { duration -> """"duration": "${duration.value}",""" }}
+            "size": "$size",
+            "recordedDate": "$recordedDate",
+            "passwordProtectedLink": "$passwordProtectedLink",
+            "path": "$path",
+            "sha256": "$hash"
+        }""".trimIndent()
 }
 
 private fun ResultSet.toAudioFileMetadata(): AudioFileMetadata {
