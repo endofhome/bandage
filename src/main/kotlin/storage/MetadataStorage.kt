@@ -12,7 +12,7 @@ data class AudioFileMetadata(
     val album: String,
     val title: String,
     val format: String,
-    val bitRate: BitRate,
+    val bitRate: BitRate?,
     val duration: Duration?,
     val size: Int,
     val recordedDate: String,
@@ -31,6 +31,7 @@ interface MetadataStorage {
     fun all(): List<AudioFileMetadata>
     fun find(uuid: UUID): AudioFileMetadata?
     fun write(newMetadata: List<AudioFileMetadata>)
+    fun update(updatedMetadata: AudioFileMetadata)
 }
 
 class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataStorage {
@@ -67,11 +68,13 @@ class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataSt
 
     override fun write(newMetadata: List<AudioFileMetadata>) = TODO("not yet implemented")
 
+    override fun update(updatedMetadata: AudioFileMetadata) = TODO("not yet implemented")
+
     private fun List<String>.dropHeader() = if (this[0] == headerLine.removeSuffix(lineSeparator)) drop(1) else this
 }
 
 object LocalCsvMetadataStorage : MetadataStorage {
-    private const val flatFileName = "seed-data.csv"
+    private const val flatFileName = "bitrate-experiment.csv"
     private val fileWriter = FileWriter(flatFileName, true)
     private val lineSeparator = System.lineSeparator()
     private val headerLine =
@@ -113,6 +116,8 @@ object LocalCsvMetadataStorage : MetadataStorage {
         fileWriter.flush()
         fileWriter.close()
     }
+
+    override fun update(updatedMetadata: AudioFileMetadata) = TODO("not implemented")
 
     private fun List<String>.dropHeader() = if (this[0] == headerLine.removeSuffix(lineSeparator)) drop(1) else this
 }

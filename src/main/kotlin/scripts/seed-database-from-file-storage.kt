@@ -35,7 +35,7 @@ fun seedDatabase(metadataStorage: MetadataStorage) {
     val fileStorage = DropboxFileStorage(dropboxClient)
 
     fileStorage.listFiles().map { files ->
-        files.map { file ->
+        files.mapIndexed { i, file ->
             val excludedFileTypes = listOf("txt", "csv", "zip")
             val allowedFileType = excludedFileTypes.none { file.name.toLowerCase().endsWith(it) }
             if (allowedFileType) {
@@ -52,7 +52,7 @@ fun seedDatabase(metadataStorage: MetadataStorage) {
                     album = ffprobeInfo.format.tags?.album.orEmpty(),
                     title = ffprobeInfo.format.tags?.title ?: file.name.replaceAfterLast(".", "").dropLast(1),
                     format = ffprobeInfo.format.format_name,
-                    bitRate = ffprobeInfo.format.bit_rate.toBitRate(),
+                    bitRate = ffprobeInfo.streams.firstOrNull()?.bit_rate?.toBitRate(),
                     duration = ffprobeInfo.format.duration?.toDuration(),
                     size = ffprobeInfo.format.size.toInt(),
                     recordedDate = ffprobeInfo.format.tags?.date.orEmpty(),
@@ -64,6 +64,8 @@ fun seedDatabase(metadataStorage: MetadataStorage) {
                 }
             } else {
                 null
+            }.also {
+                print("\rProcessed ${i + 1} / ${files.size}")
             }
         }.mapNotNull { it }.run {
             metadataStorage.write(this)
@@ -71,9 +73,9 @@ fun seedDatabase(metadataStorage: MetadataStorage) {
     }.orElse { throw RuntimeException(it.message) }
 }
 
-private fun metadataReader(tempFileName: String): BufferedReader {
+fun metadataReader(tempFileName: String): BufferedReader {
     val ffprobeMetadata =
-        "ffprobe -v quiet -print_format json -show_format $tempFileName".split(" ").toMutableList()
+        "ffprobe -v quiet -print_format json -show_format -show_streams $tempFileName".split(" ").toMutableList()
     val process = ProcessBuilder().command(ffprobeMetadata).start()
     return BufferedReader(InputStreamReader(process.inputStream))
 }
@@ -88,7 +90,13 @@ private fun hashFile(file: ByteArray): String {
 }
 
 data class FfprobeInfo(
+    val streams: List<Stream>,
     val format: Format
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class Stream(
+    val bit_rate: String
 )
 
 data class Format(

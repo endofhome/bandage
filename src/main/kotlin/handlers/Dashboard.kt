@@ -11,6 +11,7 @@ import storage.AudioFileMetadata
 import storage.BitRate
 import storage.Duration
 import storage.MetadataStorage
+import java.math.BigDecimal
 import java.util.UUID
 
 object Dashboard {
@@ -32,29 +33,28 @@ object Dashboard {
         override fun template() = "dashboard"
     }
 
-    private fun AudioFileMetadata.viewModel(): ViewModels.AudioFileMetadata {
-        fun String.emptyIfZero(): String =
-            if (this != "0") "$this:"
-            else ""
-
-        fun Duration.presentationFormat(): String {
-            val (rawSeconds, _) = this.value.split(".")
-            val duration = java.time.Duration.ofSeconds(rawSeconds.toLong())
-            val hours = duration.toHoursPart().toString().emptyIfZero()
-            val minutes = duration.toMinutesPart()
-            val seconds = duration.toSecondsPart().toString().padStart(2, '0')
-            return "$hours$minutes:$seconds"
-        }
-
-        fun BitRate.presentationFormat(): String = (this.value.toInt() / 1000).toString()
-
-        return ViewModels.AudioFileMetadata(
+    private fun AudioFileMetadata.viewModel(): ViewModels.AudioFileMetadata =
+        ViewModels.AudioFileMetadata(
             this.uuid.toString(),
             this.title,
             this.format,
-            this.bitRate.presentationFormat(),
+            this.bitRate?.presentationFormat(),
             this.duration?.presentationFormat()
         )
+
+    private fun String.emptyIfZero(): String =
+        if (this != "0") "$this:"
+        else ""
+
+    private fun BitRate.presentationFormat(): String = (this.value.toBigDecimal() / BigDecimal(1000)).toString()
+
+    private fun Duration.presentationFormat(): String {
+        val (rawSeconds, _) = this.value.split(".")
+        val duration = java.time.Duration.ofSeconds(rawSeconds.toLong())
+        val hours = duration.toHoursPart().toString().emptyIfZero()
+        val minutes = duration.toMinutesPart()
+        val seconds = duration.toSecondsPart().toString().padStart(2, '0')
+        return "$hours$minutes:$seconds"
     }
 
     object ViewModels {
@@ -63,7 +63,7 @@ object Dashboard {
             val uuid: String,
             val title: String,
             val format: String,
-            val bitRate: String,
+            val bitRate: String?,
             val duration: String?
         )
     }
