@@ -22,8 +22,8 @@ object Dashboard {
 
         val folders = metadataStorage.all().groupBy { file ->
             file.path.drop(1).substringBefore("/")
-         }.toSortedMap().map { folder ->
-            ViewModels.Folder(folder.key, folder.value.map { audioFile -> audioFile.viewModel() })
+         }.toList().sortByReversedThenFolderNamesOnlyContainingLetters().map { (folderName, files) ->
+            ViewModels.Folder(folderName, files.map { audioFile -> audioFile.viewModel() })
         }
 
         return Response(OK).with(view of DashboardPage(AuthenticatedUser, folders, nowPlaying))
@@ -67,4 +67,9 @@ object Dashboard {
             val duration: String?
         )
     }
+}
+
+private fun List<Pair<String, List<AudioFileMetadata>>>.sortByReversedThenFolderNamesOnlyContainingLetters(): List<Pair<String, List<AudioFileMetadata>>> {
+    val (onlyLetters, others) = this.partition { (folderName) -> folderName.all { it.isLetter() } }
+    return others.sortedBy { (folderName) -> folderName }.reversed() + onlyLetters
 }
