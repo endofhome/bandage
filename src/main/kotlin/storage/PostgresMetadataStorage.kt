@@ -25,23 +25,19 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
     private val connection = datasource.connection
 
     override fun all(): List<AudioFileMetadata> =
-        connection.prepareStatement("SELECT * FROM public.tracks")
-            .use { statement ->
-                statement.executeQuery()
-                    .use { resultSet ->
-                        generateSequence {
-                            if (resultSet.next()) resultSet.toAudioFileMetadata() else null
-                        }.toList()
-                    }
+        connection.prepareStatement("SELECT * FROM public.tracks").use { statement ->
+                statement.executeQuery().use { resultSet ->
+                    generateSequence {
+                        if (resultSet.next()) resultSet.toAudioFileMetadata() else null
+                    }.toList()
+                }
             }
 
     override fun find(uuid: UUID): AudioFileMetadata? =
-        connection.prepareStatement("SELECT * FROM public.tracks WHERE id = '$uuid'")
-            .use { statement ->
-                statement.executeQuery()
-                    .use { resultSet ->
-                        if (resultSet.next()) resultSet.toAudioFileMetadata() else null
-                    }
+        connection.prepareStatement("SELECT * FROM public.tracks WHERE id = '$uuid'").use { statement ->
+                statement.executeQuery().use { resultSet ->
+                    if (resultSet.next()) resultSet.toAudioFileMetadata() else null
+                }
             }
 
     override fun write(newMetadata: List<AudioFileMetadata>) {

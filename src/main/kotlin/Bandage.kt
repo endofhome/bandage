@@ -23,7 +23,6 @@ import org.http4k.core.Body
 import org.http4k.core.ContentType
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
-import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.FORBIDDEN
 import org.http4k.core.Status.Companion.SEE_OTHER
@@ -80,11 +79,11 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
 
     private val userManagement = UserManagement(providedConfig)
     private val authentication = Authentication(providedConfig, userManagement)
-    private fun redirectTo(location: String): (Request) -> Response = { Response(SEE_OTHER).header("Location", location) }
+    private fun redirectTo(location: String) = Response(SEE_OTHER).header("Location", location)
 
     private val routes = with(authentication) { routes(
-            index       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(dashboard)) },
-            login       bind GET  to { request -> ifAuthenticated(request, then = redirectTo(index), otherwise = Login(userManagement)) },
+            index       bind GET  to { redirectTo(dashboard) },
+            login       bind GET  to { request -> ifAuthenticated(request, then = { redirectTo(index) }, otherwise = Login(userManagement)) },
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },
             dashboard   bind GET  to { request -> ifAuthenticated(request, then = { Dashboard(request, metadataStorage) }) },
