@@ -45,11 +45,11 @@ class Authentication(private val config: Configuration, private val users: UserM
         then: (Request) -> Response,
         otherwise: Response = Response(Status.SEE_OTHER).header("Location", login).body("User not authenticated")
     ): Response =
-        if (request.cookie(loginCookieName).isValid()) {
-            then(request)
-        } else {
-            otherwise
-        }
+        request.cookie(loginCookieName).isValid().flatMap { cookie ->
+            cookie.authenticatedUser().map { user ->
+                then(request)
+            }
+        }.orElse { otherwise }
 
     private fun Request.authenticatedUser(): Result<Error, User> {
         val formAsMap: Map<String, List<String?>> = formAsMap()
@@ -79,13 +79,23 @@ class Authentication(private val config: Configuration, private val users: UserM
             httpOnly = true
         )
 
-    private fun Cookie?.isValid(): Boolean {
-        if (this == null) return false
-
+    private fun Cookie.authenticatedUser(): Result<Error, User> {
         val (apiKey, user) = this.value.split("_")
-        return when {
-            apiKey == config.get(API_KEY) && users.findUser(user) is Success -> true
-            else                                                                          -> false
+
+        return when (apiKey) {
+            config.get(API_KEY) -> users.findUser(user)
+            else                -> Failure(Error("Cookie is invalid"))
+        }
+    }
+
+    private fun Cookie?.isValid(): Result<Error, Cookie> {
+        if (this == null) return Failure(Error("Cookie is not present"))
+
+        val (apiKey) = this.value.split("_")
+
+        return when (apiKey) {
+            config.get(API_KEY) -> Success(this)
+            else                -> Failure(Error("Cookie is invalid"))
         }
     }
 
@@ -94,3 +104,4 @@ class Authentication(private val config: Configuration, private val users: UserM
 }
 
 object AuthenticatedUser
+data class AuthenticatedRequest(val request: Request, val user: User)
