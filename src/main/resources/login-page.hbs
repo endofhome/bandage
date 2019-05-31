@@ -17,6 +17,7 @@
             <label for="password">Password</label>
             <br>
             <input class="form-control full-width" id="password" type="password" name="password" />
+            <input type="hidden" name="redirect" value="{{redirectUri}}"/>
             <br>
             <button class="form-control full-width" type="submit" formenctype="application/x-www-form-urlencoded" formmethod="post" name="login">Log in</button>
         </form>

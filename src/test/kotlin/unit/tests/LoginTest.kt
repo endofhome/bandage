@@ -1,11 +1,14 @@
 package unit.tests
 
+import RouteMappings.login
 import User
 import UserManagement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import config.dummyConfiguration
 import handlers.Login
+import org.http4k.core.Method.GET
+import org.http4k.core.Request
 import org.http4k.core.Status.Companion.OK
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
@@ -41,9 +44,10 @@ class LoginTest {
     }
 
     private fun renderPageAndSelectOptions(): Elements {
+        val request = Request(GET, login)
         val userManagement = UserManagement(config, someUsers)
 
-        val response = Login(userManagement)
+        val response = Login(request, userManagement)
         assertThat(response.status, equalTo(OK))
 
         val document = Jsoup.parse(response.bodyString())

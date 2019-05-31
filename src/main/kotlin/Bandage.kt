@@ -83,7 +83,7 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
 
     private val routes = with(authentication) { routes(
             index       bind GET  to { redirectTo(dashboard) },
-            login       bind GET  to { request -> ifAuthenticated(request, then = { redirectTo(index) }, otherwise = Login(userManagement)) },
+            login       bind GET  to { request -> ifAuthenticated(request, then = { redirectTo(index) }, otherwise = Login(request, userManagement)) },
             login       bind POST to { request -> authenticateUser(request) },
             logout      bind GET  to { logout() },
             dashboard   bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  Dashboard(authenticatedRequest, metadataStorage) }) },

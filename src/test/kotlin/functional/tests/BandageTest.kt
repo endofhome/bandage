@@ -1,12 +1,15 @@
 package functional.tests
 
 import Authentication
+import Authentication.Companion.loginCookieName
+import Authentication.Companion.redirectCookieName
 import Bandage
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
 import User
 import UserManagement
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import config.BandageConfigItem.API_KEY
@@ -27,6 +30,7 @@ import org.http4k.testing.Approver
 import org.http4k.testing.assertApproved
 import org.http4k.webdriver.Http4kWebDriver
 import org.junit.jupiter.api.Assertions.fail
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.openqa.selenium.By
@@ -35,6 +39,8 @@ import org.openqa.selenium.WebElement
 import storage.DummyFileStorage
 import storage.DummyMetadataStorage
 import storage.StubMetadataStorage
+import java.time.Instant.EPOCH
+import java.time.temporal.ChronoUnit.HOURS
 import java.util.UUID
 
 @ExtendWith(ApprovalTest::class)
@@ -43,6 +49,13 @@ class BandageTest {
     private val config = dummyConfiguration()
     private val bandage = Bandage(config, DummyMetadataStorage(), DummyFileStorage()).app
     private val driver = Http4kWebDriver(bandage)
+
+    @BeforeEach
+    fun resetCookies() {
+        // TODO use a map of cookies to delete all of them
+        driver.manage().deleteCookieNamed(loginCookieName)
+        driver.manage().deleteCookieNamed(redirectCookieName)
+    }
 
     @Test
     fun `index redirects to login`() {
@@ -54,25 +67,27 @@ class BandageTest {
 
     @Test
     fun `can log in via login page`() {
+        driver.navigate().to(login)
         val loggedInUser = driver.userLogsIn()
 
         val loginCookie = driver.manage().getCookieNamed(Authentication.loginCookieName) ?: fail("login cookie not set")
-        val username = driver.findElement(By.cssSelector("span[data-test=\"user-short-name\"]")) ?: fail("username is unavailable on dashboard")
+        val username = driver.findElement(By.cssSelector("span[data-test=\"user-short-name\"]"))
 
         assertThat(loginCookie, equalTo(validCookieFor(loggedInUser)))
         assertThat(driver.currentUrl, equalTo(dashboard))
         assertThat(driver.title, equalTo("Bandage"))
-        assertThat(username.text, equalTo(loggedInUser.shortName))
+        assertThat(username?.text, equalTo(loggedInUser.shortName))
     }
 
     @Test
     fun `can log out`() {
+        driver.navigate().to(login)
         driver.userLogsIn()
         val logoutLink = driver.findElement(By.cssSelector("a[data-test=\"logout\"]")) ?: fail("Logout link is unavailable")
         logoutLink.click()
 
         assertThat(driver.status, equalTo(OK))
-        assertThat(driver.manage().cookies, equalTo(emptySet()))
+        assertThat(driver.manage().cookies, allInvalid)
         assertThat(driver.currentUrl, equalTo(login))
     }
     
@@ -81,12 +96,34 @@ class BandageTest {
         driver.navigate().to(dashboard)
 
         assertThat(driver.status, equalTo(OK))
-        assertThat(driver.manage().cookies, equalTo(emptySet()))
         assertThat(driver.currentUrl, equalTo(login))
+        assertThat(driver.manage().cookies, allInvalid)
+    }
+
+    @Test
+    fun `logging in after being redirected from index results in redirection to dashboard without fragment identifier`() {
+        val requestedResource = index
+        driver.navigate().to(requestedResource)
+        assertThat(driver.currentUrl, equalTo(login))
+
+        driver.userLogsIn()
+        assertThat(driver.currentUrl, equalTo(dashboard))
+    }
+
+    @Test
+    fun `logging in after being redirected from dashboard results in redirection to the originally requested resource with fragment identifier`() {
+        val requestedResource = "$dashboard?id=dd505fee-93f7-4fb3-a7fc-f48d6efb9c7e"
+
+        driver.navigate().to(requestedResource)
+        assertThat(driver.currentUrl, equalTo(login))
+
+        driver.userLogsIn()
+        assertThat(driver.currentUrl, equalTo("$requestedResource#dd505fee-93f7-4fb3-a7fc-f48d6efb9c7e"))
     }
 
     @Test
     fun `accessing index page with a logged in cookie redirects to dashboard page`() {
+        driver.navigate().to(login)
         val loggedInUser = driver.userLogsIn()
         driver.navigate().to(index)
 
@@ -97,6 +134,7 @@ class BandageTest {
 
     @Test
     fun `accessing login page with a logged in cookie redirects to dashboard page`() {
+        driver.navigate().to(login)
         val loggedInUser = driver.userLogsIn()
         driver.navigate().to(login)
 
@@ -135,6 +173,7 @@ class BandageTest {
         val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
         val driver = Http4kWebDriver(bandage)
 
+        driver.navigate().to(login)
         driver.userLogsIn()
         driver.navigate().to(dashboard)
 
@@ -178,6 +217,7 @@ class BandageTest {
     }
 
     private fun Http4kWebDriver.userLogsInAndPlaysATrack(): WebElement {
+        this.navigate().to(login)
         this.userLogsIn()
         this.navigate().to(dashboard)
 
@@ -191,8 +231,6 @@ class BandageTest {
     }
 
     private fun Http4kWebDriver.userLogsIn(): User {
-        this.navigate().to(login)
-
         assertThat(this.status, equalTo(OK))
         assertThat(this.title, equalTo("Bandage"))
 
@@ -215,3 +253,6 @@ class BandageTest {
     private fun validCookieFor(loggedInUser: User) =
         Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${loggedInUser.userId}", "login")
 }
+
+val allInvalid = Matcher(Set<Cookie>::allInvalid)
+fun Set<Cookie>.allInvalid() = this.all { it.value.isEmpty() && it.expiry.toInstant() == EPOCH.minus(1, HOURS) }

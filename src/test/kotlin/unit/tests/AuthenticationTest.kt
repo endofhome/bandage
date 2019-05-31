@@ -2,6 +2,7 @@ package unit.tests
 
 import Authentication
 import Authentication.Companion.loginCookieName
+import Authentication.Companion.redirectCookieName
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
@@ -47,6 +48,7 @@ class AuthenticationTest {
                 .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
                 .form("user", userId)
                 .form("password", config.get(PASSWORD))
+                .form("redirect", dashboard)
 
             val response = authentication.authenticateUser(request)
             val validCookie = Cookie(
@@ -166,18 +168,20 @@ class AuthenticationTest {
 
     @Test
     fun `handles logout, removing login cookie`() {
-        val invalidatedCookie = Cookie(
-            name = loginCookieName,
-            value = "",
-            maxAge = 0,
-            expires = LocalDateTime.ofInstant(EPOCH, ZoneId.of("GMT"))
-        )
+        val invalidatedCookies = listOf(loginCookieName, redirectCookieName).map {
+            Cookie(
+                name = it,
+                value = "",
+                maxAge = 0,
+                expires = LocalDateTime.ofInstant(EPOCH, ZoneId.of("GMT"))
+            )
+        }
 
         val response = authentication.logout()
 
         assertThat(response.status, equalTo(SEE_OTHER))
         assertThat(response.header("Location"), equalTo(login))
-        assertThat(response.cookies(), equalTo(listOf(invalidatedCookie)))
+        assertThat(response.cookies(), equalTo(invalidatedCookies))
     }
 
     @Nested
@@ -194,7 +198,7 @@ class AuthenticationTest {
 
             assertThat(response.status, equalTo(SEE_OTHER))
             assertThat(response.header("Location"), equalTo(login))
-            assertThat(response.cookies(), equalTo(emptyList()))
+            assertThat(response.cookies().single().value, equalTo("www.someuri.com"))
         }
 
         @Test
