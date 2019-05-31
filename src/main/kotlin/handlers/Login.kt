@@ -1,6 +1,6 @@
 package handlers
 
-import Authentication.Companion.redirectCookieName
+import Authentication.Companion.Cookies.REDIRECT
 import Bandage.StaticConfig.view
 import RouteMappings.index
 import User
@@ -16,9 +16,9 @@ import org.http4k.template.ViewModel
 
 object Login {
     operator fun invoke(request: Request, userManagement: UserManagement): Response {
-        val redirectUri = request.cookie(redirectCookieName)?.value ?: index
+        val redirectUri = request.cookie(REDIRECT.cookieName)?.value ?: index
 
-        return Response(Status.OK).with(view of LoginPage(userManagement.users, Uri.of(redirectUri))).invalidateCookie(redirectCookieName)
+        return Response(Status.OK).with(view of LoginPage(userManagement.users, Uri.of(redirectUri))).invalidateCookie(REDIRECT.cookieName)
     }
 
     data class LoginPage(val users: List<User>, val redirectUri: Uri) : ViewModel {

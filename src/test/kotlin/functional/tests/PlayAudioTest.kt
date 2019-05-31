@@ -1,6 +1,6 @@
 package functional.tests
 
-import Authentication
+import Authentication.Companion.Cookies.LOGIN
 import Bandage
 import RouteMappings.play
 import com.natpryce.hamkrest.assertion.assertThat
@@ -41,7 +41,7 @@ class PlayAudioTest {
     fun `returns BAD REQUEST when no ID query parameter is present`() {
         val bandage = Bandage(config, DummyMetadataStorage(), DummyFileStorage()).app
         val response = bandage(Request(GET, play)
-            .cookie(Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${1}", path = "login")))
+            .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
 
         assertThat(response.status, equalTo(BAD_REQUEST))
     }
@@ -52,7 +52,7 @@ class PlayAudioTest {
         val bandage = Bandage(config, emptyMetadataStorage, fileStorage).app
         val response = bandage(Request(GET, play)
             .query("id", exampleAudioFileMetadata.uuid.toString())
-            .cookie(Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${1}", path = "login")))
+            .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
 
         assertThat(response.status, equalTo(NOT_FOUND))
     }
@@ -63,7 +63,7 @@ class PlayAudioTest {
         val bandage = Bandage(config, metadataStorage, emptyFileStorage).app
         val response = bandage(Request(GET, play)
             .query("id", exampleAudioFileMetadata.uuid.toString())
-            .cookie(Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${1}", path = "login")))
+            .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
 
         assertThat(response.status, equalTo(NOT_FOUND))
     }
@@ -75,7 +75,7 @@ class PlayAudioTest {
         val bandage = Bandage(config, metadataStorage, fileStorage).app
         val response = bandage(Request(GET, play)
             .query("id", exampleAudioFileMetadata.uuid.toString())
-            .cookie(Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${1}", path = "login")))
+            .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
         val expectedHeaders: Headers = listOf(
             "Accept-Ranges" to "bytes",
             "Content-Length" to exampleAudioFileMetadata.size.toString(),

@@ -1,8 +1,7 @@
 package functional.tests
 
 import Authentication
-import Authentication.Companion.loginCookieName
-import Authentication.Companion.redirectCookieName
+import Authentication.Companion.Cookies.LOGIN
 import Bandage
 import RouteMappings.dashboard
 import RouteMappings.index
@@ -52,9 +51,9 @@ class BandageTest {
 
     @BeforeEach
     fun resetCookies() {
-        // TODO use a map of cookies to delete all of them
-        driver.manage().deleteCookieNamed(loginCookieName)
-        driver.manage().deleteCookieNamed(redirectCookieName)
+        Authentication.Companion.Cookies.values().forEach {
+            driver.manage().deleteCookieNamed(it.cookieName)
+        }
     }
 
     @Test
@@ -70,7 +69,7 @@ class BandageTest {
         driver.navigate().to(login)
         val loggedInUser = driver.userLogsIn()
 
-        val loginCookie = driver.manage().getCookieNamed(Authentication.loginCookieName) ?: fail("login cookie not set")
+        val loginCookie = driver.manage().getCookieNamed(LOGIN.cookieName) ?: fail("login cookie not set")
         val username = driver.findElement(By.cssSelector("span[data-test=\"user-short-name\"]"))
 
         assertThat(loginCookie, equalTo(validCookieFor(loggedInUser)))
@@ -251,7 +250,7 @@ class BandageTest {
     }
 
     private fun validCookieFor(loggedInUser: User) =
-        Cookie(Authentication.loginCookieName, "${config.get(API_KEY)}_${loggedInUser.userId}", "login")
+        Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${loggedInUser.userId}", "login")
 }
 
 val allInvalid = Matcher(Set<Cookie>::allInvalid)

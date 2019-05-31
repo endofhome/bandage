@@ -1,3 +1,5 @@
+import Authentication.Companion.Cookies.LOGIN
+import Authentication.Companion.Cookies.REDIRECT
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
@@ -24,9 +26,10 @@ import result.orElse
 class Authentication(private val config: Configuration, private val users: UserManagement) {
 
     companion object {
-        // TODO make this a map
-        const val loginCookieName = "bandage_login"
-        const val redirectCookieName = "bandage_redirect"
+        enum class Cookies(val cookieName: String) {
+            LOGIN("bandage_login"),
+            REDIRECT("bandage_redirect")
+        }
     }
 
     private val logger = LoggerFactory.getLogger(Authentication::class.java)
@@ -43,14 +46,14 @@ class Authentication(private val config: Configuration, private val users: UserM
         }
 
     fun logout(): Response =
-        Response(Status.SEE_OTHER).header("Location", login).invalidateCookie(loginCookieName).invalidateCookie(redirectCookieName)
+        Response(Status.SEE_OTHER).header("Location", login).invalidateCookie(LOGIN.cookieName).invalidateCookie(REDIRECT.cookieName)
 
     fun ifAuthenticated(
         request: Request,
         then: (AuthenticatedRequest) -> Response,
         otherwise: Response = Response(Status.SEE_OTHER).header("Location", login).cookie(redirectCookie(request.uri.plusDashboardFragmentIdentifier()))
     ): Response =
-        request.cookie(loginCookieName).isValid().flatMap { cookie ->
+        request.cookie(LOGIN.cookieName).isValid().flatMap { cookie ->
             cookie.authenticatedUser().map { user ->
                 then(AuthenticatedRequest(request, user))
             }
@@ -74,7 +77,7 @@ class Authentication(private val config: Configuration, private val users: UserM
 
     private fun cookieFor(user: User): Cookie =
         Cookie(
-            name = loginCookieName,
+            name = LOGIN.cookieName,
             value = "${config.get(API_KEY)}_${user.userId}",
             maxAge = 94608000L,
             expires = null,
@@ -86,7 +89,7 @@ class Authentication(private val config: Configuration, private val users: UserM
 
     private fun redirectCookie(redirectUri: Uri): Cookie =
         Cookie(
-            name = redirectCookieName,
+            name = REDIRECT.cookieName,
             value = "$redirectUri",
             maxAge = 94608000L,
             expires = null,

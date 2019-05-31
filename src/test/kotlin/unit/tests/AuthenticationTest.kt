@@ -1,8 +1,8 @@
 package unit.tests
 
 import Authentication
-import Authentication.Companion.loginCookieName
-import Authentication.Companion.redirectCookieName
+import Authentication.Companion.Cookies
+import Authentication.Companion.Cookies.LOGIN
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
@@ -52,7 +52,7 @@ class AuthenticationTest {
 
             val response = authentication.authenticateUser(request)
             val validCookie = Cookie(
-                name = loginCookieName,
+                name = LOGIN.cookieName,
                 value = "${config.get(API_KEY)}_$userId",
                 maxAge = 94608000L,
                 expires = null,
@@ -168,9 +168,9 @@ class AuthenticationTest {
 
     @Test
     fun `handles logout, removing login cookie`() {
-        val invalidatedCookies = listOf(loginCookieName, redirectCookieName).map {
+        val invalidatedCookies = Cookies.values().map {
             Cookie(
-                name = it,
+                name = it.cookieName,
                 value = "",
                 maxAge = 0,
                 expires = LocalDateTime.ofInstant(EPOCH, ZoneId.of("GMT"))
@@ -214,7 +214,7 @@ class AuthenticationTest {
 
     private fun cookieFor(user: User): Cookie =
         Cookie(
-            name = loginCookieName,
+            name = LOGIN.cookieName,
             value = "${config.get(API_KEY)}_${user.userId}",
             maxAge = Long.MAX_VALUE,
             expires = null,
