@@ -254,4 +254,4 @@ class BandageTest {
 }
 
 val allInvalid = Matcher(Set<Cookie>::allInvalid)
-fun Set<Cookie>.allInvalid() = this.all { it.value.isEmpty() && it.expiry.toInstant() == EPOCH.minus(1, HOURS) }
+fun Set<Cookie>.allInvalid() = this.all { it.value.isEmpty() && it.expiry.toInstant() in EPOCH.minus(1, HOURS)..EPOCH.plus(12, HOURS) }
