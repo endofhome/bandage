@@ -26,5 +26,7 @@ class UserManagement(config: Configuration, users: List<User>? = null) {
 }
 
 data class User(val userId: String, val fullName: String) {
-    val initials get() = fullName.split(" ").map { it.first() }.joinToString("")
+    private val parts = fullName.split(" ")
+    val initials get() = parts.map { it.first() }.joinToString("")
+    val shortName get() = parts.first()
 }

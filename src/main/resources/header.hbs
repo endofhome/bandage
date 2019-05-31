@@ -10,7 +10,8 @@
 {{#if loggedInUser}}
     <nav class="navbar fixed-top navbar-expand-lg bg-transparent">
         <div class="navbar-contents">
-            <a href="/logout" data-test="logout" id="logout">Logout</a>
+            <span id="navbar-username" data-test="user-short-name">{{loggedInUser.shortName}}</span>
+            <span><a href="/logout" id="logout"data-test="logout">Logout</a></span>
         </div>
     </nav>
 {{/if}}

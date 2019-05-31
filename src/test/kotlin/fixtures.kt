@@ -1,5 +1,3 @@
-package functional.tests
-
 import storage.AudioFileMetadata
 import storage.BitRate
 import storage.Duration
@@ -19,3 +17,5 @@ val exampleAudioFileMetadata = AudioFileMetadata(
     "/my_folder/my_file",
     "someamazinghashstring"
 )
+
+val exampleUser = User("some-user-id", "Some User")

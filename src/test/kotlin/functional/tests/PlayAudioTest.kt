@@ -7,6 +7,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import config.BandageConfigItem.API_KEY
 import config.dummyConfiguration
+import exampleAudioFileMetadata
 import org.http4k.core.Headers
 import org.http4k.core.Method.GET
 import org.http4k.core.Request

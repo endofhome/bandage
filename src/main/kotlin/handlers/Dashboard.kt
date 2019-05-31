@@ -1,8 +1,8 @@
 package handlers
 
-import AuthenticatedUser
+import AuthenticatedRequest
 import Bandage.StaticConfig.view
-import org.http4k.core.Request
+import User
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
@@ -15,8 +15,8 @@ import java.math.BigDecimal
 import java.util.UUID
 
 object Dashboard {
-    operator fun invoke(request: Request, metadataStorage: MetadataStorage): Response {
-        val nowPlaying = request.query("id")?.let {
+    operator fun invoke(authenticatedRequest: AuthenticatedRequest, metadataStorage: MetadataStorage): Response {
+        val nowPlaying = authenticatedRequest.request.query("id")?.let {
             metadataStorage.find(UUID.fromString(it))
         }?.viewModel()
 
@@ -26,10 +26,10 @@ object Dashboard {
             ViewModels.Folder(folderName, files.map { audioFile -> audioFile.viewModel() })
         }
 
-        return Response(OK).with(view of DashboardPage(AuthenticatedUser, folders, nowPlaying))
+        return Response(OK).with(view of DashboardPage(authenticatedRequest.user, folders, nowPlaying))
     }
 
-    data class DashboardPage(val loggedInUser: AuthenticatedUser, val folders: List<ViewModels.Folder>, val nowPlaying: ViewModels.AudioFileMetadata? = null) : ViewModel {
+    data class DashboardPage(val loggedInUser: User, val folders: List<ViewModels.Folder>, val nowPlaying: ViewModels.AudioFileMetadata? = null) : ViewModel {
         override fun template() = "dashboard"
     }
 

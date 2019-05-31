@@ -13,10 +13,11 @@ audio {
 
 .navbar-contents {
     width: 100%;
+    text-align: right;
 }
 
-#logout {
-    float: right;
+#navbar-username {
+    margin-right: 10px;
 }
 
 .footer {

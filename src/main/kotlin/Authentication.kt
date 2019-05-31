@@ -42,12 +42,12 @@ class Authentication(private val config: Configuration, private val users: UserM
 
     fun ifAuthenticated(
         request: Request,
-        then: (Request) -> Response,
+        then: (AuthenticatedRequest) -> Response,
         otherwise: Response = Response(Status.SEE_OTHER).header("Location", login).body("User not authenticated")
     ): Response =
         request.cookie(loginCookieName).isValid().flatMap { cookie ->
             cookie.authenticatedUser().map { user ->
-                then(request)
+                then(AuthenticatedRequest(request, user))
             }
         }.orElse { otherwise }
 
@@ -79,15 +79,6 @@ class Authentication(private val config: Configuration, private val users: UserM
             httpOnly = true
         )
 
-    private fun Cookie.authenticatedUser(): Result<Error, User> {
-        val (apiKey, user) = this.value.split("_")
-
-        return when (apiKey) {
-            config.get(API_KEY) -> users.findUser(user)
-            else                -> Failure(Error("Cookie is invalid"))
-        }
-    }
-
     private fun Cookie?.isValid(): Result<Error, Cookie> {
         if (this == null) return Failure(Error("Cookie is not present"))
 
@@ -99,9 +90,17 @@ class Authentication(private val config: Configuration, private val users: UserM
         }
     }
 
+    private fun Cookie.authenticatedUser(): Result<Error, User> {
+        val (apiKey, user) = this.value.split("_")
+
+        return when (apiKey) {
+            config.get(API_KEY) -> users.findUser(user)
+            else                -> Failure(Error("Cookie is invalid"))
+        }
+    }
+
     private fun List<String?>.firstOrFailure() =
         first()?.let { Success(it) } ?: Failure(Error("User field was empty"))
 }
 
-object AuthenticatedUser
 data class AuthenticatedRequest(val request: Request, val user: User)

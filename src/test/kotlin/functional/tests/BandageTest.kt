@@ -12,6 +12,7 @@ import com.natpryce.hamkrest.equalTo
 import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.PASSWORD
 import config.dummyConfiguration
+import exampleAudioFileMetadata
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
@@ -56,10 +57,12 @@ class BandageTest {
         val loggedInUser = driver.userLogsIn()
 
         val loginCookie = driver.manage().getCookieNamed(Authentication.loginCookieName) ?: fail("login cookie not set")
+        val username = driver.findElement(By.cssSelector("span[data-test=\"user-short-name\"]")) ?: fail("username is unavailable on dashboard")
 
         assertThat(loginCookie, equalTo(validCookieFor(loggedInUser)))
         assertThat(driver.currentUrl, equalTo(dashboard))
         assertThat(driver.title, equalTo("Bandage"))
+        assertThat(username.text, equalTo(loggedInUser.shortName))
     }
 
     @Test
@@ -163,7 +166,8 @@ class BandageTest {
     fun `currently playing track is highlighted`() {
         val unplayedTrackOne = exampleAudioFileMetadata.copy(uuid = UUID.randomUUID())
         val unplayedTrackTwo = exampleAudioFileMetadata.copy(uuid = UUID.randomUUID())
-        val metadataStorage = StubMetadataStorage(mutableListOf(unplayedTrackOne, exampleAudioFileMetadata, unplayedTrackTwo))
+        val metadataStorage = StubMetadataStorage(mutableListOf(unplayedTrackOne,
+            exampleAudioFileMetadata, unplayedTrackTwo))
         val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
         val driver = Http4kWebDriver(bandage)
 
