@@ -2,11 +2,14 @@ import Bandage.StaticConfig.configurationFilesDir
 import Bandage.StaticConfig.defaultPort
 import Bandage.StaticConfig.filters
 import Bandage.StaticConfig.logger
+import RouteMappings.api
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
 import RouteMappings.logout
 import RouteMappings.play
+import RouteMappings.tracks
+import api.Tracks
 import com.github.jknack.handlebars.Handlebars
 import com.github.jknack.handlebars.helper.ConditionalHelpers
 import config.BandageConfig
@@ -26,9 +29,11 @@ import org.http4k.core.Method.POST
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.FORBIDDEN
 import org.http4k.core.Status.Companion.SEE_OTHER
+import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.core.then
 import org.http4k.filter.ServerFilters.ReplaceResponseContentsWithStaticFile
 import org.http4k.routing.ResourceLoader
+import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
 import org.http4k.routing.routes
 import org.http4k.routing.static
@@ -81,6 +86,11 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
     private val authentication = Authentication(providedConfig, userManagement)
     private fun redirectTo(location: String) = Response(SEE_OTHER).header("Location", location)
 
+    private val apiRoutes: RoutingHttpHandler = with(authentication) { routes(
+            tracks      bind GET  to { request -> ifAuthenticated(request, then = { Tracks(metadataStorage) }, otherwise = Response(UNAUTHORIZED)) }
+        )
+    }
+
     private val routes = with(authentication) { routes(
             index       bind GET  to { redirectTo(dashboard) },
             login       bind GET  to { request -> ifAuthenticated(request, then = { redirectTo(index) }, otherwise = Login(request, userManagement)) },
@@ -89,6 +99,7 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
             dashboard   bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  Dashboard(authenticatedRequest, metadataStorage) }) },
             play        bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(FORBIDDEN)) },
 
+            api         bind apiRoutes,
             "/public"   bind static(ResourceLoader.Directory("public"))
         )
     }

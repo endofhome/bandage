@@ -1,6 +1,8 @@
 import storage.AudioFileMetadata
 import storage.BitRate
 import storage.Duration
+import java.time.Instant
+import java.time.ZoneOffset.UTC
 import java.util.UUID
 
 val exampleAudioFileMetadata = AudioFileMetadata(
@@ -12,7 +14,7 @@ val exampleAudioFileMetadata = AudioFileMetadata(
     BitRate("320000"),
     Duration("21"),
     12345,
-    "10000",
+    Instant.EPOCH.atZone(UTC).toString(),
     "https://www.passwordprotectedlink.com",
     "/my_folder/my_file",
     "someamazinghashstring"

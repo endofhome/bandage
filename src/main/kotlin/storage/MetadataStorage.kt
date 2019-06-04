@@ -6,6 +6,7 @@ import java.io.FileReader
 import java.io.FileWriter
 import java.util.UUID
 
+// TODO If this isn't about a file, rename it
 data class AudioFileMetadata(
     val uuid: UUID,
     val artist: String,
@@ -18,7 +19,8 @@ data class AudioFileMetadata(
     val recordedDate: String,
     val passwordProtectedLink: String,
     val path: String,
-    val hash: String
+    val hash: String,
+    val collections: List<UUID> = emptyList()
 )
 
 class BitRate(val value: String)
@@ -27,6 +29,7 @@ class Duration(val value: String)
 fun String.toBitRate() = BitRate(this)
 fun String.toDuration() = Duration(this)
 
+// TODO return a result
 interface MetadataStorage {
     fun all(): List<AudioFileMetadata>
     fun find(uuid: UUID): AudioFileMetadata?
