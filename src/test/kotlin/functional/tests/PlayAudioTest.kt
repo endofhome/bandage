@@ -12,9 +12,9 @@ import org.http4k.core.Headers
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
 import org.http4k.core.Status.Companion.BAD_REQUEST
-import org.http4k.core.Status.Companion.FORBIDDEN
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
+import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.core.cookie.Cookie
 import org.http4k.core.cookie.cookie
 import org.junit.jupiter.api.Test
@@ -30,11 +30,11 @@ class PlayAudioTest {
     private val fileStorage = StubFileStorage(mapOf(exampleAudioFileMetadata.passwordProtectedLink to "some test data"))
 
     @Test
-    fun `returns FORBIDDEN if not logged in`() {
+    fun `returns UNAUTHORISED if not logged in`() {
         val bandage = Bandage(config, DummyMetadataStorage(), DummyFileStorage()).app
         val response = bandage(Request(GET, play).query("id", exampleAudioFileMetadata.uuid.toString()))
 
-        assertThat(response.status, equalTo(FORBIDDEN))
+        assertThat(response.status, equalTo(UNAUTHORIZED))
     }
 
     @Test
