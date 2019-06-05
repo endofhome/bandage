@@ -54,7 +54,7 @@ fun seedDatabase(metadataStorage: MetadataStorage) {
                     format = ffprobeInfo.format.format_name,
                     bitRate = ffprobeInfo.streams.firstOrNull()?.bit_rate?.toBitRate(),
                     duration = ffprobeInfo.format.duration?.toDuration(),
-                    size = ffprobeInfo.format.size.toInt(),
+                    fileSize = ffprobeInfo.format.size.toInt(),
                     recordedDate = ffprobeInfo.format.tags?.date.orEmpty(),
                     passwordProtectedLink = fileStorage.publicLink(file.path, PasswordProtected(config.get(DROPBOX_LINK_PASSWORD))).expectSuccess(),
                     path = file.path,

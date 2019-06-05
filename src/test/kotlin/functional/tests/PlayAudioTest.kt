@@ -76,8 +76,8 @@ class PlayAudioTest {
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
         val expectedHeaders: Headers = listOf(
             "Accept-Ranges" to "bytes",
-            "Content-Length" to exampleAudioFileMetadata.size.toString(),
-            "Content-Range" to "bytes 0-${exampleAudioFileMetadata.size - 1}/${exampleAudioFileMetadata.size}",
+            "Content-Length" to exampleAudioFileMetadata.fileSize.toString(),
+            "Content-Range" to "bytes 0-${exampleAudioFileMetadata.fileSize - 1}/${exampleAudioFileMetadata.fileSize}",
             "content-disposition" to "attachment; filename=${
                 listOf(exampleAudioFileMetadata.path.removePrefix("/").substringBefore('/'), exampleAudioFileMetadata.title).joinToString(" - ")
             }.${exampleAudioFileMetadata.format}"

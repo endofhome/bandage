@@ -79,7 +79,7 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
             "format": "$format",
             ${bitRate?.let { bitRate -> """"bitrate": "${bitRate.value}",""" }}
             ${duration?.let { duration -> """"duration": "${duration.value}",""" }}
-            "size": "$size",
+            "size": "$fileSize",
             "recordedDate": "$recordedDate",
             "passwordProtectedLink": "$passwordProtectedLink",
             "path": "$path",

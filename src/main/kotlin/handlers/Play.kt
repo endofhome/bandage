@@ -29,8 +29,8 @@ object Play {
         return fileStorage.stream(metadata.passwordProtectedLink).map { audioStream ->
             val headers: Headers = listOf(
                 "Accept-Ranges" to "bytes",
-                "Content-Length" to metadata.size.toString(),
-                "Content-Range" to "bytes 0-${metadata.size - 1}/${metadata.size}",
+                "Content-Length" to metadata.fileSize.toString(),
+                "Content-Range" to "bytes 0-${metadata.fileSize - 1}/${metadata.fileSize}",
                 "content-disposition" to "attachment; filename=${
                     listOf(metadata.path.removePrefix("/").substringBefore('/'), metadata.title).joinToString(" - ")
                 }.${metadata.format}"

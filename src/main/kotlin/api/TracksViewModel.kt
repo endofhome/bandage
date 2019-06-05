@@ -35,7 +35,7 @@ object Tracks {
             format,
             bitRate?.presentationFormat(),
             duration?.presentationFormat(),
-            size,
+            fileSize,
             "$playUrl",
             collections.map { "$it" }
         )
@@ -72,7 +72,7 @@ object ApiJson {
             obj.put("format", track.format)
             track.bitRate?.let { obj.put("bitRate", track.bitRate) }
             track.duration?.let { obj.put("duration", track.duration) }
-            obj.put("size", track.size)
+            obj.put("fileSize", track.size)
             obj.put("playUrl", track.playUrl)
             track.collections.let { if (it.isNotEmpty()) { obj.putPOJO("collections", it) } }
 
