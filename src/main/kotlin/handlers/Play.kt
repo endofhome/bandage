@@ -1,11 +1,14 @@
 package handlers
 
+import RouteMappings.play
 import org.http4k.core.Headers
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
+import org.http4k.core.Status.Companion.SEE_OTHER
+import org.http4k.routing.path
 import result.map
 import result.orElse
 import storage.FileStorage
@@ -18,7 +21,9 @@ object Play {
         metadataStorage: MetadataStorage,
         fileStorage: FileStorage
     ): Response {
-        val uuid = request.query("id") ?: return Response(BAD_REQUEST)
+        request.query("id")?.let { return Response(SEE_OTHER).header("Location", "$play/$it") }
+
+        val uuid = request.path("id") ?: return Response(BAD_REQUEST)
         val metadata = metadataStorage.find(UUID.fromString(uuid)) ?: return Response(NOT_FOUND)
 
         return fileStorage.stream(metadata.passwordProtectedLink).map { audioStream ->

@@ -14,6 +14,7 @@ import org.http4k.core.Request
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
+import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.core.cookie.Cookie
 import org.http4k.core.cookie.cookie
@@ -32,13 +33,13 @@ class PlayAudioTest {
     @Test
     fun `returns UNAUTHORISED if not logged in`() {
         val bandage = Bandage(config, DummyMetadataStorage(), DummyFileStorage()).app
-        val response = bandage(Request(GET, play).query("id", exampleAudioFileMetadata.uuid.toString()))
+        val response = bandage(Request(GET, "$play/${exampleAudioFileMetadata.uuid}"))
 
         assertThat(response.status, equalTo(UNAUTHORIZED))
     }
 
     @Test
-    fun `returns BAD REQUEST when no ID query parameter is present`() {
+    fun `returns BAD REQUEST when no ID path parameter is present`() {
         val bandage = Bandage(config, DummyMetadataStorage(), DummyFileStorage()).app
         val response = bandage(Request(GET, play)
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
@@ -50,8 +51,7 @@ class PlayAudioTest {
     fun `returns NOT FOUND when authenticated but file is not present in metadata storage`() {
         val emptyMetadataStorage = StubMetadataStorage(mutableListOf())
         val bandage = Bandage(config, emptyMetadataStorage, fileStorage).app
-        val response = bandage(Request(GET, play)
-            .query("id", exampleAudioFileMetadata.uuid.toString())
+        val response = bandage(Request(GET, "$play/${exampleAudioFileMetadata.uuid}")
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
 
         assertThat(response.status, equalTo(NOT_FOUND))
@@ -61,8 +61,7 @@ class PlayAudioTest {
     fun `returns NOT FOUND when authenticated but file is not present in file storage`() {
         val emptyFileStorage = StubFileStorage(emptyMap())
         val bandage = Bandage(config, metadataStorage, emptyFileStorage).app
-        val response = bandage(Request(GET, play)
-            .query("id", exampleAudioFileMetadata.uuid.toString())
+        val response = bandage(Request(GET, "$play/${exampleAudioFileMetadata.uuid}")
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
 
         assertThat(response.status, equalTo(NOT_FOUND))
@@ -73,8 +72,7 @@ class PlayAudioTest {
         val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioFileMetadata))
         val fileStorage = StubFileStorage(mapOf(exampleAudioFileMetadata.passwordProtectedLink to "some test data"))
         val bandage = Bandage(config, metadataStorage, fileStorage).app
-        val response = bandage(Request(GET, play)
-            .query("id", exampleAudioFileMetadata.uuid.toString())
+        val response = bandage(Request(GET, "$play/${exampleAudioFileMetadata.uuid}")
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
         val expectedHeaders: Headers = listOf(
             "Accept-Ranges" to "bytes",
@@ -89,5 +87,15 @@ class PlayAudioTest {
         assertThat(response.headers, equalTo(expectedHeaders))
         val streamedData = String(response.body.stream.readAllBytes())
         assertThat(streamedData, equalTo("some test data"))
+    }
+
+    @Test
+    fun `redirects if logged in and ID query parameter is provided`() {
+        val bandage = Bandage(config, DummyMetadataStorage(), DummyFileStorage()).app
+        val response = bandage(Request(GET, play).query("id", exampleAudioFileMetadata.uuid.toString())
+            .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
+
+        assertThat(response.status, equalTo(SEE_OTHER))
+        assertThat(response.header("Location"), equalTo("$play/${exampleAudioFileMetadata.uuid}"))
     }
 }

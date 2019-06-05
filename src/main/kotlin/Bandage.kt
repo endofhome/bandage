@@ -8,6 +8,7 @@ import RouteMappings.index
 import RouteMappings.login
 import RouteMappings.logout
 import RouteMappings.play
+import RouteMappings.playWithPath
 import RouteMappings.tracks
 import api.Tracks
 import com.github.jknack.handlebars.Handlebars
@@ -87,22 +88,29 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
     private val authentication = Authentication(providedConfig, userManagement)
     private fun redirectTo(location: String) = Response(SEE_OTHER).header("Location", location)
 
+    private val legacyRoutes: RoutingHttpHandler = with(authentication) { routes(
+            play         bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(UNAUTHORIZED))}
+        )
+    }
+
     private val apiRoutes: RoutingHttpHandler = with(authentication) { routes(
-            tracks      bind GET  to { request -> ifAuthenticated(request, then = { Tracks(metadataStorage) }, otherwise = Response(UNAUTHORIZED)) }
+            tracks       bind GET  to { request -> ifAuthenticated(request, then = { Tracks(metadataStorage) }, otherwise = Response(UNAUTHORIZED)) }
         )
     }
 
     private val routes = with(authentication) { routes(
-            index       bind GET  to { redirectTo(dashboard) },
-            login       bind GET  to { request -> ifAuthenticated(request, then = { redirectTo(index) }, otherwise = Login(request, userManagement)) },
-            login       bind POST to { request -> authenticateUser(request) },
-            logout      bind GET  to { logout() },
-            dashboard   bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  Dashboard(authenticatedRequest, metadataStorage) }) },
-            play        bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(UNAUTHORIZED)) },
+            index        bind GET  to { redirectTo(dashboard) },
+            login        bind GET  to { request -> ifAuthenticated(request, then = { redirectTo(index) }, otherwise = Login(request, userManagement)) },
+            login        bind POST to { request -> authenticateUser(request) },
+            logout       bind GET  to { logout() },
+            dashboard    bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  Dashboard(authenticatedRequest, metadataStorage) }) },
+            playWithPath bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(UNAUTHORIZED)) },
 
-            api         bind apiRoutes,
+            api          bind apiRoutes,
 
-            "/public"   bind static(ResourceLoader.Directory("public"))
+            "/public"    bind static(ResourceLoader.Directory("public")),
+
+            legacyRoutes
         )
     }
 
