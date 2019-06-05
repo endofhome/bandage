@@ -14,10 +14,9 @@ import java.io.PrintWriter
 import java.io.StringWriter
 
 object HttpConfig {
+    val environment get() = if (probablyOnHeroku) PRODUCTION else LOCAL
     val probablyOnHeroku = System.getenv("DYNO") != null
     var port: Int = defaultPort
-
-    fun httpConfig() = if (probablyOnHeroku) PRODUCTION else LOCAL
 
     enum class PerEnvironment(val config: HttpConfigData) {
         PRODUCTION(HttpConfigData("https", "band-age.herokuapp.com")),
