@@ -103,7 +103,7 @@ private fun ResultSet.toAudioFileMetadata(): AudioFileMetadata {
         postgresMetadata.duration?.toDuration(),
         postgresMetadata.size,
         postgresMetadata.recordedDate,
-        postgresMetadata.passwordProtectedLink,
+        postgresMetadata.passwordProtectedLink.toUri(),
         postgresMetadata.path,
         postgresMetadata.sha256
     )

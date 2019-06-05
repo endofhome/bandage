@@ -1,3 +1,4 @@
+import org.http4k.core.Uri
 import storage.AudioFileMetadata
 import storage.BitRate
 import storage.Duration
@@ -15,7 +16,7 @@ val exampleAudioFileMetadata = AudioFileMetadata(
     Duration("21"),
     12345,
     Instant.EPOCH.atZone(UTC).toString(),
-    "https://www.passwordprotectedlink.com",
+    Uri.of("https://www.passwordprotectedlink.com"),
     "/my_folder/my_file",
     "someamazinghashstring"
 )

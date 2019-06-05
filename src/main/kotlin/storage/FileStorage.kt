@@ -1,5 +1,6 @@
 package storage
 
+import org.http4k.core.Uri
 import result.Error
 import result.Result
 import java.io.InputStream
@@ -11,8 +12,8 @@ data class File(val name: String, val path: String)
 interface FileStorage {
     fun listFiles(): Result<Error, List<File>>
     fun downloadFile(remotePath: String, destinationPath: String): Result<Error, JavaFile>
-    fun publicLink(path: String, permission: FileStoragePermission): Result<Error, String>
-    fun stream(url: String): Result<Error, InputStream>
+    fun publicLink(path: String, permission: FileStoragePermission): Result<Error, Uri>
+    fun stream(uri: Uri): Result<Error, InputStream>
 }
 
 sealed class FileStoragePermission {

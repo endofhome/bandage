@@ -1,6 +1,7 @@
 package storage
 
 import config.Configuration
+import org.http4k.core.Uri
 import result.Error
 import result.Result
 import result.asSuccess
@@ -11,29 +12,28 @@ open class DummyFileStorage : FileStorage {
     override fun downloadFile(remotePath: String, destinationPath: String): Result<Error, File> =
         TODO("not implemented")
 
-    override fun publicLink(path: String, permission: FileStoragePermission): Result<Error, String> =
+    override fun publicLink(path: String, permission: FileStoragePermission): Result<Error, Uri> =
         TODO("not implemented")
 
-    override fun stream(url: String): Result<Error, InputStream> =
+    override fun stream(uri: Uri): Result<Error, InputStream> =
         InputStream.nullInputStream().asSuccess()
 
     override fun listFiles(): Result<Error, List<storage.File>> =
         TODO("not implemented")
 }
 
-typealias FileUrl = String
 typealias FileStringData = String
-class StubFileStorage(private val files: Map<FileUrl, FileStringData>) : DummyFileStorage() {
+class StubFileStorage(private val files: Map<Uri, FileStringData>) : DummyFileStorage() {
     override fun listFiles(): Result<Error, List<storage.File>> =
-        files.entries.map { File(name = it.value, path = it.key) }.asSuccess()
+        files.entries.map { File(name = it.value, path = it.key.toString()) }.asSuccess()
 
-    override fun stream(url: String): Result<Error, InputStream> {
-        val fileStringData = files[url] ?: return Result.Failure(Error("File not found at path $url"))
+    override fun stream(uri: Uri): Result<Error, InputStream> {
+        val fileStringData = files[uri] ?: return Result.Failure(Error("File not found at path $uri"))
         return fileStringData.toByteArray().inputStream().asSuccess()
     }
 }
 
-class StubFileStorageFactory(private val files: Map<FileUrl, FileStringData>): DummyFileStorageFactory() {
+class StubFileStorageFactory(private val files: Map<Uri, FileStringData>): DummyFileStorageFactory() {
     override fun invoke(config: Configuration): FileStorage = StubFileStorage(files)
 }
 

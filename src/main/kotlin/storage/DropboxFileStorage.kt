@@ -16,6 +16,7 @@ import com.dropbox.core.v2.sharing.DbxUserSharingRequests
 import com.dropbox.core.v2.sharing.RequestedVisibility
 import com.dropbox.core.v2.sharing.SharedLinkMetadata
 import com.dropbox.core.v2.sharing.SharedLinkSettings
+import org.http4k.core.Uri
 import result.Error
 import result.Result
 import result.Result.Failure
@@ -38,10 +39,10 @@ class DropboxFileStorage(private val dropboxClient: SimpleDropboxClient) : FileS
     override fun downloadFile(remotePath: String, destinationPath: String): Result<Error, java.io.File> =
         dropboxClient.downloadFile(remotePath, destinationPath)
 
-    override fun stream(url: String): Result<Error, InputStream> =
-        dropboxClient.streamFromPasswordProtectedUrl(url)
+    override fun stream(uri: Uri): Result<Error, InputStream> =
+        dropboxClient.streamFromPasswordProtectedUri(uri)
 
-    override fun publicLink(path: String, permission: FileStoragePermission): Result<Error, String> =
+    override fun publicLink(path: String, permission: FileStoragePermission): Result<Error, Uri> =
         when (permission) {
             is FileStoragePermission.PasswordProtected -> dropboxClient.createPasswordProtectedLink(path, permission.password)
         }
@@ -51,8 +52,8 @@ interface SimpleDropboxClient {
     fun listFolders(): Result<Error, List<Folder>>
     fun readTextFile(filename: String): Result<Error, List<String>>
     fun downloadFile(remotePath: String, destinationPath: String): Result<Error, java.io.File>
-    fun streamFromPasswordProtectedUrl(url: String): Result<Error, InputStream>
-    fun createPasswordProtectedLink(remotePathLower: String, password: String, expiryDate: Date? = null): Result<Error, String>
+    fun streamFromPasswordProtectedUri(uri: Uri): Result<Error, InputStream>
+    fun createPasswordProtectedLink(remotePathLower: String, password: String, expiryDate: Date? = null): Result<Error, Uri>
 }
 
 class HttpDropboxClient(identifier: String, accessToken: String) : SimpleDropboxClient {
@@ -76,21 +77,21 @@ class HttpDropboxClient(identifier: String, accessToken: String) : SimpleDropbox
             }.asSuccess()
         }.orElse { Failure(it) }
 
-    override fun createPasswordProtectedLink(remotePathLower: String, password: String, expiryDate: Date?): Result<Error, String> =
+    override fun createPasswordProtectedLink(remotePathLower: String, password: String, expiryDate: Date?): Result<Error, Uri> =
         revokeExistingSharedLinksFor(remotePathLower).map {
             DbxUserSharingRequests(rawClient).createSharedLinkWithSettings(
                 remotePathLower,
                 SharedLinkSettings(RequestedVisibility.PASSWORD, password, expiryDate)
-            ).url
+            ).url.toUri()
         }
 
-    override fun streamFromPasswordProtectedUrl(url: String): Result<Error, InputStream> {
-        val passwordProtectedLinkDownloader = DbxUserSharingRequests(rawClient).getSharedLinkFile(url)
+    override fun streamFromPasswordProtectedUri(uri: Uri): Result<Error, InputStream> {
+        val passwordProtectedLinkDownloader = DbxUserSharingRequests(rawClient).getSharedLinkFile(uri.toString())
 
         return try {
             passwordProtectedLinkDownloader.inputStream.asSuccess()
         } catch (e: Exception) {
-            Failure(Error("Downloader for $url has already been closed"))
+            Failure(Error("Downloader for $uri has already been closed"))
         }
     }
 

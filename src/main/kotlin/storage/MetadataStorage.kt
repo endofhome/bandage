@@ -21,12 +21,12 @@ data class AudioFileMetadata(
     val duration: Duration?,
     val size: Int,
     val recordedDate: String,
-    val passwordProtectedLink: String,
+    val passwordProtectedLink: Uri,
     val path: String,
     val hash: String,
     val collections: List<UUID> = emptyList()
 ) {
-    val playUrl: Uri = Uri.of("${environment.config.baseUrl}$play/$uuid")
+    val playUrl: Uri = "${environment.config.baseUrl}$play/$uuid".toUri()
 
     companion object {
         fun BitRate.presentationFormat(): String = (this.value.toBigDecimal() / BigDecimal(1000)).toString()
@@ -51,6 +51,7 @@ class Duration(val value: String)
 
 fun String.toBitRate() = BitRate(this)
 fun String.toDuration() = Duration(this)
+fun String.toUri() = Uri.of(this)
 
 // TODO return a result
 interface MetadataStorage {
@@ -79,7 +80,7 @@ class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataSt
                     this[6].toDuration(),
                     this[7].toInt(),
                     this[8],
-                    this[9],
+                    this[9].toUri(),
                     this[10],
                     this[11]
                 )
@@ -118,7 +119,7 @@ object LocalCsvMetadataStorage : MetadataStorage {
                 this[6].toDuration(),
                 this[7].toInt(),
                 this[8],
-                this[9],
+                this[9].toUri(),
                 this[10],
                 this[11]
             )

@@ -22,6 +22,7 @@ import result.Result.Success
 import result.flatMap
 import result.map
 import result.orElse
+import storage.toUri
 
 class Authentication(private val config: Configuration, private val users: UserManagement) {
 
@@ -128,7 +129,7 @@ data class AuthenticatedRequest(val request: Request, val user: User)
 private fun Uri.plusDashboardFragmentIdentifier(): Uri =
     if (this.path.startsWith(dashboard)) {
         val id = this.query.substringAfter("id=").substringBefore("&")
-        Uri.of("$this#$id")
+        "$this#$id".toUri()
     } else {
         this
     }
