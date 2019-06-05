@@ -8,8 +8,8 @@ import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
 import org.http4k.template.ViewModel
 import org.http4k.template.viewModel
-import storage.AudioFileMetadata
-import storage.AudioFileMetadata.Companion.presentationFormat
+import storage.AudioTrackMetadata
+import storage.AudioTrackMetadata.Companion.presentationFormat
 import storage.MetadataStorage
 import java.time.temporal.ChronoUnit
 
@@ -26,7 +26,7 @@ object Tracks {
 
     data class TracksViewModel(val tracks: List<ViewModels.Track>) : ViewModel
 
-    private fun AudioFileMetadata.viewModel(): ViewModels.Track =
+    private fun AudioTrackMetadata.viewModel(): ViewModels.Track =
         ViewModels.Track(
             "$uuid",
             artist,

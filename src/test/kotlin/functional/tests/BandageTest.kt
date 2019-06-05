@@ -14,7 +14,7 @@ import com.natpryce.hamkrest.equalTo
 import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.PASSWORD
 import config.dummyConfiguration
-import exampleAudioFileMetadata
+import exampleAudioTrackMetadata
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
@@ -162,13 +162,13 @@ class BandageTest {
 
     @Test
     fun `list of audio tracks are available in dashboard`() {
-        val metadataWithNullValues = exampleAudioFileMetadata.copy(
-            uuid = UUID.fromString(exampleAudioFileMetadata.uuid.toString().reversed()),
+        val metadataWithNullValues = exampleAudioTrackMetadata.copy(
+            uuid = UUID.fromString(exampleAudioTrackMetadata.uuid.toString().reversed()),
             duration = null,
             title = "track with null duration",
             format = "wav"
         )
-        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioFileMetadata, metadataWithNullValues))
+        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata, metadataWithNullValues))
         val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
         val driver = Http4kWebDriver(bandage)
 
@@ -179,8 +179,8 @@ class BandageTest {
         val folderh4 = driver.findElement(By.cssSelector("h4[data-test=\"[folder-my_folder]\"]")) ?: fail("FolderViewModel h4 is unavailable")
         assertThat(folderh4.text, equalTo("my_folder"))
 
-        val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[file-${exampleAudioFileMetadata.uuid}]\"]")) ?: fail("First file div is unavailable")
-        assertThat(firstFile.text, equalTo("${exampleAudioFileMetadata.title} | 0:21 | ${exampleAudioFileMetadata.format} | play"))
+        val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[file-${exampleAudioTrackMetadata.uuid}]\"]")) ?: fail("First file div is unavailable")
+        assertThat(firstFile.text, equalTo("${exampleAudioTrackMetadata.title} | 0:21 | ${exampleAudioTrackMetadata.format} | play"))
 
         val fileWithNullDuration = driver.findElement(By.cssSelector("div[data-test=\"[file-${metadataWithNullValues.uuid}]\"]")) ?: fail("First file div is unavailable")
         assertThat(fileWithNullDuration.text, equalTo("${metadataWithNullValues.title} | ${metadataWithNullValues.format} | play"))
@@ -188,24 +188,24 @@ class BandageTest {
 
     @Test
     fun `audio tracks can be played via dashboard`() {
-        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioFileMetadata))
+        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata))
         val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
         val driver = Http4kWebDriver(bandage)
 
         driver.userLogsInAndPlaysATrack()
 
-        driver.findElement(By.cssSelector("audio[data-test=\"[play_file-${exampleAudioFileMetadata.uuid}]\"]")) ?: fail("Audio player footer is unavailable")
+        driver.findElement(By.cssSelector("audio[data-test=\"[play_file-${exampleAudioTrackMetadata.uuid}]\"]")) ?: fail("Audio player footer is unavailable")
         val playerMetadata = driver.findElement(By.cssSelector("div[data-test=\"[audio-player-metadata]\"]")) ?: fail("Audio player metadata is unavailable")
-        assertThat(playerMetadata.text, equalTo("${exampleAudioFileMetadata.title} | 0:21 | ${exampleAudioFileMetadata.format} (320 kbps)"))
-        assertThat(driver.currentUrl, equalTo("/dashboard?id=${exampleAudioFileMetadata.uuid}#${exampleAudioFileMetadata.uuid}"))
+        assertThat(playerMetadata.text, equalTo("${exampleAudioTrackMetadata.title} | 0:21 | ${exampleAudioTrackMetadata.format} (320 kbps)"))
+        assertThat(driver.currentUrl, equalTo("/dashboard?id=${exampleAudioTrackMetadata.uuid}#${exampleAudioTrackMetadata.uuid}"))
     }
 
     @Test
     fun `currently playing track is highlighted`() {
-        val unplayedTrackOne = exampleAudioFileMetadata.copy(uuid = UUID.randomUUID())
-        val unplayedTrackTwo = exampleAudioFileMetadata.copy(uuid = UUID.randomUUID())
+        val unplayedTrackOne = exampleAudioTrackMetadata.copy(uuid = UUID.randomUUID())
+        val unplayedTrackTwo = exampleAudioTrackMetadata.copy(uuid = UUID.randomUUID())
         val metadataStorage = StubMetadataStorage(mutableListOf(unplayedTrackOne,
-            exampleAudioFileMetadata, unplayedTrackTwo))
+            exampleAudioTrackMetadata, unplayedTrackTwo))
         val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
         val driver = Http4kWebDriver(bandage)
 
@@ -220,7 +220,7 @@ class BandageTest {
         this.userLogsIn()
         this.navigate().to(dashboard)
 
-        val trackToPlay = findElement(By.cssSelector("div[data-test=\"[file-${exampleAudioFileMetadata.uuid}]\"]"))
+        val trackToPlay = findElement(By.cssSelector("div[data-test=\"[file-${exampleAudioTrackMetadata.uuid}]\"]"))
             ?: fail("Div for track to play is unavailable")
         val playLink = trackToPlay.findElement(By.cssSelector("a[data-test=\"[play-audio-link]\"]"))
             ?: fail("Play link is unavailable")

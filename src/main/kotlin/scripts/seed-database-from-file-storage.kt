@@ -12,7 +12,7 @@ import config.ValidateConfig
 import result.expectSuccess
 import result.map
 import result.orElse
-import storage.AudioFileMetadata
+import storage.AudioTrackMetadata
 import storage.DropboxFileStorage
 import storage.FileStoragePermission.PasswordProtected
 import storage.HttpDropboxClient
@@ -46,7 +46,7 @@ fun seedDatabase(metadataStorage: MetadataStorage) {
 
                 val ffprobeInfo: FfprobeInfo = jacksonObjectMapper().readValue(fileInfoJsonString)
 
-                AudioFileMetadata(
+                AudioTrackMetadata(
                     uuid = UUID.randomUUID(),
                     artist = ffprobeInfo.format.tags?.artist.orEmpty(),
                     album = ffprobeInfo.format.tags?.album.orEmpty(),

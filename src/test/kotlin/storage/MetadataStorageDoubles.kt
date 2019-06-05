@@ -3,26 +3,26 @@ package storage
 import config.Configuration
 import java.util.UUID
 
-class StubMetadataStorage(private val metadata: MutableList<AudioFileMetadata>) : DummyMetadataStorage() {
-    override fun all(): List<AudioFileMetadata> = metadata
+class StubMetadataStorage(private val metadata: MutableList<AudioTrackMetadata>) : DummyMetadataStorage() {
+    override fun all(): List<AudioTrackMetadata> = metadata
 
-    override fun find(uuid: UUID): AudioFileMetadata? =
+    override fun find(uuid: UUID): AudioTrackMetadata? =
         metadata.find { audioFileMetadata -> audioFileMetadata.uuid == uuid }
 
-    override fun write(newMetadata: List<AudioFileMetadata>) {
+    override fun write(newMetadata: List<AudioTrackMetadata>) {
         metadata += newMetadata
     }
 }
 
 open class DummyMetadataStorage : MetadataStorage {
-    override fun all() = emptyList<AudioFileMetadata>()
-    override fun find(uuid: UUID): AudioFileMetadata? = null
-    override fun write(newMetadata: List<AudioFileMetadata>): Unit = TODO("not implemented")
-    override fun update(updatedMetadata: AudioFileMetadata) = TODO("not implemented")
+    override fun all() = emptyList<AudioTrackMetadata>()
+    override fun find(uuid: UUID): AudioTrackMetadata? = null
+    override fun write(newMetadata: List<AudioTrackMetadata>): Unit = TODO("not implemented")
+    override fun update(updatedMetadata: AudioTrackMetadata) = TODO("not implemented")
 }
 
 
-class StubMetadataStorageFactory(private val metadata: MutableList<AudioFileMetadata>): DummyMetadataStorageFactory() {
+class StubMetadataStorageFactory(private val metadata: MutableList<AudioTrackMetadata>): DummyMetadataStorageFactory() {
     override fun invoke(config: Configuration): MetadataStorage = StubMetadataStorage(metadata)
 }
 

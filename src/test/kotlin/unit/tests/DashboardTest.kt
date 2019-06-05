@@ -4,7 +4,7 @@ import AuthenticatedRequest
 import RouteMappings.dashboard
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import exampleAudioFileMetadata
+import exampleAudioTrackMetadata
 import exampleUser
 import handlers.Dashboard
 import org.http4k.core.Method.GET
@@ -19,9 +19,9 @@ class DashboardTest {
     fun `Folders are ordered crudely by date and folders only containing letters are last`() {
         val authenticatedRequest = AuthenticatedRequest(Request(GET, dashboard), exampleUser)
         val metadataStorage = StubMetadataStorage(mutableListOf(
-            exampleAudioFileMetadata.copy(path = "/1980-10-10/oldest"),
-            exampleAudioFileMetadata.copy(path = "/milford/bäbï"),
-            exampleAudioFileMetadata.copy(path = "/1999-12-31/newest")
+            exampleAudioTrackMetadata.copy(path = "/1980-10-10/oldest"),
+            exampleAudioTrackMetadata.copy(path = "/milford/bäbï"),
+            exampleAudioTrackMetadata.copy(path = "/1999-12-31/newest")
         ))
 
         val response = Dashboard(authenticatedRequest, metadataStorage)

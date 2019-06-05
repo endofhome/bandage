@@ -24,7 +24,7 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
     }
     private val connection = datasource.connection
 
-    override fun all(): List<AudioFileMetadata> =
+    override fun all(): List<AudioTrackMetadata> =
         connection.prepareStatement("SELECT * FROM public.tracks").use { statement ->
                 statement.executeQuery().use { resultSet ->
                     generateSequence {
@@ -33,14 +33,14 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
                 }
             }
 
-    override fun find(uuid: UUID): AudioFileMetadata? =
+    override fun find(uuid: UUID): AudioTrackMetadata? =
         connection.prepareStatement("SELECT * FROM public.tracks WHERE id = '$uuid'").use { statement ->
                 statement.executeQuery().use { resultSet ->
                     if (resultSet.next()) resultSet.toAudioFileMetadata() else null
                 }
             }
 
-    override fun write(newMetadata: List<AudioFileMetadata>) {
+    override fun write(newMetadata: List<AudioTrackMetadata>) {
         val preparedStatement = connection.prepareStatement("""
                 INSERT INTO tracks VALUES ${newMetadata.joinToString(",") { "(?::uuid, ?::jsonb)" }};
             """.trimIndent())
@@ -57,7 +57,7 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
         }
     }
 
-    override fun update(updatedMetadata: AudioFileMetadata) {
+    override fun update(updatedMetadata: AudioTrackMetadata) {
         find(updatedMetadata.uuid)?.let {
             val preparedStatement = connection.prepareStatement("""
                 UPDATE tracks SET metadata = ?::jsonb WHERE id = '${updatedMetadata.uuid}';
@@ -71,7 +71,7 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
         } ?: throw RuntimeException("UUID ${updatedMetadata.uuid} not found.")
     }
 
-    private fun AudioFileMetadata.toJsonString(): String =
+    private fun AudioTrackMetadata.toJsonString(): String =
         """{
             "artist": "$artist",
             "album": "$album",
@@ -87,13 +87,13 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
         }""".trimIndent()
 }
 
-private fun ResultSet.toAudioFileMetadata(): AudioFileMetadata {
+private fun ResultSet.toAudioFileMetadata(): AudioTrackMetadata {
     val uuid = UUID.fromString(this.getString("id"))
     val postgresMetadata: PostgresAudioMetadata = this.getString("metadata").run {
         jacksonObjectMapper().readValue(this)
     }
 
-    return AudioFileMetadata(
+    return AudioTrackMetadata(
         uuid,
         postgresMetadata.artist,
         postgresMetadata.album,

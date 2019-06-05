@@ -7,7 +7,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import config.BandageConfigItem.API_KEY
 import config.dummyConfiguration
-import exampleAudioFileMetadata
+import exampleAudioTrackMetadata
 import org.http4k.core.Headers
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
@@ -27,13 +27,13 @@ import storage.StubMetadataStorage
 class PlayAudioTest {
 
     private val config = dummyConfiguration()
-    private val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioFileMetadata))
-    private val fileStorage = StubFileStorage(mapOf(exampleAudioFileMetadata.passwordProtectedLink to "some test data"))
+    private val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata))
+    private val fileStorage = StubFileStorage(mapOf(exampleAudioTrackMetadata.passwordProtectedLink to "some test data"))
 
     @Test
     fun `returns UNAUTHORISED if not logged in`() {
         val bandage = Bandage(config, DummyMetadataStorage(), DummyFileStorage()).app
-        val response = bandage(Request(GET, "$play/${exampleAudioFileMetadata.uuid}"))
+        val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}"))
 
         assertThat(response.status, equalTo(UNAUTHORIZED))
     }
@@ -51,7 +51,7 @@ class PlayAudioTest {
     fun `returns NOT FOUND when authenticated but file is not present in metadata storage`() {
         val emptyMetadataStorage = StubMetadataStorage(mutableListOf())
         val bandage = Bandage(config, emptyMetadataStorage, fileStorage).app
-        val response = bandage(Request(GET, "$play/${exampleAudioFileMetadata.uuid}")
+        val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
 
         assertThat(response.status, equalTo(NOT_FOUND))
@@ -61,7 +61,7 @@ class PlayAudioTest {
     fun `returns NOT FOUND when authenticated but file is not present in file storage`() {
         val emptyFileStorage = StubFileStorage(emptyMap())
         val bandage = Bandage(config, metadataStorage, emptyFileStorage).app
-        val response = bandage(Request(GET, "$play/${exampleAudioFileMetadata.uuid}")
+        val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
 
         assertThat(response.status, equalTo(NOT_FOUND))
@@ -69,18 +69,18 @@ class PlayAudioTest {
 
     @Test
     fun `can access audio stream if logged in`() {
-        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioFileMetadata))
-        val fileStorage = StubFileStorage(mapOf(exampleAudioFileMetadata.passwordProtectedLink to "some test data"))
+        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata))
+        val fileStorage = StubFileStorage(mapOf(exampleAudioTrackMetadata.passwordProtectedLink to "some test data"))
         val bandage = Bandage(config, metadataStorage, fileStorage).app
-        val response = bandage(Request(GET, "$play/${exampleAudioFileMetadata.uuid}")
+        val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
         val expectedHeaders: Headers = listOf(
             "Accept-Ranges" to "bytes",
-            "Content-Length" to exampleAudioFileMetadata.fileSize.toString(),
-            "Content-Range" to "bytes 0-${exampleAudioFileMetadata.fileSize - 1}/${exampleAudioFileMetadata.fileSize}",
+            "Content-Length" to exampleAudioTrackMetadata.fileSize.toString(),
+            "Content-Range" to "bytes 0-${exampleAudioTrackMetadata.fileSize - 1}/${exampleAudioTrackMetadata.fileSize}",
             "content-disposition" to "attachment; filename=${
-                listOf(exampleAudioFileMetadata.path.removePrefix("/").substringBefore('/'), exampleAudioFileMetadata.title).joinToString(" - ")
-            }.${exampleAudioFileMetadata.format}"
+                listOf(exampleAudioTrackMetadata.path.removePrefix("/").substringBefore('/'), exampleAudioTrackMetadata.title).joinToString(" - ")
+            }.${exampleAudioTrackMetadata.format}"
         )
 
         assertThat(response.status, equalTo(OK))
@@ -92,10 +92,10 @@ class PlayAudioTest {
     @Test
     fun `redirects if logged in and ID query parameter is provided`() {
         val bandage = Bandage(config, DummyMetadataStorage(), DummyFileStorage()).app
-        val response = bandage(Request(GET, play).query("id", exampleAudioFileMetadata.uuid.toString())
+        val response = bandage(Request(GET, play).query("id", exampleAudioTrackMetadata.uuid.toString())
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
 
         assertThat(response.status, equalTo(SEE_OTHER))
-        assertThat(response.header("Location"), equalTo("$play/${exampleAudioFileMetadata.uuid}"))
+        assertThat(response.header("Location"), equalTo("$play/${exampleAudioTrackMetadata.uuid}"))
     }
 }

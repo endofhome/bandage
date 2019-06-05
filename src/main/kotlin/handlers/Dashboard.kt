@@ -7,8 +7,8 @@ import org.http4k.core.Response
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
 import org.http4k.template.ViewModel
-import storage.AudioFileMetadata
-import storage.AudioFileMetadata.Companion.presentationFormat
+import storage.AudioTrackMetadata
+import storage.AudioTrackMetadata.Companion.presentationFormat
 import storage.MetadataStorage
 import java.util.UUID
 
@@ -27,12 +27,12 @@ object Dashboard {
         return Response(OK).with(view of DashboardPage(authenticatedRequest.user, folders, nowPlaying))
     }
 
-    data class DashboardPage(val loggedInUser: User, val folders: List<ViewModels.Folder>, val nowPlaying: ViewModels.AudioFileMetadata? = null) : ViewModel {
+    data class DashboardPage(val loggedInUser: User, val folders: List<ViewModels.Folder>, val nowPlaying: ViewModels.AudioTrackMetadata? = null) : ViewModel {
         override fun template() = "dashboard"
     }
 
-    private fun AudioFileMetadata.viewModel(): ViewModels.AudioFileMetadata =
-        ViewModels.AudioFileMetadata(
+    private fun AudioTrackMetadata.viewModel(): ViewModels.AudioTrackMetadata =
+        ViewModels.AudioTrackMetadata(
             "$uuid",
             title,
             format,
@@ -42,8 +42,8 @@ object Dashboard {
         )
 
     object ViewModels {
-        data class Folder(val name: String, val files: List<AudioFileMetadata>)
-        data class AudioFileMetadata(
+        data class Folder(val name: String, val files: List<AudioTrackMetadata>)
+        data class AudioTrackMetadata(
             val uuid: String,
             val title: String,
             val format: String,
@@ -54,7 +54,7 @@ object Dashboard {
     }
 }
 
-private fun List<Pair<String, List<AudioFileMetadata>>>.sortByReversedThenFolderNamesOnlyContainingLetters(): List<Pair<String, List<AudioFileMetadata>>> {
+private fun List<Pair<String, List<AudioTrackMetadata>>>.sortByReversedThenFolderNamesOnlyContainingLetters(): List<Pair<String, List<AudioTrackMetadata>>> {
     val (onlyLetters, others) = this.partition { (folderName) -> folderName.all { it.isLetter() } }
     return others.sortedBy { (folderName) -> folderName }.reversed() + onlyLetters
 }
