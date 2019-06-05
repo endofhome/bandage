@@ -30,12 +30,12 @@ object HttpConfig {
 
 object Filters {
     object EnforceHttpsOnHeroku {
-        operator fun invoke(): Filter = Filter { next -> { enforceHttps(next, it) } }
+        operator fun invoke(): Filter = Filter { next -> { enforceHttpsOnHeroku(next, it) } }
 
-        private fun enforceHttps(handle: HttpHandler, request: Request): Response =
+        private fun enforceHttpsOnHeroku(handle: HttpHandler, request: Request): Response =
             if (insecureHttp(request) && probablyOnHeroku) {
                 Response(Status.SEE_OTHER)
-                    .header("Location", request.uri.copy(scheme = PRODUCTION.config.protocol, host = PRODUCTION.config.host).toString())
+                    .header("Location", request.uri.copy(scheme = PRODUCTION.config.protocol).toString())
             } else {
                 handle(request)
             }
