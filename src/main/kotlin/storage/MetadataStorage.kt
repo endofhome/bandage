@@ -4,6 +4,7 @@ import result.map
 import result.orElse
 import java.io.FileReader
 import java.io.FileWriter
+import java.math.BigDecimal
 import java.util.UUID
 
 // TODO If this isn't about a file, rename it
@@ -21,7 +22,24 @@ data class AudioFileMetadata(
     val path: String,
     val hash: String,
     val collections: List<UUID> = emptyList()
-)
+) {
+    companion object {
+        fun BitRate.presentationFormat(): String = (this.value.toBigDecimal() / BigDecimal(1000)).toString()
+
+        fun Duration.presentationFormat(): String {
+            val (rawSeconds, _) = this.value.split(".")
+            val duration = java.time.Duration.ofSeconds(rawSeconds.toLong())
+            val hours = duration.toHoursPart().toString().emptyIfZero()
+            val minutes = duration.toMinutesPart()
+            val seconds = duration.toSecondsPart().toString().padStart(2, '0')
+            return "$hours$minutes:$seconds"
+        }
+
+        private fun String.emptyIfZero(): String =
+            if (this != "0") "$this:"
+            else ""
+    }
+}
 
 class BitRate(val value: String)
 class Duration(val value: String)

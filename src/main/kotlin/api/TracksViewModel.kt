@@ -11,10 +11,8 @@ import org.http4k.core.with
 import org.http4k.template.ViewModel
 import org.http4k.template.viewModel
 import storage.AudioFileMetadata
-import storage.BitRate
-import storage.Duration
+import storage.AudioFileMetadata.Companion.presentationFormat
 import storage.MetadataStorage
-import java.math.BigDecimal
 import java.time.temporal.ChronoUnit
 
 object Tracks {
@@ -43,22 +41,6 @@ object Tracks {
             environment.config.let { "${it.baseUrl}$play?id=$uuid" },
             collections.map { "$it" }
         )
-
-    // TODO remove duplication
-    private fun BitRate.presentationFormat(): String = (this.value.toBigDecimal() / BigDecimal(1000)).toString()
-
-    private fun String.emptyIfZero(): String =
-        if (this != "0") "$this:"
-        else ""
-
-    private fun Duration.presentationFormat(): String {
-        val (rawSeconds, _) = this.value.split(".")
-        val duration = java.time.Duration.ofSeconds(rawSeconds.toLong())
-        val hours = duration.toHoursPart().toString().emptyIfZero()
-        val minutes = duration.toMinutesPart()
-        val seconds = duration.toSecondsPart().toString().padStart(2, '0')
-        return "$hours$minutes:$seconds"
-    }
 
     object ViewModels {
         data class Track(
