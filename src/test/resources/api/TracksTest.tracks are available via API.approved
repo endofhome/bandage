@@ -10,7 +10,7 @@
     "bitRate": "320",
     "duration": "0:21",
     "size": 12345,
-    "playUrl": "https://localhost/play?id=c4ca4238-a0b9-3382-8dcc-509a6f75849b"
+    "playUrl": "http://localhost/play?id=c4ca4238-a0b9-3382-8dcc-509a6f75849b"
   },
   {
     "id": "c81e728d-9d4c-3f63-af06-7f89cc14862c",
@@ -23,7 +23,7 @@
     "bitRate": "320",
     "duration": "0:21",
     "size": 12345,
-    "playUrl": "https://localhost/play?id=c81e728d-9d4c-3f63-af06-7f89cc14862c",
+    "playUrl": "http://localhost/play?id=c81e728d-9d4c-3f63-af06-7f89cc14862c",
     "collections": [
       "eccbc87e-4b5c-32fe-a830-8fd9f2a7baf3"
     ]
@@ -38,7 +38,7 @@
     "format": "mp3",
     "duration": "0:21",
     "size": 12345,
-    "playUrl": "https://localhost/play?id=a87ff679-a2f3-371d-9181-a67b7542122c"
+    "playUrl": "http://localhost/play?id=a87ff679-a2f3-371d-9181-a67b7542122c"
   },
   {
     "id": "e4da3b7f-bbce-3345-9777-2b0674a318d5",
@@ -50,6 +50,6 @@
     "format": "mp3",
     "bitRate": "320",
     "size": 12345,
-    "playUrl": "https://localhost/play?id=e4da3b7f-bbce-3345-9777-2b0674a318d5"
+    "playUrl": "http://localhost/play?id=e4da3b7f-bbce-3345-9777-2b0674a318d5"
   }
 ]

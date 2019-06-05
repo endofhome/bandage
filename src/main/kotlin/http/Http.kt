@@ -1,8 +1,8 @@
 package http
 
 import Bandage.StaticConfig.logger
-import http.Host.LOCAL
-import http.Host.PRODUCTION
+import http.HttpConfig.LOCAL
+import http.HttpConfig.PRODUCTION
 import org.http4k.core.Filter
 import org.http4k.core.HttpHandler
 import org.http4k.core.Request
@@ -11,12 +11,14 @@ import org.http4k.core.Status
 import java.io.PrintWriter
 import java.io.StringWriter
 
-enum class Host(val value: String) {
-    PRODUCTION("band-age.herokuapp.com"),
-    LOCAL("localhost")
+enum class HttpConfig(val config: HttpConfigData) {
+    PRODUCTION(HttpConfigData("https", "band-age.herokuapp.com")),
+    LOCAL(HttpConfigData("http", "localhost"))
 }
 
-fun host() = if (probablyOnHeroku) PRODUCTION else LOCAL
+data class HttpConfigData(val protocol: String, val host: String)
+
+fun httpConfig() = if (probablyOnHeroku) PRODUCTION else LOCAL
 
 private val probablyOnHeroku = System.getenv("DYNO") != null
 
@@ -27,7 +29,7 @@ object Filters {
         private fun enforceHttps(handle: HttpHandler, request: Request): Response =
             if (insecureHttp(request) && probablyOnHeroku) {
                 Response(Status.SEE_OTHER)
-                    .header("Location", request.uri.copy(scheme = "https", host = PRODUCTION.value).toString())
+                    .header("Location", request.uri.copy(scheme = PRODUCTION.config.protocol, host = PRODUCTION.config.host).toString())
             } else {
                 handle(request)
             }
