@@ -2,7 +2,9 @@ package handlers
 
 import AuthenticatedRequest
 import Bandage.StaticConfig.view
+import RouteMappings.play
 import User
+import http.HttpConfig.environment
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
@@ -33,11 +35,12 @@ object Dashboard {
 
     private fun AudioFileMetadata.viewModel(): ViewModels.AudioFileMetadata =
         ViewModels.AudioFileMetadata(
-            this.uuid.toString(),
-            this.title,
-            this.format,
-            this.bitRate?.presentationFormat(),
-            this.duration?.presentationFormat()
+            uuid.toString(),
+            title,
+            format,
+            bitRate?.presentationFormat(),
+            duration?.presentationFormat(),
+            playUrl = "${environment.config.baseUrl}$play$uuid"
         )
 
     object ViewModels {
@@ -47,7 +50,8 @@ object Dashboard {
             val title: String,
             val format: String,
             val bitRate: String?,
-            val duration: String?
+            val duration: String?,
+            val playUrl: String
         )
     }
 }
