@@ -24,7 +24,7 @@ object HttpConfig {
     }
 
     data class HttpConfigData(val protocol: String, val host: String, val port: Int? = null) {
-        val baseUrl: String = "$protocol://$host${port?.let { ":$it" }}"
+        val baseUrl: String = "$protocol://$host${port?.let { ":$it" }.orEmpty()}"
     }
 }
 
