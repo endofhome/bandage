@@ -8,6 +8,8 @@ import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
 import org.http4k.template.ViewModel
+import result.Result.Failure
+import result.Result.Success
 import result.map
 import result.orElse
 import storage.AudioTrackMetadata
@@ -21,16 +23,17 @@ object Dashboard {
             metadataStorage.find(UUID.fromString(id)).map { metadata -> metadata?.viewModel() }.orElse { null }
         }
 
-        return metadataStorage.all().map { all ->
+        val folders = metadataStorage.all().map { all ->
             all.groupBy { file ->
                 file.path.drop(1).substringBefore("/")
             }.toList().sortByReversedThenFolderNamesOnlyContainingLetters().map { (folderName, files) ->
                 ViewModels.Folder(folderName, files.map { audioFile -> audioFile.viewModel() })
             }
-        }.map { folders ->
-            Response(OK).with(view of DashboardPage(authenticatedRequest.user, folders, nowPlaying))
-        }.orElse {
-            Response(INTERNAL_SERVER_ERROR)
+        }
+
+        return when (folders) {
+            is Success -> Response(OK).with(view of DashboardPage(authenticatedRequest.user, folders.value, nowPlaying))
+            is Failure -> Response(INTERNAL_SERVER_ERROR)
         }
     }
 
