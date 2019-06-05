@@ -1,8 +1,10 @@
 package http
 
+import Bandage.StaticConfig.defaultPort
 import Bandage.StaticConfig.logger
-import http.HttpConfig.LOCAL
-import http.HttpConfig.PRODUCTION
+import http.HttpConfig.PerEnvironment.LOCAL
+import http.HttpConfig.PerEnvironment.PRODUCTION
+import http.HttpConfig.probablyOnHeroku
 import org.http4k.core.Filter
 import org.http4k.core.HttpHandler
 import org.http4k.core.Request
@@ -11,16 +13,21 @@ import org.http4k.core.Status
 import java.io.PrintWriter
 import java.io.StringWriter
 
-enum class HttpConfig(val config: HttpConfigData) {
-    PRODUCTION(HttpConfigData("https", "band-age.herokuapp.com")),
-    LOCAL(HttpConfigData("http", "localhost"))
+object HttpConfig {
+    val probablyOnHeroku = System.getenv("DYNO") != null
+    var port: Int = defaultPort
+
+    fun httpConfig() = if (probablyOnHeroku) PRODUCTION else LOCAL
+
+    enum class PerEnvironment(val config: HttpConfigData) {
+        PRODUCTION(HttpConfigData("https", "band-age.herokuapp.com")),
+        LOCAL(HttpConfigData("http", "localhost", port))
+    }
+
+    data class HttpConfigData(val protocol: String, val host: String, val port: Int? = null) {
+        val baseUrl: String = "$protocol://$host${port?.let { ":$it" }}"
+    }
 }
-
-data class HttpConfigData(val protocol: String, val host: String)
-
-fun httpConfig() = if (probablyOnHeroku) PRODUCTION else LOCAL
-
-private val probablyOnHeroku = System.getenv("DYNO") != null
 
 object Filters {
     object EnforceHttpsOnHeroku {

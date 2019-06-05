@@ -22,7 +22,8 @@ import handlers.Login
 import handlers.Play
 import http.Filters.CatchAll
 import http.Filters.EnforceHttpsOnHeroku
-import http.httpConfig
+import http.HttpConfig.httpConfig
+import http.HttpConfig.port
 import org.http4k.core.Body
 import org.http4k.core.ContentType
 import org.http4k.core.Method.GET
@@ -54,10 +55,10 @@ import java.nio.file.Paths
 
 
 fun main(args: Array<String>) {
-    val port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
+    port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
     Bandage.init(BandageConfig, PostgresMetadataStorageFactory, DropboxFileStorageFactory).app.asServer(Jetty(port)).start()
 
-    httpConfig().config.let { logger.info("Bandage has started on ${it.protocol}://${it.host}:$port") }
+    httpConfig().config.let { logger.info("Bandage has started on ${it.baseUrl}") }
 }
 
 class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, fileStorage: FileStorage) {

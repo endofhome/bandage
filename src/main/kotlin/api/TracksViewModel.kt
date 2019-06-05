@@ -2,7 +2,7 @@ package api
 
 import RouteMappings.play
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import http.httpConfig
+import http.HttpConfig.httpConfig
 import org.http4k.core.Body
 import org.http4k.core.ContentType
 import org.http4k.core.Response
@@ -40,7 +40,7 @@ object Tracks {
             bitRate?.presentationFormat(),
             duration?.presentationFormat(),
             size,
-            httpConfig().config.let { "${it.protocol}://${it.host}$play?id=$uuid" },
+            httpConfig().config.let { "${it.baseUrl}$play?id=$uuid" },
             collections.map { "$it" }
         )
 
