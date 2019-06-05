@@ -1,5 +1,8 @@
 package storage
 
+import RouteMappings.play
+import http.HttpConfig.environment
+import org.http4k.core.Uri
 import result.map
 import result.orElse
 import java.io.FileReader
@@ -23,6 +26,8 @@ data class AudioFileMetadata(
     val hash: String,
     val collections: List<UUID> = emptyList()
 ) {
+    val playUrl: Uri = Uri.of("${environment.config.baseUrl}$play/$uuid")
+
     companion object {
         fun BitRate.presentationFormat(): String = (this.value.toBigDecimal() / BigDecimal(1000)).toString()
 
