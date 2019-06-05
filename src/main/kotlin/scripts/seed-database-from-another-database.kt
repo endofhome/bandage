@@ -3,6 +3,7 @@ package scripts
 import Bandage
 import config.BandageConfig
 import config.ValidateConfig
+import result.map
 import storage.LocalCsvMetadataStorage
 import storage.PostgresMetadataStorage
 
@@ -12,6 +13,7 @@ fun main() {
     val sourceMetadataStorage = LocalCsvMetadataStorage
     val destinationMetadataStorage = PostgresMetadataStorage(config)
 
-    val allMetadata = sourceMetadataStorage.all()
-    destinationMetadataStorage.write(allMetadata)
+    sourceMetadataStorage.all().map { all ->
+        destinationMetadataStorage.write(all)
+    }
 }

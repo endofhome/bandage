@@ -3,6 +3,9 @@ package storage
 import RouteMappings.play
 import http.HttpConfig.environment
 import org.http4k.core.Uri
+import result.Result
+import result.Result.Failure
+import result.asSuccess
 import result.map
 import result.orElse
 import java.io.FileReader
@@ -52,10 +55,9 @@ fun String.toBitRate() = BitRate(this)
 fun String.toDuration() = Duration(this)
 fun String.toUri() = Uri.of(this)
 
-// TODO return a result
 interface MetadataStorage {
-    fun all(): List<AudioTrackMetadata>
-    fun find(uuid: UUID): AudioTrackMetadata?
+    fun all(): Result<Error, List<AudioTrackMetadata>>
+    fun find(uuid: UUID): Result<Error, AudioTrackMetadata?>
     fun write(newMetadata: List<AudioTrackMetadata>)
     fun update(updatedMetadata: AudioTrackMetadata)
 }
@@ -84,13 +86,13 @@ class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataSt
                     this[11]
                 )
             }
-        }
-    }.orElse { throw Exception("Couldn't read file $filePath in Dropbox") }
+        }.asSuccess()
+    }.orElse { Failure(Error("Couldn't read file $filePath in Dropbox")) }
 
-    override fun all(): List<AudioTrackMetadata> = store
+    override fun all(): Result<Error, List<AudioTrackMetadata>> = store
 
-    override fun find(uuid: UUID): AudioTrackMetadata? =
-        store.find { audioFileMetadata -> audioFileMetadata.uuid == uuid }
+    override fun find(uuid: UUID): Result<Error, AudioTrackMetadata?> =
+        store.map { it.find { audioFileMetadata -> audioFileMetadata.uuid == uuid } }
 
     override fun write(newMetadata: List<AudioTrackMetadata>) = TODO("not yet implemented")
 
@@ -106,29 +108,34 @@ object LocalCsvMetadataStorage : MetadataStorage {
     private val headerLine =
         "ID,Artist,Album,Title,Format,Bitrate,Duration,Size,Recorded date,Password protected link,Path,SHA-256$lineSeparator"
 
-    private val store = FileReader(flatFileName).readLines().dropHeader().map { line ->
-        line.split(",").run {
-            AudioTrackMetadata(
-                UUID.fromString(this[0]),
-                this[1],
-                this[2],
-                this[3],
-                this[4],
-                this[5].toBitRate(),
-                this[6].toDuration(),
-                this[7].toInt(),
-                this[8],
-                this[9].toUri(),
-                this[10],
-                this[11]
-            )
+    private val store =
+        try {
+            FileReader(flatFileName).readLines().dropHeader().map { line ->
+                line.split(",").run {
+                    AudioTrackMetadata(
+                        UUID.fromString(this[0]),
+                        this[1],
+                        this[2],
+                        this[3],
+                        this[4],
+                        this[5].toBitRate(),
+                        this[6].toDuration(),
+                        this[7].toInt(),
+                        this[8],
+                        this[9].toUri(),
+                        this[10],
+                        this[11]
+                    )
+                }
+            }.asSuccess()
+        } catch (e: Exception) {
+            Failure(Error("Couldn't read file $flatFileName"))
         }
-    }
 
-    override fun all(): List<AudioTrackMetadata> = store
+    override fun all(): Result<Error, List<AudioTrackMetadata>> = store
 
-    override fun find(uuid: UUID): AudioTrackMetadata? =
-        store.find { audioFileMetadata -> audioFileMetadata.uuid == uuid }
+    override fun find(uuid: UUID): Result<Error, AudioTrackMetadata?> =
+        store.map { it.find { audioFileMetadata -> audioFileMetadata.uuid == uuid } }
 
     override fun write(newMetadata: List<AudioTrackMetadata>) {
         fileWriter.append(headerLine)

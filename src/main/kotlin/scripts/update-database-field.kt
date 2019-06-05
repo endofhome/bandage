@@ -10,6 +10,8 @@ import config.BandageConfigItem.DROPBOX_LINK_PASSWORD
 import config.Configuration
 import config.ValidateConfig
 import result.expectSuccess
+import result.map
+import result.orElse
 import storage.DropboxFileStorage
 import storage.FileStorage
 import storage.HttpDropboxClient
@@ -21,47 +23,52 @@ import storage.toBitRate
 fun updateBitrate(metadataStorage: MetadataStorage, fileStorage: FileStorage) {
     val ok = listOf(128000, 96000, 192000, 256000, 320000).map { it.toString() }
 
-    return metadataStorage.all().run {
-        val numberOfFiles = this.size
-        this.forEachIndexed{ i, file ->
-            if (ok.contains(file.bitRate?.value ?: "no bitrate")) {
-                println("skipping as bitrate is ${file.bitRate?.value}")
-                return@forEachIndexed
-            }
+    return metadataStorage.all().map { all ->
+        all.run {
+            val numberOfFiles = this.size
+            this.forEachIndexed { i, file ->
+                if (ok.contains(file.bitRate?.value ?: "no bitrate")) {
+                    println("skipping as bitrate is ${file.bitRate?.value}")
+                    return@forEachIndexed
+                }
 
-            val tempFilePath = "file.tmp"
-            val javaFile = fileStorage.downloadFile(file.path, tempFilePath).expectSuccess()
-            val reader = metadataReader(tempFilePath)
-            val fileInfoJsonString = reader.readLines().joinToString("")
+                val tempFilePath = "file.tmp"
+                val javaFile = fileStorage.downloadFile(file.path, tempFilePath).expectSuccess()
+                val reader = metadataReader(tempFilePath)
+                val fileInfoJsonString = reader.readLines().joinToString("")
 
-            val ffprobeInfo: FfprobeInfo = jacksonObjectMapper().readValue(fileInfoJsonString)
+                val ffprobeInfo: FfprobeInfo = jacksonObjectMapper().readValue(fileInfoJsonString)
 
-            file.copy(
-                bitRate = ffprobeInfo.streams.firstOrNull()?.bit_rate?.toBitRate()
-                    ?: throw RuntimeException("Couldn't get bitrate for ${file.uuid}")
-            ).apply {
-                metadataStorage.update(this)
-                javaFile.delete()
-                println("Processed ${i + 1} / $numberOfFiles")
+                file.copy(
+                    bitRate = ffprobeInfo.streams.firstOrNull()?.bit_rate?.toBitRate()
+                        ?: throw RuntimeException("Couldn't get bitrate for ${file.uuid}")
+                ).apply {
+                    metadataStorage.update(this)
+                    javaFile.delete()
+                    println("Processed ${i + 1} / $numberOfFiles")
+                }
             }
         }
-    }
+    }.orElse { println(it.message) }
 }
 
 fun updatePasswordProtectedLinks(config: Configuration, metadataStorage: MetadataStorage, dropboxClient: HttpDropboxClient) =
-    metadataStorage.all().run {
-        val numberOfFiles = this.size
-        this.forEachIndexed { i, file ->
-            val newLink = dropboxClient.createPasswordProtectedLink(file.path, config.get(DROPBOX_LINK_PASSWORD)).expectSuccess()
+    metadataStorage.all().map { all ->
+        all.run {
+            val numberOfFiles = this.size
+            this.forEachIndexed { i, file ->
+                val newLink = dropboxClient.createPasswordProtectedLink(file.path, config.get(DROPBOX_LINK_PASSWORD))
+                    .expectSuccess()
 
-            file.copy(
-                passwordProtectedLink = newLink
-            ).apply {
-                metadataStorage.update(this)
-                println("Processed ${i + 1} / $numberOfFiles")
+                file.copy(
+                    passwordProtectedLink = newLink
+                ).apply {
+                    metadataStorage.update(this)
+                    println("Processed ${i + 1} / $numberOfFiles")
+                }
             }
         }
-    }
+    }.orElse { println(it.message) }
 
 fun main() {
     val config = ValidateConfig(BandageConfig, Bandage.StaticConfig.configurationFilesDir)

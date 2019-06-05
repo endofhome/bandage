@@ -10,6 +10,9 @@ import config.BandageConfigItem.METADATA_DB_SSL_MODE
 import config.BandageConfigItem.METADATA_DB_USER
 import config.Configuration
 import org.postgresql.ds.PGSimpleDataSource
+import result.Result
+import result.Result.Failure
+import result.asSuccess
 import java.sql.ResultSet
 import java.util.UUID
 
@@ -24,21 +27,31 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
     }
     private val connection = datasource.connection
 
-    override fun all(): List<AudioTrackMetadata> =
-        connection.prepareStatement("SELECT * FROM public.tracks").use { statement ->
+    override fun all(): Result<Error, List<AudioTrackMetadata>> =
+        try {
+            connection.prepareStatement("SELECT * FROM public.tracks").use { statement ->
                 statement.executeQuery().use { resultSet ->
                     generateSequence {
                         if (resultSet.next()) resultSet.toAudioFileMetadata() else null
                     }.toList()
                 }
-            }
+            }.asSuccess()
+        } catch (e: Exception) {
+            Failure(Error("Error reading all metadata"))
+        }
 
-    override fun find(uuid: UUID): AudioTrackMetadata? =
-        connection.prepareStatement("SELECT * FROM public.tracks WHERE id = '$uuid'").use { statement ->
+
+    override fun find(uuid: UUID): Result<Error, AudioTrackMetadata?> =
+        try {
+            connection.prepareStatement("SELECT * FROM public.tracks WHERE id = '$uuid'").use { statement ->
                 statement.executeQuery().use { resultSet ->
                     if (resultSet.next()) resultSet.toAudioFileMetadata() else null
-                }
+                }.asSuccess()
             }
+        } catch (e: Exception) {
+            Failure(Error("Error finding $uuid in Postgres metadata storage"))
+
+        }
 
     override fun write(newMetadata: List<AudioTrackMetadata>) {
         val preparedStatement = connection.prepareStatement("""
@@ -58,17 +71,17 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
     }
 
     override fun update(updatedMetadata: AudioTrackMetadata) {
-        find(updatedMetadata.uuid)?.let {
+        find(updatedMetadata.uuid).let {
             val preparedStatement = connection.prepareStatement("""
-                UPDATE tracks SET metadata = ?::jsonb WHERE id = '${updatedMetadata.uuid}';
-            """.trimIndent())
+                    UPDATE tracks SET metadata = ?::jsonb WHERE id = '${updatedMetadata.uuid}';
+                """.trimIndent())
 
             preparedStatement.setString(1, updatedMetadata.toJsonString())
 
             preparedStatement.use { statement ->
                 statement.executeUpdate()
             }
-        } ?: throw RuntimeException("UUID ${updatedMetadata.uuid} not found.")
+        }
     }
 
     private fun AudioTrackMetadata.toJsonString(): String =

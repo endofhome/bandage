@@ -1,13 +1,16 @@
 package storage
 
 import config.Configuration
+import result.Result
+import result.Result.Success
+import result.asSuccess
 import java.util.UUID
 
 class StubMetadataStorage(private val metadata: MutableList<AudioTrackMetadata>) : DummyMetadataStorage() {
-    override fun all(): List<AudioTrackMetadata> = metadata
+    override fun all(): Result<Error, List<AudioTrackMetadata>> = metadata.asSuccess()
 
-    override fun find(uuid: UUID): AudioTrackMetadata? =
-        metadata.find { audioFileMetadata -> audioFileMetadata.uuid == uuid }
+    override fun find(uuid: UUID): Result<Error, AudioTrackMetadata?> =
+        metadata.find { audioFileMetadata -> audioFileMetadata.uuid == uuid }.asSuccess()
 
     override fun write(newMetadata: List<AudioTrackMetadata>) {
         metadata += newMetadata
@@ -15,8 +18,8 @@ class StubMetadataStorage(private val metadata: MutableList<AudioTrackMetadata>)
 }
 
 open class DummyMetadataStorage : MetadataStorage {
-    override fun all() = emptyList<AudioTrackMetadata>()
-    override fun find(uuid: UUID): AudioTrackMetadata? = null
+    override fun all(): Result<Error, List<AudioTrackMetadata>> = Success(emptyList())
+    override fun find(uuid: UUID): Result<Error, AudioTrackMetadata?> = Success(null)
     override fun write(newMetadata: List<AudioTrackMetadata>): Unit = TODO("not implemented")
     override fun update(updatedMetadata: AudioTrackMetadata) = TODO("not implemented")
 }

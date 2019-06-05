@@ -4,10 +4,13 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.http4k.core.Body
 import org.http4k.core.ContentType
 import org.http4k.core.Response
+import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
 import org.http4k.template.ViewModel
 import org.http4k.template.viewModel
+import result.map
+import result.orElse
 import storage.AudioTrackMetadata
 import storage.AudioTrackMetadata.Companion.presentationFormat
 import storage.MetadataStorage
@@ -17,12 +20,12 @@ object Tracks {
     private val jsonRenderer: (ViewModel) -> String = { with(ApiJson) { (it as TracksViewModel).toJson() } }
     private val jsonView = Body.viewModel(jsonRenderer, ContentType.APPLICATION_JSON).toLens()
 
-    operator fun invoke(metadataStorage: MetadataStorage): Response {
-        // TODO return a result and handle failure.
-        val tracks = metadataStorage.all().map { it.viewModel() }
-
-        return Response(OK).with(jsonView of TracksViewModel(tracks))
-    }
+    operator fun invoke(metadataStorage: MetadataStorage): Response =
+        metadataStorage.all().map { tracks ->
+            Response(OK).with(jsonView of TracksViewModel(tracks.map { it.viewModel() }))
+        }.orElse {
+            Response(INTERNAL_SERVER_ERROR)
+        }
 
     data class TracksViewModel(val tracks: List<ViewModels.Track>) : ViewModel
 
