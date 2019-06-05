@@ -22,6 +22,7 @@ import handlers.Login
 import handlers.Play
 import http.Filters.CatchAll
 import http.Filters.EnforceHttpsOnHeroku
+import http.host
 import org.http4k.core.Body
 import org.http4k.core.ContentType
 import org.http4k.core.Method.GET
@@ -56,7 +57,7 @@ fun main(args: Array<String>) {
     val port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
     Bandage.init(BandageConfig, PostgresMetadataStorageFactory, DropboxFileStorageFactory).app.asServer(Jetty(port)).start()
 
-    logger.info("Bandage has started on http://localhost:$port")
+    logger.info("Bandage has started on http://${host()}:$port")
 }
 
 class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, fileStorage: FileStorage) {
@@ -99,6 +100,7 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
             play        bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(UNAUTHORIZED)) },
 
             api         bind apiRoutes,
+
             "/public"   bind static(ResourceLoader.Directory("public"))
         )
     }

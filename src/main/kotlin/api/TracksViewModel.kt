@@ -1,6 +1,7 @@
 package api
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import http.host
 import org.http4k.core.Body
 import org.http4k.core.ContentType
 import org.http4k.core.Response
@@ -38,8 +39,7 @@ object Tracks {
             bitRate?.presentationFormat(),
             duration?.presentationFormat(),
             size,
-            // TODO this baseUri should be per-environment.
-            "https://band-age.herokuapp.com/play?id=$uuid",
+            "https://${host().value}/play?id=$uuid",
             collections.map { "$it" }
         )
 
