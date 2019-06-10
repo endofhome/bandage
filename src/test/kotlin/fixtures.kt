@@ -4,6 +4,7 @@ import storage.BitRate
 import storage.Duration
 import java.time.Instant
 import java.time.ZoneOffset.UTC
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 val exampleAudioTrackMetadata = AudioTrackMetadata(
@@ -16,6 +17,9 @@ val exampleAudioTrackMetadata = AudioTrackMetadata(
     Duration("21"),
     12345,
     Instant.EPOCH.atZone(UTC).toString(),
+    Instant.EPOCH.atZone(UTC),
+    ChronoUnit.FOREVER,
+    Instant.EPOCH.atZone(UTC),
     Uri.of("https://www.passwordprotectedlink.com"),
     "/my_folder/my_file",
     "someamazinghashstring"

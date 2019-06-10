@@ -11,6 +11,10 @@ import result.orElse
 import java.io.FileReader
 import java.io.FileWriter
 import java.math.BigDecimal
+import java.time.Instant.EPOCH
+import java.time.ZoneOffset.UTC
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 data class AudioTrackMetadata(
@@ -23,6 +27,9 @@ data class AudioTrackMetadata(
     val duration: Duration?,
     val fileSize: Int,
     val recordedDate: String,
+    val recordedTimestamp: ZonedDateTime? = EPOCH.atZone(UTC),
+    val recordedTimestampPrecision: ChronoUnit? = ChronoUnit.FOREVER,
+    val uploadedTimestamp: ZonedDateTime? = EPOCH.atZone(UTC),
     val passwordProtectedLink: Uri,
     val path: String,
     val hash: String,
@@ -53,6 +60,9 @@ class Duration(val value: String)
 
 fun String.toBitRate() = BitRate(this)
 fun String.toDuration() = Duration(this)
+fun String.toZonedDateTime() = ZonedDateTime.parse(this)
+    ?: throw RuntimeException("Could not parse $this as ZonedDateTime")
+fun String.toChronoUnit() = ChronoUnit.valueOf(this)
 fun String.toUri() = Uri.of(this)
 
 interface MetadataStorage {
@@ -66,7 +76,7 @@ class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataSt
     private val filePath = "/seed-data.csv"
     private val lineSeparator = "\n"
     private val headerLine =
-        "ID,Artist,Album,Title,Format,Bitrate,Duration,Size,Recorded date,Password protected link,Path,SHA-256$lineSeparator"
+        "ID,Artist,Album,Title,Format,Bitrate,Duration,Size,Recorded date,Recorded timestamp,Recorded timestamp precision,Uploaded date,Password protected link,Path,SHA-256,Collections$lineSeparator"
 
     private val store = dropboxClient.readTextFile(filePath).map { lines ->
         lines.dropHeader().map { line ->
@@ -81,9 +91,13 @@ class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataSt
                     this[6].toDuration(),
                     this[7].toInt(),
                     this[8],
-                    this[9].toUri(),
-                    this[10],
-                    this[11]
+                    this[9].toZonedDateTime(),
+                    this[10].toChronoUnit(),
+                    this[11].toZonedDateTime(),
+                    this[12].toUri(),
+                    this[13],
+                    this[14],
+                    this[15].split('\t').map { UUID.fromString(it) }
                 )
             }
         }.asSuccess()
@@ -122,9 +136,13 @@ object LocalCsvMetadataStorage : MetadataStorage {
                         this[6].toDuration(),
                         this[7].toInt(),
                         this[8],
-                        this[9].toUri(),
-                        this[10],
-                        this[11]
+                        this[9].toZonedDateTime(),
+                        this[10].toChronoUnit(),
+                        this[11].toZonedDateTime(),
+                        this[12].toUri(),
+                        this[13],
+                        this[14],
+                        this[15].split('\t').map { UUID.fromString(it) }
                     )
                 }
             }.asSuccess()
@@ -142,7 +160,7 @@ object LocalCsvMetadataStorage : MetadataStorage {
 
         newMetadata.forEach { singleFileMetadata ->
             fileWriter.append(singleFileMetadata.run {
-                "$uuid,$artist,$album,$title,$format,$bitRate,$duration,$fileSize,$recordedDate,$passwordProtectedLink,$path,$hash$lineSeparator"
+                "$uuid,$artist,$album,$title,$format,$bitRate,$duration,$fileSize,$recordedDate,$recordedTimestamp,$recordedTimestampPrecision,$uploadedTimestamp,$passwordProtectedLink,$path,$hash$collections,$lineSeparator"
             })
         }
 

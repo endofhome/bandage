@@ -94,6 +94,9 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
             ${duration?.let { duration -> """"duration": "${duration.value}",""" }}
             "size": "$fileSize",
             "recordedDate": "$recordedDate",
+            "recordedTimestamp": "$recordedTimestamp",
+            "recordedTimestampPrecision": "${recordedTimestampPrecision?.name}",
+            "uploadedTimestamp": "$uploadedTimestamp",
             "passwordProtectedLink": "$passwordProtectedLink",
             "path": "$path",
             "sha256": "$hash"
@@ -116,6 +119,9 @@ private fun ResultSet.toAudioFileMetadata(): AudioTrackMetadata {
         postgresMetadata.duration?.toDuration(),
         postgresMetadata.size,
         postgresMetadata.recordedDate,
+        postgresMetadata.recordedTimestamp?.toZonedDateTime(),
+        postgresMetadata.recordedTimestampPrecision?.toChronoUnit(),
+        postgresMetadata.uploadedTimestamp?.toZonedDateTime(),
         postgresMetadata.passwordProtectedLink.toUri(),
         postgresMetadata.path,
         postgresMetadata.sha256
@@ -131,6 +137,9 @@ private data class PostgresAudioMetadata(
     val duration: String?,
     val size: Int,
     val recordedDate: String,
+    val recordedTimestamp: String?,
+    val recordedTimestampPrecision: String?,
+    val uploadedTimestamp: String?,
     val passwordProtectedLink: String,
     val path: String,
     val sha256: String
