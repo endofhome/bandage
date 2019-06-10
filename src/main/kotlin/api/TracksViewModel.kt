@@ -14,7 +14,6 @@ import result.orElse
 import storage.AudioTrackMetadata
 import storage.AudioTrackMetadata.Companion.presentationFormat
 import storage.MetadataStorage
-import java.time.temporal.ChronoUnit
 
 object Tracks {
     private val jsonRenderer: (ViewModel) -> String = { with(ApiJson) { (it as TracksViewModel).toJson() } }
@@ -34,7 +33,9 @@ object Tracks {
             "$uuid",
             artist,
             title,
-            recordedDate,
+            "$recordedTimestamp",
+            "${recordedTimestampPrecision?.name}",
+            "$uploadedTimestamp",
             format,
             bitRate?.presentationFormat(),
             duration?.presentationFormat(),
@@ -48,7 +49,9 @@ object Tracks {
             val uuid: String,
             val artist: String,
             val title: String,
-            val recordedDate: String,
+            val recordedTimestamp: String,
+            val recordedTimestampPrecision: String,
+            val uploadedTimestamp: String,
             val format: String,
             val bitRate: String?,
             val duration: String?,
@@ -69,9 +72,9 @@ object ApiJson {
             obj.put("id", track.uuid)
             obj.put("artist", track.artist)
             obj.put("title", track.title)
-            obj.put("recordedTimestamp", track.recordedDate)
-            obj.put("recordedTimestampPrecision", ChronoUnit.MINUTES.name)
-            obj.put("uploadedTimestamp", track.recordedDate)
+            obj.put("recordedTimestamp", track.recordedTimestamp)
+            obj.put("recordedTimestampPrecision", track.recordedTimestampPrecision)
+            obj.put("uploadedTimestamp", track.uploadedTimestamp)
             obj.put("format", track.format)
             track.bitRate?.let { obj.put("bitRate", track.bitRate) }
             track.duration?.let { obj.put("duration", track.duration) }
