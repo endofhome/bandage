@@ -79,7 +79,7 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
             preparedStatement.setString(1, updatedMetadata.toJsonString())
 
             preparedStatement.use { statement ->
-                statement.executeUpdate()
+                 statement.executeUpdate()
             }
         }
     }
@@ -95,7 +95,7 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
             "size": "$fileSize",
             "recordedDate": "$recordedDate",
             "recordedTimestamp": "$recordedTimestamp",
-            "recordedTimestampPrecision": ${recordedTimestampPrecision.name},
+            "recordedTimestampPrecision": "${recordedTimestampPrecision.name}",
             "uploadedTimestamp": "$uploadedTimestamp",
             "passwordProtectedLink": "$passwordProtectedLink",
             "path": "$path",
