@@ -34,7 +34,7 @@ object Tracks {
             artist,
             title,
             "$recordedTimestamp",
-            "${recordedTimestampPrecision?.name}",
+            recordedTimestampPrecision.name,
             "$uploadedTimestamp",
             format,
             bitRate?.presentationFormat(),

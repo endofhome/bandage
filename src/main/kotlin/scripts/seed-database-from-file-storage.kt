@@ -23,6 +23,9 @@ import storage.toDuration
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.security.MessageDigest
+import java.time.Instant.EPOCH
+import java.time.ZoneOffset.UTC
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 // requires ffprobe (https://www.ffmpeg.org/)
@@ -56,6 +59,9 @@ fun seedDatabase(metadataStorage: MetadataStorage) {
                     duration = ffprobeInfo.format.duration?.toDuration(),
                     fileSize = ffprobeInfo.format.size.toInt(),
                     recordedDate = ffprobeInfo.format.tags?.date.orEmpty(),
+                    recordedTimestamp = EPOCH.atZone(UTC),
+                    recordedTimestampPrecision = ChronoUnit.FOREVER,
+                    uploadedTimestamp = EPOCH.atZone(UTC),
                     passwordProtectedLink = fileStorage.publicLink(file.path, PasswordProtected(config.get(DROPBOX_LINK_PASSWORD))).expectSuccess(),
                     path = file.path,
                     hash = hashFile(javaFile.readBytes())

@@ -11,8 +11,6 @@ import result.orElse
 import java.io.FileReader
 import java.io.FileWriter
 import java.math.BigDecimal
-import java.time.Instant.EPOCH
-import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -27,9 +25,9 @@ data class AudioTrackMetadata(
     val duration: Duration?,
     val fileSize: Int,
     val recordedDate: String,
-    val recordedTimestamp: ZonedDateTime? = EPOCH.atZone(UTC),
-    val recordedTimestampPrecision: ChronoUnit? = ChronoUnit.FOREVER,
-    val uploadedTimestamp: ZonedDateTime? = EPOCH.atZone(UTC),
+    val recordedTimestamp: ZonedDateTime,
+    val recordedTimestampPrecision: ChronoUnit,
+    val uploadedTimestamp: ZonedDateTime,
     val passwordProtectedLink: Uri,
     val path: String,
     val hash: String,
