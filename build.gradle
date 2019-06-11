@@ -59,8 +59,4 @@ task migrate(type: JavaExec) {
     main = "storage.PostgresMetadataMigrations"
 }
 
-migrate.onlyIf { System.getenv("DYNO") == null }
-
-test.dependsOn migrate
-
 mainClassName = "BandageKt"
