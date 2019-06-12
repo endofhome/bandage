@@ -8,6 +8,7 @@ import result.Result.Failure
 import result.asSuccess
 import result.map
 import result.orElse
+import storage.Collection.ExistingCollection
 import java.io.FileReader
 import java.io.FileWriter
 import java.math.BigDecimal
@@ -53,6 +54,11 @@ data class AudioTrackMetadata(
     }
 }
 
+sealed class Collection {
+    data class NewCollection(val title: String)
+    data class ExistingCollection(val uuid: UUID, val title: String, val tracks: List<UUID>) // TODO tracks should be AudioTrackMetadata
+}
+
 class BitRate(val value: String)
 class Duration(val value: String)
 
@@ -68,6 +74,7 @@ interface MetadataStorage {
     fun find(uuid: UUID): Result<Error, AudioTrackMetadata?>
     fun write(newMetadata: List<AudioTrackMetadata>)
     fun update(updatedMetadata: AudioTrackMetadata)
+    fun findCollection(uuid: UUID): Result<Error, ExistingCollection?>
 }
 
 class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataStorage {
@@ -109,6 +116,8 @@ class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataSt
     override fun write(newMetadata: List<AudioTrackMetadata>) = TODO("not yet implemented")
 
     override fun update(updatedMetadata: AudioTrackMetadata) = TODO("not yet implemented")
+
+    override fun findCollection(uuid: UUID) = TODO("not yet implemented")
 
     private fun List<String>.dropHeader() = if (this[0] == headerLine.removeSuffix(lineSeparator)) drop(1) else this
 }
@@ -167,6 +176,8 @@ object LocalCsvMetadataStorage : MetadataStorage {
     }
 
     override fun update(updatedMetadata: AudioTrackMetadata) = TODO("not implemented")
+
+    override fun findCollection(uuid: UUID) = TODO("not implemented")
 
     private fun List<String>.dropHeader() = if (this[0] == headerLine.removeSuffix(lineSeparator)) drop(1) else this
 }

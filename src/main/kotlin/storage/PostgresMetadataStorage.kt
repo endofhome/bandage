@@ -13,6 +13,7 @@ import org.postgresql.ds.PGSimpleDataSource
 import result.Result
 import result.Result.Failure
 import result.asSuccess
+import storage.Collection.ExistingCollection
 import java.sql.ResultSet
 import java.util.UUID
 
@@ -84,6 +85,17 @@ class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
         }
     }
 
+    override fun findCollection(uuid: UUID): Result<Error, ExistingCollection?> =
+        try {
+            connection.prepareStatement("SELECT * FROM public.collections WHERE id = '$uuid'").use { statement ->
+                statement.executeQuery().use { resultSet ->
+                    if (resultSet.next()) resultSet.toCollection() else null
+                }.asSuccess()
+            }
+        } catch (e: Exception) {
+            Failure(Error("Error while finding collection $uuid in Postgres metadata storage:\n${e.message}"))
+        }
+
     private fun AudioTrackMetadata.toJsonString(): String =
         """{
             "artist": "$artist",
@@ -125,6 +137,19 @@ private fun ResultSet.toAudioFileMetadata(): AudioTrackMetadata {
         postgresMetadata.passwordProtectedLink.toUri(),
         postgresMetadata.path,
         postgresMetadata.sha256
+    )
+}
+
+private fun ResultSet.toCollection(): ExistingCollection {
+    val uuid = UUID.fromString(this.getString("id"))
+    val title = this.getString("name")
+    @Suppress("UNCHECKED_CAST")
+    val tracks: List<UUID> = (this.getArray("tracks").array as Array<UUID>).toList()
+
+    return ExistingCollection(
+        uuid,
+        title,
+        tracks
     )
 }
 

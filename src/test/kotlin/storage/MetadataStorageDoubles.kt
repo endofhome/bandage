@@ -22,8 +22,8 @@ open class DummyMetadataStorage : MetadataStorage {
     override fun find(uuid: UUID): Result<Error, AudioTrackMetadata?> = Success(null)
     override fun write(newMetadata: List<AudioTrackMetadata>): Unit = TODO("not implemented")
     override fun update(updatedMetadata: AudioTrackMetadata) = TODO("not implemented")
+    override fun findCollection(uuid: UUID) = TODO("not implemented")
 }
-
 
 class StubMetadataStorageFactory(private val metadata: MutableList<AudioTrackMetadata>): DummyMetadataStorageFactory() {
     override fun invoke(config: Configuration): MetadataStorage = StubMetadataStorage(metadata)
