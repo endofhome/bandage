@@ -20,10 +20,10 @@ import java.util.UUID
 object Dashboard {
     operator fun invoke(authenticatedRequest: AuthenticatedRequest, metadataStorage: MetadataStorage): Response {
         val nowPlaying = authenticatedRequest.request.query("id")?.let { id ->
-            metadataStorage.find(UUID.fromString(id)).map { metadata -> metadata?.viewModel() }.orElse { null }
+            metadataStorage.findTrack(UUID.fromString(id)).map { metadata -> metadata?.viewModel() }.orElse { null }
         }
 
-        val folders = metadataStorage.all().map { all ->
+        val folders = metadataStorage.tracks().map { all ->
             all.groupBy { file ->
                 file.path.drop(1).substringBefore("/")
             }.toList().sortByReversedThenFolderNamesOnlyContainingLetters().map { (folderName, files) ->

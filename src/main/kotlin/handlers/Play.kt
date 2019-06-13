@@ -24,7 +24,7 @@ object Play {
         request.query("id")?.let { return Response(SEE_OTHER).header("Location", "$play/$it") }
 
         val uuid = request.path("id") ?: return Response(BAD_REQUEST)
-        val metadata = metadataStorage.find(UUID.fromString(uuid)).map { it }.orElse { null } ?: return Response(NOT_FOUND)
+        val metadata = metadataStorage.findTrack(UUID.fromString(uuid)).map { it }.orElse { null } ?: return Response(NOT_FOUND)
 
         return fileStorage.stream(metadata.passwordProtectedLink).map { audioStream ->
             val headers: Headers = listOf(

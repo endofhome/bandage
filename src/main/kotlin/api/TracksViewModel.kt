@@ -20,7 +20,7 @@ object Tracks {
     private val jsonView = Body.viewModel(jsonRenderer, ContentType.APPLICATION_JSON).toLens()
 
     operator fun invoke(metadataStorage: MetadataStorage): Response =
-        metadataStorage.all().map { tracks ->
+        metadataStorage.tracks().map { tracks ->
             Response(OK).with(jsonView of TracksViewModel(tracks.map { it.viewModel() }))
         }.orElse {
             Response(INTERNAL_SERVER_ERROR)

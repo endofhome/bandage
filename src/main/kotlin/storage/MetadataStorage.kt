@@ -9,6 +9,7 @@ import result.asSuccess
 import result.map
 import result.orElse
 import storage.Collection.ExistingCollection
+import storage.Collection.NewCollection
 import java.io.FileReader
 import java.io.FileWriter
 import java.math.BigDecimal
@@ -55,8 +56,8 @@ data class AudioTrackMetadata(
 }
 
 sealed class Collection {
-    data class NewCollection(val title: String)
-    data class ExistingCollection(val uuid: UUID, val title: String, val tracks: List<UUID>) // TODO tracks should be AudioTrackMetadata
+    data class NewCollection(val title: String): Collection()
+    data class ExistingCollection(val uuid: UUID, val title: String, val tracks: Set<UUID>): Collection() // TODO tracks should be AudioTrackMetadata
 }
 
 class BitRate(val value: String)
@@ -70,19 +71,22 @@ fun String.toChronoUnit() = ChronoUnit.valueOf(this)
 fun String.toUri() = Uri.of(this)
 
 interface MetadataStorage {
-    fun all(): Result<Error, List<AudioTrackMetadata>>
-    fun find(uuid: UUID): Result<Error, AudioTrackMetadata?>
-    fun write(newMetadata: List<AudioTrackMetadata>)
-    fun update(updatedMetadata: AudioTrackMetadata)
+    fun tracks(): Result<Error, List<AudioTrackMetadata>>
+    fun findTrack(uuid: UUID): Result<Error, AudioTrackMetadata?>
+    fun addTracks(newMetadata: List<AudioTrackMetadata>)
+    fun updateTrack(updatedMetadata: AudioTrackMetadata): Result<Error, AudioTrackMetadata>
+    fun addExistingTrackToCollection(existingTrack: AudioTrackMetadata, collection: Collection)
     fun findCollection(uuid: UUID): Result<Error, ExistingCollection?>
+    fun addCollection(newCollection: NewCollection, firstElement: AudioTrackMetadata): ExistingCollection
+    fun updateCollection(updatedCollection: ExistingCollection): Result<Error, ExistingCollection>
 }
 
 class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataStorage {
     private val filePath = "/seed-data.csv"
+
     private val lineSeparator = "\n"
     private val headerLine =
         "ID,Artist,Album,Title,Format,Bitrate,Duration,Size,Recorded date,Recorded timestamp,Recorded timestamp precision,Uploaded date,Password protected link,Path,SHA-256,Collections$lineSeparator"
-
     private val store = dropboxClient.readTextFile(filePath).map { lines ->
         lines.dropHeader().map { line ->
             line.split(",").run {
@@ -108,16 +112,19 @@ class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataSt
         }.asSuccess()
     }.orElse { Failure(Error("Couldn't read file $filePath in Dropbox")) }
 
-    override fun all(): Result<Error, List<AudioTrackMetadata>> = store
+    override fun tracks(): Result<Error, List<AudioTrackMetadata>> = store
 
-    override fun find(uuid: UUID): Result<Error, AudioTrackMetadata?> =
+    override fun findTrack(uuid: UUID): Result<Error, AudioTrackMetadata?> =
         store.map { it.find { audioFileMetadata -> audioFileMetadata.uuid == uuid } }
 
-    override fun write(newMetadata: List<AudioTrackMetadata>) = TODO("not yet implemented")
-
-    override fun update(updatedMetadata: AudioTrackMetadata) = TODO("not yet implemented")
-
+    override fun addTracks(newMetadata: List<AudioTrackMetadata>) = TODO("not yet implemented")
+    override fun updateTrack(updatedMetadata: AudioTrackMetadata) = TODO("not yet implemented")
+    override fun addExistingTrackToCollection(existingTrack: AudioTrackMetadata, collection: Collection) =
+        TODO("not yet implemented")
     override fun findCollection(uuid: UUID) = TODO("not yet implemented")
+    override fun updateCollection(updatedCollection: ExistingCollection) = TODO("not yet implemented")
+    override fun addCollection(newCollection: NewCollection, firstElement: AudioTrackMetadata) =
+        TODO("not yet implemented")
 
     private fun List<String>.dropHeader() = if (this[0] == headerLine.removeSuffix(lineSeparator)) drop(1) else this
 }
@@ -157,12 +164,12 @@ object LocalCsvMetadataStorage : MetadataStorage {
             Failure(Error("Couldn't read file $flatFileName"))
         }
 
-    override fun all(): Result<Error, List<AudioTrackMetadata>> = store
+    override fun tracks(): Result<Error, List<AudioTrackMetadata>> = store
 
-    override fun find(uuid: UUID): Result<Error, AudioTrackMetadata?> =
+    override fun findTrack(uuid: UUID): Result<Error, AudioTrackMetadata?> =
         store.map { it.find { audioFileMetadata -> audioFileMetadata.uuid == uuid } }
 
-    override fun write(newMetadata: List<AudioTrackMetadata>) {
+    override fun addTracks(newMetadata: List<AudioTrackMetadata>) {
         fileWriter.append(headerLine)
 
         newMetadata.forEach { singleFileMetadata ->
@@ -175,9 +182,13 @@ object LocalCsvMetadataStorage : MetadataStorage {
         fileWriter.close()
     }
 
-    override fun update(updatedMetadata: AudioTrackMetadata) = TODO("not implemented")
-
+    override fun updateTrack(updatedMetadata: AudioTrackMetadata) = TODO("not implemented")
+    override fun addExistingTrackToCollection(existingTrack: AudioTrackMetadata, collection: Collection) =
+        TODO("not yet implemented")
     override fun findCollection(uuid: UUID) = TODO("not implemented")
+    override fun updateCollection(updatedCollection: ExistingCollection) = TODO("not yet implemented")
+    override fun addCollection(newCollection: NewCollection, firstElement: AudioTrackMetadata) =
+        TODO("not yet implemented")
 
     private fun List<String>.dropHeader() = if (this[0] == headerLine.removeSuffix(lineSeparator)) drop(1) else this
 }

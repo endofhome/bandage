@@ -4,25 +4,31 @@ import config.Configuration
 import result.Result
 import result.Result.Success
 import result.asSuccess
+import storage.Collection.NewCollection
 import java.util.UUID
 
 class StubMetadataStorage(private val metadata: MutableList<AudioTrackMetadata>) : DummyMetadataStorage() {
-    override fun all(): Result<Error, List<AudioTrackMetadata>> = metadata.asSuccess()
+    override fun tracks(): Result<Error, List<AudioTrackMetadata>> = metadata.asSuccess()
 
-    override fun find(uuid: UUID): Result<Error, AudioTrackMetadata?> =
+    override fun findTrack(uuid: UUID): Result<Error, AudioTrackMetadata?> =
         metadata.find { audioFileMetadata -> audioFileMetadata.uuid == uuid }.asSuccess()
 
-    override fun write(newMetadata: List<AudioTrackMetadata>) {
+    override fun addTracks(newMetadata: List<AudioTrackMetadata>) {
         metadata += newMetadata
     }
 }
 
 open class DummyMetadataStorage : MetadataStorage {
-    override fun all(): Result<Error, List<AudioTrackMetadata>> = Success(emptyList())
-    override fun find(uuid: UUID): Result<Error, AudioTrackMetadata?> = Success(null)
-    override fun write(newMetadata: List<AudioTrackMetadata>): Unit = TODO("not implemented")
-    override fun update(updatedMetadata: AudioTrackMetadata) = TODO("not implemented")
+    override fun tracks(): Result<Error, List<AudioTrackMetadata>> = Success(emptyList())
+    override fun findTrack(uuid: UUID): Result<Error, AudioTrackMetadata?> = Success(null)
+    override fun addTracks(newMetadata: List<AudioTrackMetadata>): Unit = TODO("not implemented")
+    override fun updateTrack(updatedMetadata: AudioTrackMetadata) = TODO("not implemented")
+    override fun addExistingTrackToCollection(existingTrack: AudioTrackMetadata, collection: Collection) =
+        TODO("not yet implemented")
     override fun findCollection(uuid: UUID) = TODO("not implemented")
+    override fun addCollection(newCollection: NewCollection, firstElement: AudioTrackMetadata
+    ) = TODO("not yet implemented")
+    override fun updateCollection(updatedCollection: Collection.ExistingCollection) = TODO("not yet implemented")
 }
 
 class StubMetadataStorageFactory(private val metadata: MutableList<AudioTrackMetadata>): DummyMetadataStorageFactory() {

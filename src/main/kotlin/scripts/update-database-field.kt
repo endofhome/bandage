@@ -23,7 +23,7 @@ import storage.toBitRate
 fun updateBitrate(metadataStorage: MetadataStorage, fileStorage: FileStorage) {
     val ok = listOf(128000, 96000, 192000, 256000, 320000).map { it.toString() }
 
-    return metadataStorage.all().map { all ->
+    return metadataStorage.tracks().map { all ->
         all.run {
             val numberOfFiles = this.size
             this.forEachIndexed { i, file ->
@@ -43,7 +43,7 @@ fun updateBitrate(metadataStorage: MetadataStorage, fileStorage: FileStorage) {
                     bitRate = ffprobeInfo.streams.firstOrNull()?.bit_rate?.toBitRate()
                         ?: throw RuntimeException("Couldn't get bitrate for ${file.uuid}")
                 ).apply {
-                    metadataStorage.update(this)
+                    metadataStorage.updateTrack(this)
                     javaFile.delete()
                     println("Processed ${i + 1} / $numberOfFiles")
                 }
@@ -53,7 +53,7 @@ fun updateBitrate(metadataStorage: MetadataStorage, fileStorage: FileStorage) {
 }
 
 fun updatePasswordProtectedLinks(config: Configuration, metadataStorage: MetadataStorage, dropboxClient: HttpDropboxClient) =
-    metadataStorage.all().map { all ->
+    metadataStorage.tracks().map { all ->
         all.run {
             val numberOfFiles = this.size
             this.forEachIndexed { i, file ->
@@ -63,7 +63,7 @@ fun updatePasswordProtectedLinks(config: Configuration, metadataStorage: Metadat
                 file.copy(
                     passwordProtectedLink = newLink
                 ).apply {
-                    metadataStorage.update(this)
+                    metadataStorage.updateTrack(this)
                     println("Processed ${i + 1} / $numberOfFiles")
                 }
             }

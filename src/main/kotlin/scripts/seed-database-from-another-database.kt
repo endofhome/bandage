@@ -13,7 +13,7 @@ fun main() {
     val sourceMetadataStorage = LocalCsvMetadataStorage
     val destinationMetadataStorage = PostgresMetadataStorage(config)
 
-    sourceMetadataStorage.all().map { all ->
-        destinationMetadataStorage.write(all)
+    sourceMetadataStorage.tracks().map { all ->
+        destinationMetadataStorage.addTracks(all)
     }
 }

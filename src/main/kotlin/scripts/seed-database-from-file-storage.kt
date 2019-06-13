@@ -74,7 +74,7 @@ fun seedDatabase(metadataStorage: MetadataStorage) {
                 print("\rProcessed ${i + 1} / ${files.size}")
             }
         }.mapNotNull { it }.run {
-            metadataStorage.write(this)
+            metadataStorage.addTracks(this)
         }
     }.orElse { throw RuntimeException(it.message) }
 }
