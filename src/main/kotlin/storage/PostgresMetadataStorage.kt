@@ -20,14 +20,14 @@ import storage.Collection.ExistingCollection
 import java.sql.ResultSet
 import java.util.UUID
 
-class PostgresMetadataStorage(config: Configuration) : MetadataStorage {
+class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boolean? = null) : MetadataStorage {
     private val datasource = PGSimpleDataSource().apply {
         serverName = config.get(METADATA_DB_HOST)
         portNumber = config.get(METADATA_DB_PORT).toInt()
         databaseName = config.get(METADATA_DB_NAME)
         user = config.get(METADATA_DB_USER)
         password = config.get(METADATA_DB_PASSWORD)
-        sslMode = config.get(METADATA_DB_SSL_MODE)
+        sslMode = sslRequireModeOverride?.let { if (it) "require" else ""  } ?: config.get(METADATA_DB_SSL_MODE)
     }
     private val connection = datasource.connection
 
