@@ -21,7 +21,7 @@ object Tracks {
 
     operator fun invoke(metadataStorage: MetadataStorage): Response =
         metadataStorage.tracks().map { tracks ->
-            Response(OK).with(jsonView of TracksViewModel(tracks.map { it.viewModel() }))
+            Response(OK).with(jsonView of TracksViewModel(tracks.sortedByDescending { it.recordedTimestamp }.map { it.viewModel() }))
         }.orElse {
             Response(INTERNAL_SERVER_ERROR)
         }
