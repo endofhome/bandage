@@ -33,7 +33,7 @@ data class AudioTrackMetadata(
     val passwordProtectedLink: Uri,
     val path: String,
     val hash: String,
-    val collections: List<UUID> = emptyList()
+    val collections: List<ExistingCollection> = emptyList()
 ) {
     val playUrl: Uri = "${environment.config.baseUrl}$play/$uuid".toUri()
 
@@ -106,7 +106,7 @@ class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataSt
                     this[12].toUri(),
                     this[13],
                     this[14],
-                    this[15].split('\t').map { UUID.fromString(it) }
+                    this[15].split('\t').map { ExistingCollection(UUID.fromString(it), "dummy - should get this from another file", emptySet()) }
                 )
             }
         }.asSuccess()
@@ -156,7 +156,7 @@ object LocalCsvMetadataStorage : MetadataStorage {
                         this[12].toUri(),
                         this[13],
                         this[14],
-                        this[15].split('\t').map { UUID.fromString(it) }
+                        this[15].split('\t').map { ExistingCollection(UUID.fromString(it), "dummy - should get this from another file", emptySet()) }
                     )
                 }
             }.asSuccess()

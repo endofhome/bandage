@@ -33,11 +33,26 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
 
     override fun tracks(): Result<Error, List<AudioTrackMetadata>> =
         try {
-            connection.prepareStatement("SELECT * FROM public.tracks").use { statement ->
+            // TODO - try to do this nicely in one query with a JOIN - multiple queries is really not nice
+
+            val initialMetadata = connection.prepareStatement("SELECT * FROM public.tracks").use { statement ->
                 statement.executeQuery().use { resultSet ->
                     generateSequence {
                         if (resultSet.next()) resultSet.toAudioFileMetadata() else null
                     }.toList()
+                }
+            }
+            initialMetadata.map {
+                if (it.collections.isEmpty()) {
+                    it
+                } else {
+                    val onlyFirstCollectionSupported = it.collections.first()
+                    connection.prepareStatement("SELECT name FROM collections WHERE id = '${onlyFirstCollectionSupported.uuid}'").use { statement ->
+                        statement.executeQuery().use { resultSet ->
+                            resultSet.next()
+                            it.copy(collections = listOf(it.collections.first().copy(title = resultSet.getString("name"))))
+                        }
+                    }
                 }
             }.asSuccess()
         } catch (e: Exception) {
@@ -144,7 +159,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
             is ExistingCollection -> findCollection(collection.uuid).map { foundCollection ->
                 if (foundCollection != null) {
                     val updatedCollection = foundCollection.copy(tracks = foundCollection.tracks + existingTrack.uuid)
-                    val updatedTrackMetadata = existingTrack.copy(collections = existingTrack.collections + foundCollection.uuid)
+                    val updatedTrackMetadata = existingTrack.copy(collections = existingTrack.collections + foundCollection)
                     connection.autoCommit = false
                     val trackResult = updateTrack(updatedTrackMetadata)
                     val collectionResult = updateCollection(updatedCollection)
@@ -162,7 +177,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
             is Collection.NewCollection -> {
                 connection.autoCommit = false
                 val existingCollection = addCollection(collection, existingTrack)
-                updateTrack(existingTrack.copy(collections = existingTrack.collections + existingCollection.uuid))
+                updateTrack(existingTrack.copy(collections = existingTrack.collections + existingCollection))
                 connection.commit()
                 connection.autoCommit = true
             }
@@ -210,7 +225,8 @@ private fun ResultSet.toAudioFileMetadata(): AudioTrackMetadata {
         postgresMetadata.passwordProtectedLink.toUri(),
         postgresMetadata.path,
         postgresMetadata.sha256,
-        postgresMetadata.collections?.map { UUID.fromString(it) } ?: emptyList()
+        // TODO again, not pleasant as the title and tracks are set to empty.
+        postgresMetadata.collections?.map { ExistingCollection(UUID.fromString(it), "", emptySet()) } ?: emptyList()
     )
 }
 

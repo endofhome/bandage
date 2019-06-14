@@ -41,7 +41,7 @@ object Tracks {
             duration?.presentationFormat(),
             fileSize,
             "$playUrl",
-            collections.map { "$it" }
+            collections.map { Tracks.ViewModels.Collection("${it.uuid}", it.title) }
         )
 
     object ViewModels {
@@ -57,7 +57,12 @@ object Tracks {
             val duration: String?,
             val size: Int,
             val playUrl: String,
-            val collections: List<String>
+            val collections: List<Collection>
+        )
+
+        data class Collection(
+            val uuid: String,
+            val title: String
         )
     }
 }
@@ -80,7 +85,11 @@ object ApiJson {
             track.duration?.let { obj.put("duration", track.duration) }
             obj.put("fileSize", track.size)
             obj.put("playUrl", track.playUrl)
-            track.collections.let { if (it.isNotEmpty()) { obj.putPOJO("collections", it) } }
+            track.collections.let {
+                if (it.isNotEmpty()) {
+                    obj.putPOJO("collections", it)
+                }
+            }
 
             rootNode.addPOJO(obj)
         }

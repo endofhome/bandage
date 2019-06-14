@@ -25,7 +25,10 @@
     "fileSize": 12345,
     "playUrl": "http://localhost:7000/play/c81e728d-9d4c-3f63-af06-7f89cc14862c",
     "collections": [
-      "eccbc87e-4b5c-32fe-a830-8fd9f2a7baf3"
+      {
+        "uuid": "eccbc87e-4b5c-32fe-a830-8fd9f2a7baf3",
+        "title": "Awesome collection"
+      }
     ]
   },
   {
