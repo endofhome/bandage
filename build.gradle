@@ -56,7 +56,7 @@ compileTestKotlin {
 
 task migrate(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = "storage.PostgresMetadataMigrations"
+    main = "storage.PostgresMetadataMigrationsKt"
 }
 
 mainClassName = "BandageKt"
