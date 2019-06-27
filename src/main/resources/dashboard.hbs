@@ -3,7 +3,7 @@
 <div class="container-fluid d-flex h-100">
     <div class="justify-content-center align-self-center mx-auto" id="main-container">
         {{#each dateGroups}}
-            <h4 data-test="[date-{{name}}]">{{name}}</h4>
+            <h4 data-test="[date-{{date}}]">{{presentationDate}}</h4>
             {{#each tracks}}
                 <div id={{uuid}} {{#eq uuid nowPlaying.uuid}}class="highlighted"{{/eq}} data-test="[track-{{uuid}}]" data-track>
                     {{title}} | {{#if duration}}{{duration}} | {{/if}}{{format}} | <a href="?id={{uuid}}#{{uuid}}" data-test="[play-audio-link]">play</a>

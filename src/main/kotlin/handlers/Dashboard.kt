@@ -15,6 +15,7 @@ import result.orElse
 import storage.AudioTrackMetadata
 import storage.AudioTrackMetadata.Companion.presentationFormat
 import storage.MetadataStorage
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 object Dashboard {
@@ -29,6 +30,7 @@ object Dashboard {
             }.toList().sortedBy { (date) -> date }.reversed().map { (date, tracks) ->
                 ViewModels.DateGroup(
                     date.toString(),
+                    date.format(DateTimeFormatter.ofPattern("d MMMM yyyy")),
                     tracks.sortedBy { it.recordedTimestamp }.reversed().map { audioFile -> audioFile.viewModel() }
                 )
             }
@@ -55,7 +57,13 @@ object Dashboard {
         )
 
     object ViewModels {
-        data class DateGroup(val name: String, val tracks: List<AudioTrackMetadata>)
+
+        data class DateGroup(
+            val date: String,
+            val presentationDate: String,
+            val tracks: List<AudioTrackMetadata>
+        )
+
         data class AudioTrackMetadata(
             val uuid: String,
             val title: String,
