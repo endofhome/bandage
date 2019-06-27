@@ -23,21 +23,24 @@ object Dashboard {
             metadataStorage.findTrack(UUID.fromString(id)).map { metadata -> metadata?.viewModel() }.orElse { null }
         }
 
-        val folders = metadataStorage.tracks().map { all ->
-            all.groupBy { file ->
-                file.path.drop(1).substringBefore("/")
-            }.toList().sortByReversedThenFolderNamesOnlyContainingLetters().map { (folderName, files) ->
-                ViewModels.Folder(folderName, files.map { audioFile -> audioFile.viewModel() })
+        val tracks = metadataStorage.tracks().map { all ->
+            all.groupBy { track ->
+                track.recordedTimestamp.toLocalDate()
+            }.toList().sortedBy { (date) -> date }.reversed().map { (date, tracks) ->
+                ViewModels.DateGroup(
+                    date.toString(),
+                    tracks.sortedBy { it.recordedTimestamp }.reversed().map { audioFile -> audioFile.viewModel() }
+                )
             }
         }
 
-        return when (folders) {
-            is Success -> Response(OK).with(view of DashboardPage(authenticatedRequest.user, folders.value, nowPlaying))
+        return when (tracks) {
+            is Success -> Response(OK).with(view of DashboardPage(authenticatedRequest.user, tracks.value, nowPlaying))
             is Failure -> Response(INTERNAL_SERVER_ERROR)
         }
     }
 
-    data class DashboardPage(val loggedInUser: User, val folders: List<ViewModels.Folder>, val nowPlaying: ViewModels.AudioTrackMetadata? = null) : ViewModel {
+    data class DashboardPage(val loggedInUser: User, val dateGroups: List<ViewModels.DateGroup>, val nowPlaying: ViewModels.AudioTrackMetadata? = null) : ViewModel {
         override fun template() = "dashboard"
     }
 
@@ -52,7 +55,7 @@ object Dashboard {
         )
 
     object ViewModels {
-        data class Folder(val name: String, val files: List<AudioTrackMetadata>)
+        data class DateGroup(val name: String, val tracks: List<AudioTrackMetadata>)
         data class AudioTrackMetadata(
             val uuid: String,
             val title: String,
@@ -62,9 +65,4 @@ object Dashboard {
             val playUrl: String
         )
     }
-}
-
-private fun List<Pair<String, List<AudioTrackMetadata>>>.sortByReversedThenFolderNamesOnlyContainingLetters(): List<Pair<String, List<AudioTrackMetadata>>> {
-    val (onlyLetters, others) = this.partition { (folderName) -> folderName.all { it.isLetter() } }
-    return others.sortedBy { (folderName) -> folderName }.reversed() + onlyLetters
 }

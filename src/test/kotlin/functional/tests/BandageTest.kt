@@ -11,6 +11,7 @@ import UserManagement
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.startsWith
 import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.PASSWORD
 import config.dummyConfiguration
@@ -176,14 +177,43 @@ class BandageTest {
         driver.userLogsIn()
         driver.navigate().to(dashboard)
 
-        val folderh4 = driver.findElement(By.cssSelector("h4[data-test=\"[folder-my_folder]\"]")) ?: fail("FolderViewModel h4 is unavailable")
-        assertThat(folderh4.text, equalTo("my_folder"))
+        val folderh4 = driver.findElement(By.cssSelector("h4[data-test=\"[date-1970-01-01]\"]")) ?: fail("h4 is unavailable")
+        assertThat(folderh4.text, equalTo("1970-01-01"))
 
-        val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[file-${exampleAudioTrackMetadata.uuid}]\"]")) ?: fail("First file div is unavailable")
+        val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[track-${exampleAudioTrackMetadata.uuid}]\"]")) ?: fail("First file div is unavailable")
         assertThat(firstFile.text, equalTo("${exampleAudioTrackMetadata.title} | 0:21 | ${exampleAudioTrackMetadata.format} | play"))
 
-        val fileWithNullDuration = driver.findElement(By.cssSelector("div[data-test=\"[file-${metadataWithNullValues.uuid}]\"]")) ?: fail("First file div is unavailable")
+        val fileWithNullDuration = driver.findElement(By.cssSelector("div[data-test=\"[track-${metadataWithNullValues.uuid}]\"]")) ?: fail("First file div is unavailable")
         assertThat(fileWithNullDuration.text, equalTo("${metadataWithNullValues.title} | ${metadataWithNullValues.format} | play"))
+    }
+
+    @Test
+    fun `audio tracks are sorted and grouped by recorded timestamp`() {
+        val earliestRecordedTrack = exampleAudioTrackMetadata.copy(title = "earliest recorded track")
+        val middleTrack = exampleAudioTrackMetadata.copy(
+            title = "middle track",
+            recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.plusDays(1)
+        )
+        val latestRecordedTrack = exampleAudioTrackMetadata.copy(
+            title = "latest recorded track",
+            recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.plusDays(1).plusHours(1)
+        )
+        val metadataStorage = StubMetadataStorage(mutableListOf(middleTrack, earliestRecordedTrack, latestRecordedTrack))
+        val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
+        val driver = Http4kWebDriver(bandage)
+
+        driver.navigate().to(login)
+        driver.userLogsIn()
+        driver.navigate().to(dashboard)
+
+        val h4Elements = driver.findElements(By.cssSelector("h4")) ?: fail("h4 elements are unavailable")
+        assertThat(h4Elements[0].text, equalTo("1970-01-02"))
+        assertThat(h4Elements[1].text, equalTo("1970-01-01"))
+
+        val dataTrackElements = driver.findElements(By.cssSelector("[data-track]")) ?: fail("data-track elements are unavailable")
+        assertThat(dataTrackElements[0].text, startsWith(latestRecordedTrack.title))
+        assertThat(dataTrackElements[1].text, startsWith(middleTrack.title))
+        assertThat(dataTrackElements[2].text, startsWith(earliestRecordedTrack.title))
     }
 
     @Test
@@ -220,7 +250,7 @@ class BandageTest {
         this.userLogsIn()
         this.navigate().to(dashboard)
 
-        val trackToPlay = findElement(By.cssSelector("div[data-test=\"[file-${exampleAudioTrackMetadata.uuid}]\"]"))
+        val trackToPlay = findElement(By.cssSelector("div[data-test=\"[track-${exampleAudioTrackMetadata.uuid}]\"]"))
             ?: fail("Div for track to play is unavailable")
         val playLink = trackToPlay.findElement(By.cssSelector("a[data-test=\"[play-audio-link]\"]"))
             ?: fail("Play link is unavailable")
