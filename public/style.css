@@ -11,6 +11,10 @@ audio {
     width: 100%;
 }
 
+.title-link {
+    color: black;
+}
+
 .navbar-contents {
     width: 100%;
     text-align: right;

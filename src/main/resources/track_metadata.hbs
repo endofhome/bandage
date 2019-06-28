@@ -1,0 +1,36 @@
+{{> header loggedInUser}}
+<body>
+<div class="container-fluid d-flex h-100">
+    <div class="justify-content-center align-self-center mx-auto" id="main-container">
+        <h4 class="container-fluid" data-test="heading">{{trackMetadata.title}}</h4>
+        <form class="form-group" action="/edit-metadata" method="POST">
+            <label for="artist">Artist</label>
+            <input readonly class="form-control full-width" id="artist" type="artist" name="artist" value="{{trackMetadata.artist}}" data-test="artist"/>
+            <label for="title">Title</label>
+            <input readonly class="form-control full-width" id="title" type="title" name="title" value="{{trackMetadata.title}}" data-test="title"/>
+            <label for="duration">Duration</label>
+            <input readonly class="form-control full-width" id="duration" type="duration" name="duration" value="{{trackMetadata.duration}}" data-test="duration"/>
+            <label for="format">Format</label>
+            <input readonly class="form-control full-width" id="format" type="format" name="format" value="{{trackMetadata.format}}" data-test="format"/>
+            <label for="bitrate">Bitrate</label>
+            <input readonly class="form-control full-width" id="bitrate" type="bitrate" name="bitrate" value="{{trackMetadata.bitRate}} kbps" data-test="bitrate"/>
+            <label for="recorded">Recorded on</label>
+            <input readonly class="form-control full-width" id="recordedOn" type="recordedOn" name="recordedOn" value="{{trackMetadata.recordedTimestamp}}" data-test="recordedOn"/>
+            <label for="uploadedOn">Uploaded at</label>
+            <input readonly class="form-control full-width" id="uploadedOn" type="uploadedOn" name="uploadedOn" value="{{trackMetadata.uploadedTimestamp}}" data-test="uploadedOn"/>
+            {{#if trackMetadata.collections}}
+                <label>In collections</label>
+                {{#each trackMetadata.collections}}
+                    <div data-test="collection-{{this}}">{{this}}</div>
+                {{/each}}
+            {{/if}}
+            <br>
+            {{!--<button class="form-control full-width" type="submit" formenctype="application/x-www-form-urlencoded" formmethod="post" name="edit-metadata">Edit</button>}}
+            {{!-- untested --}}
+
+        </form>
+    </div>
+</div>
+
+</body>
+{{> footer nowPlaying}}

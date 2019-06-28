@@ -36,6 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.openqa.selenium.By
 import org.openqa.selenium.Cookie
 import org.openqa.selenium.WebElement
+import storage.Collection
 import storage.DummyFileStorage
 import storage.DummyMetadataStorage
 import storage.StubMetadataStorage
@@ -228,6 +229,46 @@ class BandageTest {
         val playerMetadata = driver.findElement(By.cssSelector("div[data-test=\"[audio-player-metadata]\"]")) ?: fail("Audio player metadata is unavailable")
         assertThat(playerMetadata.text, equalTo("${exampleAudioTrackMetadata.title} | 0:21 | ${exampleAudioTrackMetadata.format} (320 kbps)"))
         assertThat(driver.currentUrl, equalTo("/dashboard?id=${exampleAudioTrackMetadata.uuid}#${exampleAudioTrackMetadata.uuid}"))
+    }
+
+    @Test
+    fun `full audio track metadata can be viewed`() {
+        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata.copy(
+            collections = listOf(Collection.ExistingCollection(UUID.randomUUID(), "some_collection", setOf(exampleAudioTrackMetadata.uuid)))))
+        )
+        val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
+        val driver = Http4kWebDriver(bandage)
+
+        driver.navigate().to(login)
+        driver.userLogsIn()
+
+        val trackToView = driver.findElement(By.cssSelector("div[data-test=\"[track-${exampleAudioTrackMetadata.uuid}]\"]")) ?: fail("Track ${exampleAudioTrackMetadata.uuid} is unavailable")
+        val viewMetadataLink = trackToView.findElement(By.cssSelector("a[data-test=\"[metadata-link]\"]")) ?: fail("Metadata link for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        viewMetadataLink.click()
+
+        assertThat(driver.status, equalTo(OK))
+        assertThat(driver.currentUrl, equalTo("/tracks/${exampleAudioTrackMetadata.uuid}"))
+
+        val heading = driver.findElement(By.cssSelector("h4[data-test=\"heading\"]")) ?: fail("Heading for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        assertThat(heading.text, equalTo(exampleAudioTrackMetadata.title))
+        val artist = driver.findElement(By.cssSelector("input[data-test=\"artist\"]")) ?: fail("Artist for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        assertThat(artist.getAttribute("value"), equalTo(exampleAudioTrackMetadata.artist))
+        val title = driver.findElement(By.cssSelector("input[data-test=\"title\"]")) ?: fail("Title for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        assertThat(title.getAttribute("value"), equalTo(exampleAudioTrackMetadata.title))
+        val duration = driver.findElement(By.cssSelector("input[data-test=\"duration\"]")) ?: fail("Duration for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        assertThat(duration.getAttribute("value"), equalTo("0:21"))
+        val format = driver.findElement(By.cssSelector("input[data-test=\"format\"]")) ?: fail("Format for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        assertThat(format.getAttribute("value"), equalTo("mp3"))
+        val bitrate = driver.findElement(By.cssSelector("input[data-test=\"bitrate\"]")) ?: fail("Bitrate for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        assertThat(bitrate.getAttribute("value"), equalTo("320 kbps"))
+        val recordedOn = driver.findElement(By.cssSelector("input[data-test=\"recordedOn\"]")) ?: fail("Recorded on for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        assertThat(recordedOn.getAttribute("value"), equalTo("1/01/1970   00:00"))
+        val uploadedOn = driver.findElement(By.cssSelector("input[data-test=\"uploadedOn\"]")) ?: fail("Uploaded on for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        assertThat(uploadedOn.getAttribute("value"), equalTo("1/01/1970   00:00"))
+        val aCollection = driver.findElement(By.cssSelector("[data-test=\"collection-some_collection\"]")) ?: fail("Collections for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        assertThat(aCollection.text, equalTo("some_collection"))
+
+        // TODO test that only dates/times with relevant precision are shown
     }
 
     @Test

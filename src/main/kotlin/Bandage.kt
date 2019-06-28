@@ -7,6 +7,7 @@ import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
 import RouteMappings.logout
+import RouteMappings.metadata
 import RouteMappings.play
 import RouteMappings.playWithPath
 import RouteMappings.tracks
@@ -21,6 +22,7 @@ import config.withDynamicDatabaseUrlFrom
 import handlers.Dashboard
 import handlers.Login
 import handlers.Play
+import handlers.TrackMetadata
 import http.Filters.CatchAll
 import http.Filters.EnforceHttpsOnHeroku
 import http.HttpConfig.environment
@@ -94,7 +96,7 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
     }
 
     private val apiRoutes: RoutingHttpHandler = with(authentication) { routes(
-            tracks       bind GET  to { request -> ifAuthenticated(request, then = { Tracks(metadataStorage) }, otherwise = Response(UNAUTHORIZED)) }
+            tracks    bind GET  to { request -> ifAuthenticated(request, then = { Tracks(metadataStorage) }, otherwise = Response(UNAUTHORIZED)) }
         )
     }
 
@@ -104,6 +106,7 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
             login        bind POST to { request -> authenticateUser(request) },
             logout       bind GET  to { logout() },
             dashboard    bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  Dashboard(authenticatedRequest, metadataStorage) }) },
+            metadata     bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  TrackMetadata(authenticatedRequest, metadataStorage) }) },
             playWithPath bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(UNAUTHORIZED)) },
 
             api          bind apiRoutes,

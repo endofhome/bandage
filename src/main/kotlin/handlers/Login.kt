@@ -22,6 +22,6 @@ object Login {
     }
 
     data class LoginPage(val users: List<User>, val redirectUri: Uri) : ViewModel {
-        override fun template() = "login-page"
+        override fun template() = "login"
     }
 }
