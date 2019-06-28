@@ -1,5 +1,6 @@
 package storage
 
+import Bandage.StaticConfig.logger
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import config.BandageConfigItem.METADATA_DB_HOST
@@ -56,7 +57,9 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
                 }
             }.asSuccess()
         } catch (e: Exception) {
-            Failure(Error("Error reading all tracks metadata"))
+            val errorMessage = "Error reading all tracks metadata"
+            logger.error("$errorMessage\n${e.message}\n${e.stackTrace}")
+            Failure(Error(errorMessage))
         }
 
     override fun findTrack(uuid: UUID): Result<Error, AudioTrackMetadata?> =
@@ -214,7 +217,9 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
             "uploadedTimestamp": "$uploadedTimestamp",
             "passwordProtectedLink": "$passwordProtectedLink",
             "path": "$path",
-            ${collections.let { collections -> if (collections.isNotEmpty()) { """"collections": ${collections.map { "\"$it\"" }},""" } else { "" }}}
+            ${collections.let { collections ->
+                if (collections.isNotEmpty()) { """"collections": ${collections.map { "\"${it.uuid}\"" }},""" } else { "" }
+            }}
             "sha256": "$hash"
         }""".trimIndent()
 }
