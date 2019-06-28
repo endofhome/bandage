@@ -60,12 +60,28 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
         }
 
     override fun findTrack(uuid: UUID): Result<Error, AudioTrackMetadata?> =
+        // TODO - try to do this nicely in one query with a JOIN - multiple queries is really not nice
+
         try {
-            connection.prepareStatement("SELECT * FROM public.tracks WHERE id = '$uuid'").use { statement ->
+            val searchResult = connection.prepareStatement("SELECT * FROM public.tracks WHERE id = '$uuid'").use { statement ->
                 statement.executeQuery().use { resultSet ->
                     if (resultSet.next()) resultSet.toAudioFileMetadata() else null
-                }.asSuccess()
+                }
             }
+
+            searchResult?.let {
+                if (it.collections.isEmpty()) {
+                    it
+                } else {
+                    val onlyFirstCollectionSupported = it.collections.first()
+                    connection.prepareStatement("SELECT name FROM collections WHERE id = '${onlyFirstCollectionSupported.uuid}'").use { statement ->
+                        statement.executeQuery().use { resultSet ->
+                            resultSet.next()
+                            it.copy(collections = listOf(it.collections.first().copy(title = resultSet.getString("name"))))
+                        }
+                    }
+                }
+            }.asSuccess()
         } catch (e: Exception) {
             Failure(Error("Error finding track $uuid in metadata storage"))
 
