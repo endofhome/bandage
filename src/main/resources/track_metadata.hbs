@@ -3,11 +3,11 @@
 <div class="container-fluid d-flex h-100">
     <div class="justify-content-center align-self-center mx-auto" id="main-container">
         <h4 class="container-fluid" data-test="heading">{{trackMetadata.title}}</h4>
-        <form class="form-group" action="/edit-metadata" method="POST">
+        <form class="form-group" action="/api/tracks/{{trackMetadata.uuid}}" method="POST">
             <label for="artist">Artist</label>
             <input readonly class="form-control full-width" id="artist" type="artist" name="artist" value="{{trackMetadata.artist}}" data-test="artist"/>
             <label for="title">Title</label>
-            <input readonly class="form-control full-width" id="title" type="title" name="title" value="{{trackMetadata.title}}" data-test="title"/>
+            <input class="form-control full-width" id="title" type="title" name="title" value="{{trackMetadata.title}}" data-test="title"/>
             <label for="duration">Duration</label>
             <input readonly class="form-control full-width" id="duration" type="duration" name="duration" value="{{trackMetadata.duration}}" data-test="duration"/>
             <label for="format">Format</label>
@@ -25,9 +25,7 @@
                 {{/each}}
             {{/if}}
             <br>
-            {{!--<button class="form-control full-width" type="submit" formenctype="application/x-www-form-urlencoded" formmethod="post" name="edit-metadata">Edit</button>}}
-            {{!-- untested --}}
-
+            <button class="form-control full-width" type="submit" formenctype="application/x-www-form-urlencoded" formmethod="post" name="edit-metadata" data-test="edit-metadata">Edit</button>
         </form>
     </div>
 </div>

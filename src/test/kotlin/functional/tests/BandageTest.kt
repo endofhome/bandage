@@ -36,6 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.openqa.selenium.By
 import org.openqa.selenium.Cookie
 import org.openqa.selenium.WebElement
+import result.expectSuccess
 import storage.Collection
 import storage.DummyFileStorage
 import storage.DummyMetadataStorage
@@ -269,6 +270,31 @@ class BandageTest {
         assertThat(aCollection.text, equalTo("some_collection"))
 
         // TODO test that only dates/times with relevant precision are shown
+    }
+
+    @Test
+    fun `title of audio track can be updated`() {
+        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata))
+        val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
+        val driver = Http4kWebDriver(bandage)
+
+        driver.navigate().to(login)
+        driver.userLogsIn()
+
+        val trackToView = driver.findElement(By.cssSelector("div[data-test=\"[track-${exampleAudioTrackMetadata.uuid}]\"]")) ?: fail("Track ${exampleAudioTrackMetadata.uuid} is unavailable")
+        val viewMetadataLink = trackToView.findElement(By.cssSelector("a[data-test=\"[metadata-link]\"]")) ?: fail("Metadata link for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        viewMetadataLink.click()
+
+        val title = driver.findElement(By.cssSelector("input[data-test=\"title\"]")) ?: fail("Title for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        title.clear()
+        title.sendKeys("a new title")
+
+        val editButton = driver.findElement(By.cssSelector("button[data-test=\"edit-metadata\"]")) ?: fail("Title for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        editButton.click()
+
+        assertThat(driver.status, equalTo(OK))
+        assertThat(driver.currentUrl, equalTo("/dashboard#${exampleAudioTrackMetadata.uuid}"))
+        assertThat(metadataStorage.findTrack(exampleAudioTrackMetadata.uuid).expectSuccess()?.title, equalTo("a new title"))
     }
 
     @Test
