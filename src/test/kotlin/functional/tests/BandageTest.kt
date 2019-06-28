@@ -178,7 +178,7 @@ class BandageTest {
         driver.navigate().to(dashboard)
 
         val folderh4 = driver.findElement(By.cssSelector("h4[data-test=\"[date-1970-01-01]\"]")) ?: fail("h4 is unavailable")
-        assertThat(folderh4.text, equalTo("1 January 1970"))
+        assertThat(folderh4.text, equalTo("1st January 1970"))
 
         val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[track-${exampleAudioTrackMetadata.uuid}]\"]")) ?: fail("First file div is unavailable")
         assertThat(firstFile.text, equalTo("${exampleAudioTrackMetadata.title} | 0:21 | ${exampleAudioTrackMetadata.format} | play"))
@@ -207,8 +207,8 @@ class BandageTest {
         driver.navigate().to(dashboard)
 
         val h4Elements = driver.findElements(By.cssSelector("h4")) ?: fail("h4 elements are unavailable")
-        assertThat(h4Elements[0].text, equalTo("2 January 1970"))
-        assertThat(h4Elements[1].text, equalTo("1 January 1970"))
+        assertThat(h4Elements[0].text, equalTo("2nd January 1970"))
+        assertThat(h4Elements[1].text, equalTo("1st January 1970"))
 
         val dataTrackElements = driver.findElements(By.cssSelector("[data-track]")) ?: fail("data-track elements are unavailable")
         assertThat(dataTrackElements[0].text, startsWith(latestRecordedTrack.title))

@@ -30,7 +30,9 @@ object Dashboard {
             }.toList().sortedBy { (date) -> date }.reversed().map { (date, tracks) ->
                 ViewModels.DateGroup(
                     date.toString(),
-                    date.format(DateTimeFormatter.ofPattern("d MMMM yyyy")),
+                    date.dayOfMonth.toString(),
+                    with(Ordinal) { date.dayOfMonth.dayOfMonthToOrdinal() },
+                    date.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
                     tracks.sortedBy { it.recordedTimestamp }.reversed().map { audioFile -> audioFile.viewModel() }
                 )
             }
@@ -60,7 +62,9 @@ object Dashboard {
 
         data class DateGroup(
             val date: String,
-            val presentationDate: String,
+            val presentationDay: String,
+            val presentationOrdinal: String,
+            val presentationMonthYear: String,
             val tracks: List<AudioTrackMetadata>
         )
 
@@ -72,5 +76,20 @@ object Dashboard {
             val duration: String?,
             val playUrl: String
         )
+    }
+
+    object Ordinal {
+        fun Int.dayOfMonthToOrdinal(): String {
+            require(this in 1..31) { "Day of month cannot be less than 0 or more than 31" }
+
+            val lastTwo = this.toString().takeLast(2)
+            return when {
+                lastTwo.length == 2 && lastTwo.first() == '1' -> "th"
+                lastTwo.last() == '1'                         -> "st"
+                lastTwo.last() == '2'                         -> "nd"
+                lastTwo.last() == '3'                         -> "rd"
+                else                                          -> "th"
+            }
+        }
     }
 }
