@@ -7,7 +7,7 @@ import java.time.temporal.ChronoUnit.SECONDS
 import java.time.temporal.ChronoUnit.YEARS
 
 object DateTimePatterns {
-    fun patternFor(precision: ChronoUnit) =
+    fun shortPatternFor(precision: ChronoUnit): String =
         when(precision) {
             SECONDS     -> "dd/MM/yyyy   HH:mm"
             MINUTES     -> "dd/MM/yyyy   HH:mm"
@@ -15,6 +15,20 @@ object DateTimePatterns {
             DAYS        -> "dd/MM/yyyy"
             MONTHS      -> "MM/yyyy"
             YEARS       -> "yyyy"
-            else        -> error("$precision precision is not supported")
+            else        -> error(unsupportedPatternMessage(precision))
         }
+
+    fun longPatternFor(precision: ChronoUnit): String =
+        when(precision) {
+            SECONDS     -> "d MMMM yyyy"
+            MINUTES     -> "d MMMM yyyy"
+            HOURS       -> "d MMMM yyyy"
+            DAYS        -> "d MMMM yyyy"
+            MONTHS      -> "MMMM yyyy"
+            YEARS       -> "yyyy"
+            else        -> error(unsupportedPatternMessage(precision))
+        }
+
+    private fun unsupportedPatternMessage(precision: ChronoUnit) =
+        "$precision precision is not supported"
 }

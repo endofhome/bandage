@@ -12,19 +12,27 @@ import java.time.temporal.ChronoUnit.SECONDS
 import java.time.temporal.ChronoUnit.YEARS
 
 class DateTimePatternsTest {
+    private data class Pattern(val shortPattern: String, val longPattern: String)
+
     private val expectedResults = mapOf(
-        SECONDS to "dd/MM/yyyy   HH:mm",
-        MINUTES to "dd/MM/yyyy   HH:mm",
-        HOURS to "dd/MM/yyyy",
-        DAYS to "dd/MM/yyyy",
-        MONTHS to "MM/yyyy",
-        YEARS to "yyyy"
+        SECONDS to Pattern("dd/MM/yyyy   HH:mm", "d MMMM yyyy"),
+        MINUTES to Pattern("dd/MM/yyyy   HH:mm", "d MMMM yyyy"),
+        HOURS to Pattern("dd/MM/yyyy", "d MMMM yyyy"),
+        DAYS to Pattern("dd/MM/yyyy", "d MMMM yyyy"),
+        MONTHS to Pattern("MM/yyyy", "MMMM yyyy"),
+        YEARS to Pattern("yyyy", "yyyy")
     )
+    @Test
+    fun `provides correct short pattern precision for given precision`() {
+        expectedResults.entries.forEach {
+            assertThat(DateTimePatterns.shortPatternFor(it.key), equalTo(it.value.shortPattern))
+        }
+    }
 
     @Test
-    fun `provides correct precision for given precision`() {
+    fun `provides correct long pattern precision for given precision`() {
         expectedResults.entries.forEach {
-            assertThat(DateTimePatterns.patternFor(it.key), equalTo(it.value))
+            assertThat(DateTimePatterns.longPatternFor(it.key), equalTo(it.value.longPattern))
         }
     }
 
@@ -33,7 +41,7 @@ class DateTimePatternsTest {
         val unexpectedPrecisionValues = ChronoUnit.values().filter { ! expectedResults.keys.contains(it) }
         val exceptions = unexpectedPrecisionValues.map {
             assertThrows<IllegalStateException> {
-                DateTimePatterns.patternFor(it)
+                DateTimePatterns.shortPatternFor(it)
             }
         }
 

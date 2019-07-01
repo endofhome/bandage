@@ -33,7 +33,7 @@ object TrackMetadata {
     private fun AudioTrackMetadata.viewModel(): ViewModels.AudioFileMetadata =
         this.let {
             with(AudioTrackMetadata) {
-                val pattern = DateTimePatterns.patternFor(it.recordedTimestampPrecision)
+                val pattern = DateTimePatterns.shortPatternFor(it.recordedTimestampPrecision)
                 val dateTimeFormatter = DateTimeFormatter.ofPattern(pattern)
                 ViewModels.AudioFileMetadata(
                     it.uuid.toString(),
