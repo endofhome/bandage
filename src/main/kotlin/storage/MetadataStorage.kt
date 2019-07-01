@@ -60,8 +60,8 @@ sealed class Collection {
     data class ExistingCollection(val uuid: UUID, val title: String, val tracks: Set<UUID>): Collection() // TODO tracks should be AudioTrackMetadata
 }
 
-class BitRate(val value: String)
-class Duration(val value: String)
+data class BitRate(val value: String)
+data class Duration(val value: String)
 
 fun String.toBitRate() = BitRate(this)
 fun String.toDuration() = Duration(this)

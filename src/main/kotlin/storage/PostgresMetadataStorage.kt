@@ -99,7 +99,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
 
         newMetadata.zip(uuidIndexes).forEach { (audioFileMetadata, uuidIndex) ->
             preparedStatement.setString(uuidIndex, audioFileMetadata.uuid.toString())
-            preparedStatement.setString(uuidIndex + 1, audioFileMetadata.toJsonString())
+            preparedStatement.setString(uuidIndex + 1, with(JsonSerialisation) { audioFileMetadata.toJsonString() })
         }
 
         preparedStatement.use { statement ->
@@ -114,7 +114,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
                     UPDATE tracks SET metadata = ?::jsonb WHERE id = '${updatedMetadata.uuid}';
                 """.trimIndent())
 
-                preparedStatement.setString(1, updatedMetadata.toJsonString())
+                preparedStatement.setString(1, with(JsonSerialisation) { updatedMetadata.toJsonString() })
 
                 preparedStatement.use { statement ->
                     statement.executeUpdate()
@@ -202,8 +202,9 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
             }
         }
 
-    private fun AudioTrackMetadata.toJsonString(): String =
-        """{
+    object JsonSerialisation {
+        fun AudioTrackMetadata.toJsonString(): String =
+            """{
             "artist": "$artist",
             "album": "$album",
             "title": "$title",
@@ -222,33 +223,41 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
             }}
             "sha256": "$hash"
         }""".trimIndent()
+
+        fun String.toAudioTrackMetadataWith(uuid: UUID): AudioTrackMetadata {
+            val postgresMetadata: PostgresAudioMetadata = run {
+                jacksonObjectMapper().readValue(this)
+            }
+
+            return AudioTrackMetadata(
+                uuid,
+                postgresMetadata.artist,
+                postgresMetadata.album,
+                postgresMetadata.title,
+                postgresMetadata.format,
+                postgresMetadata.bitrate.toBitRate(),
+                postgresMetadata.duration?.toDuration(),
+                postgresMetadata.size,
+                postgresMetadata.recordedDate,
+                postgresMetadata.recordedTimestamp.toZonedDateTime(),
+                postgresMetadata.recordedTimestampPrecision.toChronoUnit(),
+                postgresMetadata.uploadedTimestamp.toZonedDateTime(),
+                postgresMetadata.passwordProtectedLink.toUri(),
+                postgresMetadata.path,
+                postgresMetadata.sha256,
+                // TODO again, not pleasant as the title and tracks are set to empty.
+                postgresMetadata.collections?.map { ExistingCollection(UUID.fromString(it), "", emptySet()) } ?: emptyList()
+            )
+        }
+    }
 }
 
 private fun ResultSet.toAudioFileMetadata(): AudioTrackMetadata {
     val uuid = UUID.fromString(this.getString("id"))
-    val postgresMetadata: PostgresAudioMetadata = this.getString("metadata").run {
-        jacksonObjectMapper().readValue(this)
+    val metadataJsonString = this.getString("metadata")
+    return with(PostgresMetadataStorage.JsonSerialisation) {
+        metadataJsonString.toAudioTrackMetadataWith(uuid)
     }
-
-    return AudioTrackMetadata(
-        uuid,
-        postgresMetadata.artist,
-        postgresMetadata.album,
-        postgresMetadata.title,
-        postgresMetadata.format,
-        postgresMetadata.bitrate.toBitRate(),
-        postgresMetadata.duration?.toDuration(),
-        postgresMetadata.size,
-        postgresMetadata.recordedDate,
-        postgresMetadata.recordedTimestamp.toZonedDateTime(),
-        postgresMetadata.recordedTimestampPrecision.toChronoUnit(),
-        postgresMetadata.uploadedTimestamp.toZonedDateTime(),
-        postgresMetadata.passwordProtectedLink.toUri(),
-        postgresMetadata.path,
-        postgresMetadata.sha256,
-        // TODO again, not pleasant as the title and tracks are set to empty.
-        postgresMetadata.collections?.map { ExistingCollection(UUID.fromString(it), "", emptySet()) } ?: emptyList()
-    )
 }
 
 private fun ResultSet.toCollection(): ExistingCollection {
