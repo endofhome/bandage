@@ -12,27 +12,34 @@ import java.time.temporal.ChronoUnit.SECONDS
 import java.time.temporal.ChronoUnit.YEARS
 
 class DateTimePatternsTest {
-    private data class Pattern(val shortPattern: String, val longPattern: String)
+    private data class Pattern(val shortPattern: String, val longPattern: String, val filenamePattern: String)
 
     private val expectedResults = mapOf(
-        SECONDS to Pattern("dd/MM/yyyy   HH:mm", "d MMMM yyyy"),
-        MINUTES to Pattern("dd/MM/yyyy   HH:mm", "d MMMM yyyy"),
-        HOURS to Pattern("dd/MM/yyyy", "d MMMM yyyy"),
-        DAYS to Pattern("dd/MM/yyyy", "d MMMM yyyy"),
-        MONTHS to Pattern("MM/yyyy", "MMMM yyyy"),
-        YEARS to Pattern("yyyy", "yyyy")
+        SECONDS to Pattern("dd/MM/yyyy   HH:mm", "d MMMM yyyy", "yyyy-MM-dd"),
+        MINUTES to Pattern("dd/MM/yyyy   HH:mm", "d MMMM yyyy", "yyyy-MM-dd"),
+        HOURS to Pattern("dd/MM/yyyy", "d MMMM yyyy", "yyyy-MM-dd"),
+        DAYS to Pattern("dd/MM/yyyy", "d MMMM yyyy", "yyyy-MM-dd"),
+        MONTHS to Pattern("MM/yyyy", "MMMM yyyy", "yyyy-MM"),
+        YEARS to Pattern("yyyy", "yyyy", "yyyy")
     )
     @Test
-    fun `provides correct short pattern precision for given precision`() {
+    fun `provides correct short pattern for given precision`() {
         expectedResults.entries.forEach {
             assertThat(DateTimePatterns.shortPatternFor(it.key), equalTo(it.value.shortPattern))
         }
     }
 
     @Test
-    fun `provides correct long pattern precision for given precision`() {
+    fun `provides correct long pattern for given precision`() {
         expectedResults.entries.forEach {
             assertThat(DateTimePatterns.longPatternFor(it.key), equalTo(it.value.longPattern))
+        }
+    }
+
+    @Test
+    fun `provides correct filename pattern for given precision`() {
+        expectedResults.entries.forEach {
+            assertThat(DateTimePatterns.filenamePatternFor(it.key), equalTo(it.value.filenamePattern))
         }
     }
 

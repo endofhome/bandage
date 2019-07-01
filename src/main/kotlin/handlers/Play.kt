@@ -1,5 +1,6 @@
 package handlers
 
+import DateTimePatterns
 import RouteMappings.play
 import org.http4k.core.Headers
 import org.http4k.core.Request
@@ -13,6 +14,7 @@ import result.map
 import result.orElse
 import storage.FileStorage
 import storage.MetadataStorage
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 object Play {
@@ -27,12 +29,16 @@ object Play {
         val metadata = metadataStorage.findTrack(UUID.fromString(uuid)).map { it }.orElse { null } ?: return Response(NOT_FOUND)
 
         return fileStorage.stream(metadata.passwordProtectedLink).map { audioStream ->
+            val dateTimePattern = DateTimeFormatter.ofPattern(
+                DateTimePatterns.filenamePatternFor(metadata.recordedTimestampPrecision)
+            )
+            val dateTime = metadata.recordedTimestamp.format(dateTimePattern)
             val headers: Headers = listOf(
                 "Accept-Ranges" to "bytes",
                 "Content-Length" to metadata.fileSize.toString(),
                 "Content-Range" to "bytes 0-${metadata.fileSize - 1}/${metadata.fileSize}",
                 "content-disposition" to "attachment; filename=${
-                    listOf(metadata.path.removePrefix("/").substringBefore('/'), metadata.title).joinToString(" - ")
+                    listOf(dateTime, metadata.title).joinToString(" ")
                 }.${metadata.format}"
             )
             Response(OK).body(audioStream).headers(headers)

@@ -29,6 +29,17 @@ object DateTimePatterns {
             else        -> error(unsupportedPatternMessage(precision))
         }
 
+    fun filenamePatternFor(precision: ChronoUnit): String =
+        when(precision) {
+            SECONDS     -> "yyyy-MM-dd"
+            MINUTES     -> "yyyy-MM-dd"
+            HOURS       -> "yyyy-MM-dd"
+            DAYS        -> "yyyy-MM-dd"
+            MONTHS      -> "yyyy-MM"
+            YEARS       -> "yyyy"
+            else        -> error(unsupportedPatternMessage(precision))
+        }
+
     private fun unsupportedPatternMessage(precision: ChronoUnit) =
         "$precision precision is not supported"
 }

@@ -78,9 +78,7 @@ class PlayAudioTest {
             "Accept-Ranges" to "bytes",
             "Content-Length" to exampleAudioTrackMetadata.fileSize.toString(),
             "Content-Range" to "bytes 0-${exampleAudioTrackMetadata.fileSize - 1}/${exampleAudioTrackMetadata.fileSize}",
-            "content-disposition" to "attachment; filename=${
-                listOf(exampleAudioTrackMetadata.path.removePrefix("/").substringBefore('/'), exampleAudioTrackMetadata.title).joinToString(" - ")
-            }.${exampleAudioTrackMetadata.format}"
+            "content-disposition" to "attachment; filename=1970-01-01 some title.${exampleAudioTrackMetadata.format}"
         )
 
         assertThat(response.status, equalTo(OK))
