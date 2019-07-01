@@ -2,6 +2,7 @@ package handlers
 
 import AuthenticatedRequest
 import Bandage
+import DateTimePatterns
 import User
 import org.http4k.core.Response
 import org.http4k.core.Status
@@ -32,6 +33,8 @@ object TrackMetadata {
     private fun AudioTrackMetadata.viewModel(): ViewModels.AudioFileMetadata =
         this.let {
             with(AudioTrackMetadata) {
+                val pattern = DateTimePatterns.patternFor(it.recordedTimestampPrecision)
+                val dateTimeFormatter = DateTimeFormatter.ofPattern(pattern)
                 ViewModels.AudioFileMetadata(
                     it.uuid.toString(),
                     it.artist,
@@ -39,8 +42,8 @@ object TrackMetadata {
                     it.format,
                     it.bitRate?.presentationFormat(),
                     it.duration?.presentationFormat(),
-                    it.recordedTimestamp.format(DateTimeFormatter.ofPattern("dd/MM/yyyy   HH:mm")),
-                    it.uploadedTimestamp.format(DateTimeFormatter.ofPattern("dd/MM/yyyy   HH:mm")),
+                    it.recordedTimestamp.format(dateTimeFormatter),
+                    it.uploadedTimestamp.format(dateTimeFormatter),
                     it.collections.map { it.title }.ifEmpty { null }
                 )
             }
