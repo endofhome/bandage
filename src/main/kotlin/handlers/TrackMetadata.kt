@@ -39,8 +39,8 @@ object TrackMetadata {
                     it.format,
                     it.bitRate?.presentationFormat(),
                     it.duration?.presentationFormat(),
-                    it.recordedTimestamp.format(DateTimeFormatter.ofPattern("d/MM/yyyy   HH:mm")),
-                    it.uploadedTimestamp.format(DateTimeFormatter.ofPattern("d/MM/yyyy   HH:mm")),
+                    it.recordedTimestamp.format(DateTimeFormatter.ofPattern("dd/MM/yyyy   HH:mm")),
+                    it.uploadedTimestamp.format(DateTimeFormatter.ofPattern("dd/MM/yyyy   HH:mm")),
                     it.collections.map { it.title }.ifEmpty { null }
                 )
             }
