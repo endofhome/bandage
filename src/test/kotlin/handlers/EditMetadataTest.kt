@@ -17,6 +17,19 @@ class EditMetadataTest {
     fun `no id path parameter returns 400 BAD REQUEST`() {
         val authenticatedRequest = AuthenticatedRequest(
             RoutedRequest(
+                Request(GET, "/tracks/"),
+                UriTemplate.from("/tracks/{id}")
+            ),
+            exampleUser
+        )
+
+        assertThat(EditMetadata(authenticatedRequest, DummyMetadataStorage()).status, equalTo(BAD_REQUEST))
+    }
+
+    @Test
+    fun `malformed uuid in path parameter returns 400 BAD REQUEST`() {
+        val authenticatedRequest = AuthenticatedRequest(
+            RoutedRequest(
                 Request(GET, "/tracks/some_id"),
                 UriTemplate.from("/tracks/{id}")
             ),
