@@ -268,8 +268,6 @@ class BandageTest {
         assertThat(uploadedOn.getAttribute("value"), equalTo("01/01/1970   00:00"))
         val aCollection = driver.findElement(By.cssSelector("[data-test=\"collection-some_collection\"]")) ?: fail("Collections for ${exampleAudioTrackMetadata.uuid} is unavailable")
         assertThat(aCollection.text, equalTo("some_collection"))
-
-        // TODO test that only dates/times with relevant precision are shown
     }
 
     @Test
