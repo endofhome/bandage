@@ -25,8 +25,7 @@ object TrackMetadata {
         return Response(Status.OK).with(Bandage.StaticConfig.view of TrackMetadataPage(authenticatedRequest.user, trackMetadata))
     }
 
-    data class TrackMetadataPage(val loggedInUser: User, val trackMetadata: ViewModels.AudioFileMetadata) :
-        ViewModel {
+    data class TrackMetadataPage(val loggedInUser: User, val trackMetadata: ViewModels.AudioFileMetadata) : ViewModel {
         override fun template() = "track_metadata"
     }
 
@@ -42,6 +41,7 @@ object TrackMetadata {
                     it.format,
                     it.bitRate?.presentationFormat(),
                     it.duration?.presentationFormat(),
+                    it.playUrl.toString(),
                     it.recordedTimestamp.format(dateTimeFormatter),
                     it.uploadedTimestamp.format(dateTimeFormatter),
                     it.collections.map { it.title }.ifEmpty { null }
@@ -57,6 +57,7 @@ object TrackMetadata {
             val format: String,
             val bitRate: String?,
             val duration: String?,
+            val playUrl: String,
             val recordedTimestamp: String? = null,
             val uploadedTimestamp: String = "",
             val collections: List<String>? = null

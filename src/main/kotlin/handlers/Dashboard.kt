@@ -62,7 +62,8 @@ object Dashboard {
         val loggedInUser: User,
         val dateGroups: List<ViewModels.DateGroup>,
         val highlighted: ViewModels.AudioTrackMetadata? = null,
-        val nowPlaying: ViewModels.AudioTrackMetadata? = null
+        val nowPlaying: ViewModels.AudioTrackMetadata? = null,
+        val autoPlayAudio: Boolean = true
     ) : ViewModel {
         override fun template() = "dashboard"
     }

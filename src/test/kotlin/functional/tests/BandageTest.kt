@@ -9,8 +9,10 @@ import RouteMappings.login
 import User
 import UserManagement
 import com.natpryce.hamkrest.Matcher
+import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.present
 import com.natpryce.hamkrest.startsWith
 import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.PASSWORD
@@ -226,10 +228,7 @@ class BandageTest {
 
         driver.userLogsInAndPlaysATrack()
 
-        driver.findElement(By.cssSelector("audio[data-test=\"[play_file-${exampleAudioTrackMetadata.uuid}]\"]")) ?: fail("Audio player footer is unavailable")
-        val playerMetadata = driver.findElement(By.cssSelector("div[data-test=\"[audio-player-metadata]\"]")) ?: fail("Audio player metadata is unavailable")
-        assertThat(playerMetadata.text, equalTo("${exampleAudioTrackMetadata.title} | 0:21 | ${exampleAudioTrackMetadata.format} (320 kbps)"))
-        assertThat(driver.currentUrl, equalTo("/dashboard?id=${exampleAudioTrackMetadata.uuid}#${exampleAudioTrackMetadata.uuid}"))
+        driver.assertAudioPlayerPresent(autoplayAttributeState = present())
     }
 
     @Test
@@ -276,12 +275,7 @@ class BandageTest {
         val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
         val driver = Http4kWebDriver(bandage)
 
-        driver.navigate().to(login)
-        driver.userLogsIn()
-
-        val trackToView = driver.findElement(By.cssSelector("div[data-test=\"[track-${exampleAudioTrackMetadata.uuid}]\"]")) ?: fail("Track ${exampleAudioTrackMetadata.uuid} is unavailable")
-        val viewMetadataLink = trackToView.findElement(By.cssSelector("a[data-test=\"[metadata-link]\"]")) ?: fail("Metadata link for ${exampleAudioTrackMetadata.uuid} is unavailable")
-        viewMetadataLink.click()
+        val trackToView = driver.loginAndVisitMetadataPage()
 
         val title = driver.findElement(By.cssSelector("input[data-test=\"title\"]")) ?: fail("Title for ${exampleAudioTrackMetadata.uuid} is unavailable")
         title.clear()
@@ -296,6 +290,30 @@ class BandageTest {
 
         val highlightedElements = driver.findElements(By.cssSelector(".highlighted")) ?: fail("No highlighted elements")
         assertThat(highlightedElements.single().getAttribute("data-test"), equalTo(trackToView.getAttribute("data-test")))
+    }
+
+    private fun Http4kWebDriver.loginAndVisitMetadataPage(): WebElement {
+        navigate().to(login)
+        userLogsIn()
+
+        val trackToView =
+            findElement(By.cssSelector("div[data-test=\"[track-${exampleAudioTrackMetadata.uuid}]\"]"))
+                ?: fail("Track ${exampleAudioTrackMetadata.uuid} is unavailable")
+        val viewMetadataLink = trackToView.findElement(By.cssSelector("a[data-test=\"[metadata-link]\"]"))
+            ?: fail("Metadata link for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        viewMetadataLink.click()
+        return trackToView
+    }
+
+    @Test
+    fun `audio track can be played from metadata view`() {
+        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata))
+        val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
+        val driver = Http4kWebDriver(bandage)
+
+        driver.loginAndVisitMetadataPage()
+
+        driver.assertAudioPlayerPresent(autoplayAttributeState = absent())
     }
 
     @Test
@@ -345,6 +363,19 @@ class BandageTest {
         loginButton.click()
 
         return lastUser
+    }
+
+    private fun Http4kWebDriver.assertAudioPlayerPresent(autoplayAttributeState: Matcher<String?>) {
+        val audioPlayer =
+            findElement(By.cssSelector("audio[data-test=\"[play_file-${exampleAudioTrackMetadata.uuid}]\"]"))
+                ?: fail("Audio player footer is unavailable")
+        val playerMetadata = findElement(By.cssSelector("div[data-test=\"[audio-player-metadata]\"]"))
+            ?: fail("Audio player metadata is unavailable")
+        assertThat(
+            playerMetadata.text,
+            equalTo("${exampleAudioTrackMetadata.title} | 0:21 | ${exampleAudioTrackMetadata.format} (320 kbps)")
+        )
+        assertThat(audioPlayer.getAttribute("autoplay"), autoplayAttributeState)
     }
 
     private fun validCookieFor(loggedInUser: User) =
