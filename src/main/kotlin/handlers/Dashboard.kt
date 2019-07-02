@@ -22,9 +22,13 @@ import java.util.UUID
 
 object Dashboard {
     operator fun invoke(authenticatedRequest: AuthenticatedRequest, metadataStorage: MetadataStorage): Response {
-        val nowPlaying = authenticatedRequest.request.query("id")?.let { id ->
-            metadataStorage.findTrack(UUID.fromString(id)).map { metadata -> metadata?.viewModel() }.orElse { null }
+        val request = authenticatedRequest.request
+        val nowPlaying = request.query("id")?.let { id ->
+            metadataStorage.findTrackViewModelOrNull(id)
         }
+        val highlighted = request.query("highlighted")?.let { id ->
+            metadataStorage.findTrackViewModelOrNull(id)
+        } ?: nowPlaying
 
         val tracks = metadataStorage.tracks().map { all ->
             all.groupBy { track ->
@@ -44,14 +48,22 @@ object Dashboard {
         }
 
         return when (tracks) {
-            is Success -> Response(OK).with(view of DashboardPage(authenticatedRequest.user, tracks.value, nowPlaying))
+            is Success -> Response(OK).with(view of DashboardPage(authenticatedRequest.user, tracks.value, highlighted, nowPlaying))
             is Failure -> Response(INTERNAL_SERVER_ERROR)
         }
     }
 
+    private fun MetadataStorage.findTrackViewModelOrNull(uuid: String) =
+        findTrack(UUID.fromString(uuid)).map { metadata -> metadata?.viewModel() }.orElse { null }
+
     data class DateFormats(val localDate: LocalDate, val formattedDate: String)
 
-    data class DashboardPage(val loggedInUser: User, val dateGroups: List<ViewModels.DateGroup>, val nowPlaying: ViewModels.AudioTrackMetadata? = null) : ViewModel {
+    data class DashboardPage(
+        val loggedInUser: User,
+        val dateGroups: List<ViewModels.DateGroup>,
+        val highlighted: ViewModels.AudioTrackMetadata? = null,
+        val nowPlaying: ViewModels.AudioTrackMetadata? = null
+    ) : ViewModel {
         override fun template() = "dashboard"
     }
 

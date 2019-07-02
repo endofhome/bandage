@@ -26,7 +26,7 @@ object EditMetadata {
         val updatedTrack = foundTrack.copy(title = newTitle)
 
         return metadataStorage.updateTrack(updatedTrack).map {
-            Response(SEE_OTHER).header("Location", "$dashboard#$uuid")
+            Response(SEE_OTHER).header("Location", "${dashboard}?highlighted=$uuid#$uuid")
         }.orElse {
             Response(INTERNAL_SERVER_ERROR)
         }

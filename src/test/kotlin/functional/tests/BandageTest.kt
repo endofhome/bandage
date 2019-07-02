@@ -291,8 +291,11 @@ class BandageTest {
         editButton.click()
 
         assertThat(driver.status, equalTo(OK))
-        assertThat(driver.currentUrl, equalTo("/dashboard#${exampleAudioTrackMetadata.uuid}"))
+        assertThat(driver.currentUrl, equalTo("/dashboard?highlighted=${exampleAudioTrackMetadata.uuid}#${exampleAudioTrackMetadata.uuid}"))
         assertThat(metadataStorage.findTrack(exampleAudioTrackMetadata.uuid).expectSuccess()?.title, equalTo("a new title"))
+
+        val highlightedElements = driver.findElements(By.cssSelector(".highlighted")) ?: fail("No highlighted elements")
+        assertThat(highlightedElements.single().getAttribute("data-test"), equalTo(trackToView.getAttribute("data-test")))
     }
 
     @Test
