@@ -20,7 +20,7 @@ import config.RequiredConfig
 import config.ValidateConfig
 import config.withDynamicDatabaseUrlFrom
 import handlers.Dashboard
-import handlers.EditMetadata
+import handlers.EditTrackMetadata
 import handlers.Login
 import handlers.Play
 import handlers.TrackMetadata
@@ -98,7 +98,7 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
 
     private val apiRoutes: RoutingHttpHandler = with(authentication) { routes(
             tracks       bind GET  to { request -> ifAuthenticated(request, then = { Tracks(metadataStorage) }, otherwise = Response(UNAUTHORIZED)) },
-            metadata     bind POST  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  EditMetadata(authenticatedRequest, metadataStorage) }) }
+            metadata     bind POST  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  EditTrackMetadata(authenticatedRequest, metadataStorage) }) }
         )
     }
 

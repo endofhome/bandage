@@ -21,7 +21,7 @@ import storage.DummyMetadataStorage
 import storage.StubMetadataStorage
 import java.util.UUID
 
-class EditMetadataTest {
+class EditTrackMetadataTest {
     @Test
     fun `no id path parameter returns 400 BAD REQUEST`() {
         val authenticatedRequest = AuthenticatedRequest(
@@ -32,7 +32,7 @@ class EditMetadataTest {
             exampleUser
         )
 
-        assertThat(EditMetadata(authenticatedRequest, DummyMetadataStorage()).status, equalTo(BAD_REQUEST))
+        assertThat(EditTrackMetadata(authenticatedRequest, DummyMetadataStorage()).status, equalTo(BAD_REQUEST))
     }
 
     @Test
@@ -45,7 +45,7 @@ class EditMetadataTest {
             exampleUser
         )
 
-        assertThat(EditMetadata(authenticatedRequest, DummyMetadataStorage()).status, equalTo(BAD_REQUEST))
+        assertThat(EditTrackMetadata(authenticatedRequest, DummyMetadataStorage()).status, equalTo(BAD_REQUEST))
     }
 
     @Test
@@ -60,7 +60,7 @@ class EditMetadataTest {
             exampleUser
         )
 
-        assertThat(EditMetadata(authenticatedRequest, DummyMetadataStorage()).status, equalTo(BAD_REQUEST))
+        assertThat(EditTrackMetadata(authenticatedRequest, DummyMetadataStorage()).status, equalTo(BAD_REQUEST))
     }
 
     @Test
@@ -78,7 +78,7 @@ class EditMetadataTest {
         val existingTrack = exampleAudioTrackMetadata.copy(uuid = UUID.nameUUIDFromBytes("this track exists".toByteArray()))
         val metadataStorage = StubMetadataStorage(mutableListOf(existingTrack))
 
-        assertThat(EditMetadata(authenticatedRequest, metadataStorage).status, equalTo(NOT_FOUND))
+        assertThat(EditTrackMetadata(authenticatedRequest, metadataStorage).status, equalTo(NOT_FOUND))
     }
 
     @Test
@@ -98,6 +98,6 @@ class EditMetadataTest {
                 Failure(Error("metadata could not be updated"))
         }
 
-        assertThat(EditMetadata(authenticatedRequest, metadataStorage).status, equalTo(INTERNAL_SERVER_ERROR))
+        assertThat(EditTrackMetadata(authenticatedRequest, metadataStorage).status, equalTo(INTERNAL_SERVER_ERROR))
     }
 }

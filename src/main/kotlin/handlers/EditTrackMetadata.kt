@@ -14,7 +14,7 @@ import result.orElse
 import storage.MetadataStorage
 import java.util.UUID
 
-object EditMetadata {
+object EditTrackMetadata {
     operator fun invoke(authenticatedRequest: AuthenticatedRequest, metadataStorage: MetadataStorage): Response {
         val id = try { authenticatedRequest.request.path("id") } catch (e: Exception) { return Response(BAD_REQUEST) }
         val uuid = try { UUID.fromString(id) } catch (e: Exception) { return Response(BAD_REQUEST) }
