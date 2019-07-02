@@ -8,11 +8,15 @@ import exampleUser
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
 import org.http4k.core.Status.Companion.BAD_REQUEST
+import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.UriTemplate
 import org.http4k.core.body.form
 import org.http4k.routing.RoutedRequest
 import org.junit.jupiter.api.Test
+import result.Result
+import result.Result.Failure
+import storage.AudioTrackMetadata
 import storage.DummyMetadataStorage
 import storage.StubMetadataStorage
 import java.util.UUID
@@ -75,5 +79,25 @@ class EditMetadataTest {
         val metadataStorage = StubMetadataStorage(mutableListOf(existingTrack))
 
         assertThat(EditMetadata(authenticatedRequest, metadataStorage).status, equalTo(NOT_FOUND))
+    }
+
+    @Test
+    fun `update to metadata failed returns 500 INTERNAL SERVER ERROR`() {
+        val authenticatedRequest = AuthenticatedRequest(
+            RoutedRequest(
+                Request(GET, "/tracks/${exampleAudioTrackMetadata.uuid}").form(
+                    "title", "some value"
+                ),
+                UriTemplate.from("/tracks/{id}")
+            ),
+            exampleUser
+        )
+
+        val metadataStorage = object : StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata)) {
+            override fun updateTrack(updatedMetadata: AudioTrackMetadata): Result<Error, AudioTrackMetadata> =
+                Failure(Error("metadata could not be updated"))
+        }
+
+        assertThat(EditMetadata(authenticatedRequest, metadataStorage).status, equalTo(INTERNAL_SERVER_ERROR))
     }
 }

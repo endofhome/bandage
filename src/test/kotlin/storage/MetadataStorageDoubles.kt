@@ -7,7 +7,7 @@ import result.asSuccess
 import storage.Collection.NewCollection
 import java.util.UUID
 
-class StubMetadataStorage(private val metadata: MutableList<AudioTrackMetadata>) : DummyMetadataStorage() {
+open class StubMetadataStorage(private val metadata: MutableList<AudioTrackMetadata>) : DummyMetadataStorage() {
     override fun tracks(): Result<Error, List<AudioTrackMetadata>> = metadata.asSuccess()
 
     override fun findTrack(uuid: UUID): Result<Error, AudioTrackMetadata?> =
