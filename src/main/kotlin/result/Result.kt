@@ -20,7 +20,7 @@ fun <F, S, T> Result<F, S>.flatMap(transform: (S) -> Result<F, T>): Result<F, T>
         is Failure -> this
     }
 
-fun <F, S> Result<F, S>.orElse(transform: (F) -> S): S =
+fun <F, T> Result<F, T>.orElse(transform: (F) -> T): T =
     when (this) {
         is Success -> this.value
         is Failure -> transform(this.reason)

@@ -11,6 +11,7 @@ import config.BandageConfigItem.METADATA_DB_SSL_MODE
 import config.BandageConfigItem.METADATA_DB_USER
 import config.Configuration
 import org.postgresql.ds.PGSimpleDataSource
+import result.Error
 import result.Result
 import result.Result.Failure
 import result.asSuccess

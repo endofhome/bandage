@@ -1,6 +1,7 @@
 package storage
 
 import config.Configuration
+import result.Error
 import result.Result
 import result.Result.Success
 import result.asSuccess

@@ -3,6 +3,7 @@ package storage
 import RouteMappings.play
 import http.HttpConfig.environment
 import org.http4k.core.Uri
+import result.Error
 import result.Result
 import result.Result.Failure
 import result.asSuccess

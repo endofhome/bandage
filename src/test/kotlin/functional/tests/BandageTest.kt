@@ -168,12 +168,20 @@ class BandageTest {
     @Test
     fun `list of audio tracks are available in dashboard`() {
         val metadataWithNullValues = exampleAudioTrackMetadata.copy(
-            uuid = UUID.fromString(exampleAudioTrackMetadata.uuid.toString().reversed()),
+            uuid = UUID.nameUUIDFromBytes("metadataWithNullValues".toByteArray()),
             duration = null,
             title = "track with null duration",
             format = "wav"
         )
-        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata, metadataWithNullValues))
+        val metadataWithSameTitle = exampleAudioTrackMetadata.copy(
+            uuid = UUID.nameUUIDFromBytes("metadataWithSameTitle".toByteArray()),
+            recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.minusHours(1)
+        )
+        val metadataUntitled = exampleAudioTrackMetadata.copy(
+            uuid = UUID.nameUUIDFromBytes("metadataUntitled".toByteArray()),
+            title = "untitled"
+        )
+        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata, metadataWithSameTitle, metadataWithNullValues, metadataUntitled))
         val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
         val driver = Http4kWebDriver(bandage)
 
@@ -184,11 +192,17 @@ class BandageTest {
         val folderh4 = driver.findElement(By.cssSelector("h4[data-test=\"[date-1970-01-01]\"]")) ?: fail("h4 is unavailable")
         assertThat(folderh4.text, equalTo("1 January 1970"))
 
-        val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[track-${exampleAudioTrackMetadata.uuid}]\"]")) ?: fail("First file div is unavailable")
-        assertThat(firstFile.text, equalTo("${exampleAudioTrackMetadata.title} | 0:21 | ${exampleAudioTrackMetadata.format} | play"))
+        val firstFile = driver.findElement(By.cssSelector("div[data-test=\"[track-${exampleAudioTrackMetadata.uuid}]\"]")) ?: fail("Div for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        assertThat(firstFile.text, equalTo("${exampleAudioTrackMetadata.title} (take 2) | 0:21 | ${exampleAudioTrackMetadata.format} | play"))
 
-        val fileWithNullDuration = driver.findElement(By.cssSelector("div[data-test=\"[track-${metadataWithNullValues.uuid}]\"]")) ?: fail("First file div is unavailable")
+        val fileWithNullDuration = driver.findElement(By.cssSelector("div[data-test=\"[track-${metadataWithNullValues.uuid}]\"]")) ?: fail("Div for ${metadataWithNullValues.uuid} is unavailable")
         assertThat(fileWithNullDuration.text, equalTo("${metadataWithNullValues.title} | ${metadataWithNullValues.format} | play"))
+
+        val fileWithSameTitle = driver.findElement(By.cssSelector("div[data-test=\"[track-${metadataWithSameTitle.uuid}]\"]")) ?: fail("Div for ${metadataWithSameTitle.uuid} is unavailable")
+        assertThat(fileWithSameTitle.text, equalTo("${metadataWithSameTitle.title} (take 1) | 0:21 | ${metadataWithSameTitle.format} | play"))
+
+        val fileUntitled = driver.findElement(By.cssSelector("div[data-test=\"[track-${metadataUntitled.uuid}]\"]")) ?: fail("Div for ${metadataUntitled.uuid} is unavailable")
+        assertThat(fileUntitled.text, equalTo("${metadataUntitled.title} | 0:21 | ${metadataUntitled.format} | play"))
     }
 
     @Test

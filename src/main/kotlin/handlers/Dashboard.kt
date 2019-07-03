@@ -12,49 +12,51 @@ import org.http4k.template.ViewModel
 import result.Result.Failure
 import result.Result.Success
 import result.map
-import result.orElse
-import storage.AudioTrackMetadata
 import storage.AudioTrackMetadata.Companion.presentationFormat
+import storage.AudioTrackMetadataEnhancer
 import storage.MetadataStorage
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.UUID
 
 object Dashboard {
     operator fun invoke(authenticatedRequest: AuthenticatedRequest, metadataStorage: MetadataStorage): Response {
         val request = authenticatedRequest.request
-        val nowPlaying = request.query("id")?.let { id ->
-            metadataStorage.findTrackViewModelOrNull(id)
-        }
-        val highlighted = request.query("highlighted")?.let { id ->
-            metadataStorage.findTrackViewModelOrNull(id)
-        } ?: nowPlaying
 
-        val tracks = metadataStorage.tracks().map { all ->
-            all.groupBy { track ->
-                val localDate = track.recordedTimestamp.toLocalDate()
-                val pattern = DateTimePatterns.longPatternFor(track.recordedTimestampPrecision)
-                DateFormats(localDate, localDate.format(DateTimeFormatter.ofPattern(pattern)))
-            }.toList()
-             .sortedBy { (date) -> date.localDate }
-             .reversed()
-             .map { (date, tracks) ->
-                 ViewModels.DateGroup(
-                     date.localDate.toString(),
-                     date.formattedDate,
-                     tracks.sortedBy { it.recordedTimestamp }.reversed().map { audioFile -> audioFile.viewModel() }
-                 )
-             }
+        val dateGroupedTracks = metadataStorage.tracks().map { all ->
+            with(AudioTrackMetadataEnhancer) {
+                all.groupBy { track ->
+                    val localDate = track.recordedTimestamp.toLocalDate()
+                    val pattern = DateTimePatterns.longPatternFor(track.recordedTimestampPrecision)
+                    DateFormats(localDate, localDate.format(DateTimeFormatter.ofPattern(pattern)))
+                }.map { (date, tracks) -> date to tracks.enhanceWithTakeNumber() }
+                 .sortedBy { (date) -> date.localDate }
+                 .reversed()
+                 .map { (date, tracks) ->
+                     ViewModels.DateGroup(
+                         date.localDate.toString(),
+                         date.formattedDate,
+                         tracks.sortedBy { it.basicMetadata.recordedTimestamp }
+                               .reversed()
+                               .map { audioFile -> audioFile.viewModel() }
+                     )
+                 }
+            }
         }
 
-        return when (tracks) {
-            is Success -> Response(OK).with(view of DashboardPage(authenticatedRequest.user, tracks.value, highlighted, nowPlaying))
+        return when (dateGroupedTracks) {
+            is Success -> {
+                val nowPlaying = request.query("id")?.let { id ->
+                    dateGroupedTracks.value.flatMap { it.tracks }.find { it.uuid == id }
+                }
+                val highlighted = request.query("highlighted")?.let { id ->
+                    dateGroupedTracks.value.flatMap { it.tracks }.find { it.uuid == id }
+                } ?: nowPlaying
+
+                Response(OK).with(view of DashboardPage(authenticatedRequest.user, dateGroupedTracks.value, highlighted, nowPlaying))
+            }
             is Failure -> Response(INTERNAL_SERVER_ERROR)
         }
     }
-
-    private fun MetadataStorage.findTrackViewModelOrNull(uuid: String) =
-        findTrack(UUID.fromString(uuid)).map { metadata -> metadata?.viewModel() }.orElse { null }
 
     data class DateFormats(val localDate: LocalDate, val formattedDate: String)
 
@@ -68,18 +70,20 @@ object Dashboard {
         override fun template() = "dashboard"
     }
 
-    private fun AudioTrackMetadata.viewModel(): ViewModels.AudioTrackMetadata =
-        ViewModels.AudioTrackMetadata(
-            "$uuid",
-            title,
-            format,
-            bitRate?.presentationFormat(),
-            duration?.presentationFormat(),
-            "$playUrl"
-        )
+    private fun AudioTrackMetadataEnhancer.EnhancedAudioTrackMetadata.viewModel(): ViewModels.AudioTrackMetadata =
+        this.basicMetadata.let {
+            ViewModels.AudioTrackMetadata(
+                "${it.uuid}",
+                it.title,
+                it.format,
+                it.bitRate?.presentationFormat(),
+                it.duration?.presentationFormat(),
+                "${it.playUrl}",
+                this.takeNumber?.let { take -> "$take" }.orEmpty()
+            )
+        }
 
     object ViewModels {
-
         data class DateGroup(
             val date: String,
             val presentationDate: String,
@@ -92,7 +96,8 @@ object Dashboard {
             val format: String,
             val bitRate: String?,
             val duration: String?,
-            val playUrl: String
+            val playUrl: String,
+            val takeNumber: String?
         )
     }
 }
