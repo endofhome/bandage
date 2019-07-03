@@ -23,6 +23,7 @@ import storage.DummyFileStorage
 import storage.DummyMetadataStorage
 import storage.StubFileStorage
 import storage.StubMetadataStorage
+import java.util.UUID
 
 class PlayAudioTest {
 
@@ -69,16 +70,19 @@ class PlayAudioTest {
 
     @Test
     fun `can access audio stream if logged in`() {
-        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata))
+        val take2 = exampleAudioTrackMetadata.copy(recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.plusHours(12))
+        val take1 = take2.copy(uuid = UUID.nameUUIDFromBytes("take-1".toByteArray()), recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.minusHours(1))
+        val take3 = take2.copy(uuid = UUID.nameUUIDFromBytes("take-3".toByteArray()), recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.plusHours(1))
+        val metadataStorage = StubMetadataStorage(mutableListOf(take1, take2, take3))
         val fileStorage = StubFileStorage(mapOf(exampleAudioTrackMetadata.passwordProtectedLink to "some test data"))
         val bandage = Bandage(config, metadataStorage, fileStorage).app
         val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
         val expectedHeaders: Headers = listOf(
             "Accept-Ranges" to "bytes",
-            "Content-Length" to exampleAudioTrackMetadata.fileSize.toString(),
-            "Content-Range" to "bytes 0-${exampleAudioTrackMetadata.fileSize - 1}/${exampleAudioTrackMetadata.fileSize}",
-            "content-disposition" to "attachment; filename=1970-01-01 some title.${exampleAudioTrackMetadata.format}"
+            "Content-Length" to take2.fileSize.toString(),
+            "Content-Range" to "bytes 0-${take2.fileSize - 1}/${take2.fileSize}",
+            "content-disposition" to "attachment; filename=1970-01-01 some title (take 2).${take2.format}"
         )
 
         assertThat(response.status, equalTo(OK))
