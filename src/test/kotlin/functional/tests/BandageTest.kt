@@ -262,9 +262,9 @@ class BandageTest {
         val bitrate = driver.findElement(By.cssSelector("input[data-test=\"bitrate\"]")) ?: fail("Bitrate for ${exampleAudioTrackMetadata.uuid} is unavailable")
         assertThat(bitrate.getAttribute("value"), equalTo("320 kbps"))
         val recordedOn = driver.findElement(By.cssSelector("input[data-test=\"recordedOn\"]")) ?: fail("Recorded on for ${exampleAudioTrackMetadata.uuid} is unavailable")
-        assertThat(recordedOn.getAttribute("value"), equalTo("01/01/1970   00:00"))
+        assertThat(recordedOn.getAttribute("value"), equalTo("01/01/1970   12:00"))
         val uploadedOn = driver.findElement(By.cssSelector("input[data-test=\"uploadedOn\"]")) ?: fail("Uploaded on for ${exampleAudioTrackMetadata.uuid} is unavailable")
-        assertThat(uploadedOn.getAttribute("value"), equalTo("01/01/1970   00:00"))
+        assertThat(uploadedOn.getAttribute("value"), equalTo("01/01/1970   12:00"))
         val aCollection = driver.findElement(By.cssSelector("[data-test=\"collection-some_collection\"]")) ?: fail("Collections for ${exampleAudioTrackMetadata.uuid} is unavailable")
         assertThat(aCollection.text, equalTo("some_collection"))
     }

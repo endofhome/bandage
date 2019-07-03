@@ -70,7 +70,7 @@ class PlayAudioTest {
 
     @Test
     fun `can access audio stream if logged in`() {
-        val take2 = exampleAudioTrackMetadata.copy(recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.plusHours(12))
+        val take2 = exampleAudioTrackMetadata
         val take1 = take2.copy(uuid = UUID.nameUUIDFromBytes("take-1".toByteArray()), recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.minusHours(1))
         val take3 = take2.copy(uuid = UUID.nameUUIDFromBytes("take-3".toByteArray()), recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.plusHours(1))
         val metadataStorage = StubMetadataStorage(mutableListOf(take1, take2, take3))

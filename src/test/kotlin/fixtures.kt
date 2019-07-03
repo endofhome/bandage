@@ -16,10 +16,10 @@ val exampleAudioTrackMetadata = AudioTrackMetadata(
     BitRate("320000"),
     Duration("21"),
     12345,
-    Instant.EPOCH.atZone(UTC).toString(),
-    Instant.EPOCH.atZone(UTC),
+    Instant.EPOCH.atZone(UTC).plusHours(12).toString(),
+    Instant.EPOCH.atZone(UTC).plusHours(12),
     ChronoUnit.MINUTES,
-    Instant.EPOCH.atZone(UTC),
+    Instant.EPOCH.atZone(UTC).plusHours(12),
     Uri.of("https://www.passwordprotectedlink.com"),
     "/my_folder/my_file",
     "someamazinghashstring"
