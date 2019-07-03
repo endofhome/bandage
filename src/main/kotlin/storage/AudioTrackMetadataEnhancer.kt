@@ -12,7 +12,7 @@ object AudioTrackMetadataEnhancer {
 
     fun List<AudioTrackMetadata>.enhanceWithTakeNumber(): List<EnhancedAudioTrackMetadata> =
         groupBy { it.title }.map { entry ->
-            if (entry.key != "untitled" && entry.value.size > 1) {
+            if (listOf("untitled", "improv").contains(entry.key).not()  && entry.value.size > 1) {
                 entry.value.sortedBy { it.recordedTimestamp }.mapIndexed { index, audioTrackMetadata ->
                     EnhancedAudioTrackMetadata(audioTrackMetadata, index + 1)
                 }
