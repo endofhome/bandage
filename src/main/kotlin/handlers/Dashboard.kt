@@ -35,7 +35,7 @@ object Dashboard {
                      ViewModels.DateGroup(
                          date.localDate.toString(),
                          date.formattedDate,
-                         tracks.sortedBy { it.basicMetadata.recordedTimestamp }
+                         tracks.sortedBy { it.base.recordedTimestamp }
                                .reversed()
                                .map { audioFile -> audioFile.viewModel() }
                      )
@@ -71,7 +71,7 @@ object Dashboard {
     }
 
     private fun AudioTrackMetadataEnhancer.EnhancedAudioTrackMetadata.viewModel(): ViewModels.AudioTrackMetadata =
-        this.basicMetadata.let {
+        this.base.let {
             ViewModels.AudioTrackMetadata(
                 "${it.uuid}",
                 it.title,

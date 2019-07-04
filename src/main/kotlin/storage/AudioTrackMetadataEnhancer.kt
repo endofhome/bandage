@@ -8,7 +8,7 @@ object AudioTrackMetadataEnhancer {
     fun AudioTrackMetadata.enhanceWithTakeNumber(metadataStorage: MetadataStorage): Result<Error, EnhancedAudioTrackMetadata> =
         metadataStorage.tracks()
             .map { tracks -> tracks.filter { it.recordedTimestamp.toLocalDate() == recordedTimestamp.toLocalDate() } }
-            .map { tracks -> tracks.enhanceWithTakeNumber().find { it.basicMetadata.uuid == uuid }!! }
+            .map { tracks -> tracks.enhanceWithTakeNumber().find { it.base.uuid == uuid }!! }
 
     fun List<AudioTrackMetadata>.enhanceWithTakeNumber(): List<EnhancedAudioTrackMetadata> =
         groupBy { it.title.toLowerCase() }.map { entry ->
@@ -22,7 +22,7 @@ object AudioTrackMetadataEnhancer {
                 }
             }
         }.flatten()
-         .sortedBy { it.basicMetadata.recordedTimestamp }
+         .sortedBy { it.base.recordedTimestamp }
 
-    data class EnhancedAudioTrackMetadata(val basicMetadata: AudioTrackMetadata, val takeNumber: Int? = null)
+    data class EnhancedAudioTrackMetadata(val base: AudioTrackMetadata, val takeNumber: Int? = null)
 }

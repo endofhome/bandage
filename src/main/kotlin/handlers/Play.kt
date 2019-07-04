@@ -46,7 +46,7 @@ object Play {
                 "Content-Length" to metadata.fileSize.toString(),
                 "Content-Range" to "bytes 0-${metadata.fileSize - 1}/${metadata.fileSize}",
                 "content-disposition" to "attachment; filename=${
-                    listOf(dateTime, "${enhancedMetadata.basicMetadata.title}${enhancedMetadata.takeNumber?.let { " (take $it)" }.orEmpty()}").joinToString(" ")
+                    listOf(dateTime, "${enhancedMetadata.base.title}${enhancedMetadata.takeNumber?.let { " (take $it)" }.orEmpty()}").joinToString(" ")
                 }.${metadata.format}"
             )
             Response(OK).body(audioStream).headers(headers)
