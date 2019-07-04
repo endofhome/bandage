@@ -34,6 +34,12 @@ fun <F, S> List<Result<F, S>>.partition(): Pair<List<F>, List<S>> =
             }
         }
 
+fun <S> Result<Error, S?>.mapNullToFailure(): Result<Error, S> =
+    when (this) {
+        is Success -> this.value?.asSuccess() ?: Failure(Error("Successful value of ${this.value} was null"))
+        is Failure -> this
+    }
+
 fun <T> T.asSuccess(): Result<Nothing, T> = Success(this)
 
 fun <F, S> Result<F, S>.expectSuccess(): S =

@@ -3,12 +3,15 @@ package storage
 import result.Error
 import result.Result
 import result.map
+import result.mapNullToFailure
 
 object AudioTrackMetadataEnhancer {
     fun AudioTrackMetadata.enhanceWithTakeNumber(metadataStorage: MetadataStorage): Result<Error, EnhancedAudioTrackMetadata> =
         metadataStorage.tracks()
             .map { tracks -> tracks.filter { it.recordedTimestamp.toLocalDate() == recordedTimestamp.toLocalDate() } }
-            .map { tracks -> tracks.enhanceWithTakeNumber().find { it.base.uuid == uuid }!! }
+            .map { tracks -> tracks.enhanceWithTakeNumber() }
+            .map { tracks -> tracks.find { it.base.uuid == uuid } }
+            .mapNullToFailure()
 
     fun List<AudioTrackMetadata>.enhanceWithTakeNumber(): List<EnhancedAudioTrackMetadata> =
         groupBy { it.title.toLowerCase() }.map { entry ->
