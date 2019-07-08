@@ -3,6 +3,7 @@ import Authentication.Companion.Cookies.REDIRECT
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.PASSWORD
@@ -126,7 +127,7 @@ class Authentication(private val config: Configuration, private val users: UserM
             .body(rfc6749BodyFor(user))
 
     private fun rfc6749BodyFor(user: User): String =
-        jacksonObjectMapper().writeValueAsString(
+        jacksonObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL).writeValueAsString(
             RFC6749Body(
                 access_token = jwtFor(user),
                 token_type = "Bearer"
