@@ -6,6 +6,9 @@ import RouteMappings.login
 import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.PASSWORD
 import config.Configuration
+import io.jsonwebtoken.JwtParser
+import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.security.Keys
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
@@ -19,6 +22,7 @@ import result.Error
 import result.Result
 import result.Result.Failure
 import result.Result.Success
+import result.asSuccess
 import result.flatMap
 import result.map
 import result.orElse
@@ -33,6 +37,10 @@ class Authentication(private val config: Configuration, private val users: UserM
         }
     }
 
+    private val minimumBits = (1..4).joinToString("") { config.get(API_KEY) }
+    private val secretKey = Keys.hmacShaKeyFor(minimumBits.toByteArray())
+    internal val jwtParser: JwtParser = Jwts.parser().setSigningKey(secretKey)
+
     private val logger = LoggerFactory.getLogger(Authentication::class.java)
 
     fun authenticateUser(request: Request): Response =
@@ -40,7 +48,7 @@ class Authentication(private val config: Configuration, private val users: UserM
             val formAsMap: Map<String, List<String?>> = request.formAsMap()
             val redirectUri = formAsMap["redirect"]?.single()
             logger.info("User ${user.userId} was successfully logged in, redirecting to $redirectUri")
-            Response(Status.SEE_OTHER).header("Location", redirectUri).withLoginCookieFor(user)
+            Response(Status.SEE_OTHER).header("Location", redirectUri).withLoginCookieFor(user).withJwtFor(user)
         }.orElse { error ->
             logger.warn("Unsuccessful login attempt: ${error.message}")
             Response(Status.SEE_OTHER).header("Location", login).body(error.message)
@@ -58,7 +66,29 @@ class Authentication(private val config: Configuration, private val users: UserM
             cookie.authenticatedUser().map { user ->
                 then(AuthenticatedRequest(request, user))
             }
-        }.orElse { otherwise }
+        }.orElse { err ->
+            logger.warn(err.message)
+            request.authenticatedJwtUser().map { user ->
+                then(AuthenticatedRequest(request, user))
+            }.orElse {
+                otherwise
+            }
+        }
+
+    private fun Request.authenticatedJwtUser(): Result<Error, User> =
+        try {
+            header("Authorization")?.let { token ->
+                val parsed = jwtParser.parseClaimsJws(token.substringAfter("Bearer "))
+                val userId: String = parsed.body["userId"].toString()
+                users.findUser(userId).map { user ->
+                    user.asSuccess()
+                }.orElse { err ->
+                    error(err.message)
+                }
+            } ?: error("Authorization header was missing")
+        } catch (e: Exception) {
+            Failure(Error(e.message ?: "Error while authenticating via JWT"))
+        }
 
     private fun Request.authenticatedUser(): Result<Error, User> {
         val formAsMap: Map<String, List<String?>> = formAsMap()
@@ -75,6 +105,11 @@ class Authentication(private val config: Configuration, private val users: UserM
     }
 
     private fun Response.withLoginCookieFor(user: User): Response = cookie(cookieFor(user))
+
+    private fun Response.withJwtFor(user: User): Response =
+        this.body(jwtFor(user))
+
+    internal fun jwtFor(user: User): String = Jwts.builder().claim("userId", user.userId).signWith(secretKey).compact()
 
     private fun cookieFor(user: User): Cookie =
         Cookie(

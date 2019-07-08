@@ -65,6 +65,10 @@ class AuthenticationTest {
             assertThat(response.status, equalTo(SEE_OTHER))
             assertThat(response.header("Location"), equalTo(dashboard))
             assertThat(response.cookies(), equalTo(listOf(validCookie)))
+
+            val jwt = authentication.jwtParser.parseClaimsJws(response.bodyString())
+            val userIdFromJwt = jwt.body["userId"].toString()
+            assertThat(userIdFromJwt, equalTo(userId))
         }
 
         @Test
@@ -189,8 +193,10 @@ class AuthenticationTest {
     inner class AuthenticatingRequests {
         private val unauthenticatedRequest = Request(Method.GET, Uri.of("www.someuri.com"))
         private val handlerWithAuthentication = { request: Request ->
-            authentication.ifAuthenticated(request, { Response(OK) })
+            authentication.ifAuthenticated(request, { (_, user) -> Response(OK).body(user.userId) })
         }
+        private val cookieUser = userManagement.users.last()
+        private val jwtUser = cookieUser.copy(userId = "2")
 
         @Test
         fun `can ensure unauthenticated user is returned to login when handling requests`() {
@@ -202,13 +208,37 @@ class AuthenticationTest {
         }
 
         @Test
-        fun `can ensure authenticated user has their request handled`() {
-            val validCookie = cookieFor(userManagement.users.last())
+        fun `can ensure authenticated user with only cookie has their request handled`() {
+            val validCookie = cookieFor(cookieUser)
             val authenticatedRequest = unauthenticatedRequest.cookie(validCookie)
 
             val response = handlerWithAuthentication(authenticatedRequest)
 
             assertThat(response.status, equalTo(OK))
+        }
+
+        @Test
+        fun `can ensure authenticated user with only JWT has their request handled`() {
+            val validJwt = authentication.jwtFor(jwtUser)
+            val authenticatedRequest = unauthenticatedRequest.header("Authorization", "Bearer $validJwt")
+
+            val response = handlerWithAuthentication(authenticatedRequest)
+
+            assertThat(response.status, equalTo(OK))
+        }
+
+        @Test
+        fun `cookie takes precedence over JWT`() {
+            val validCookie = cookieFor(cookieUser)
+            val validJwt = authentication.jwtFor(jwtUser)
+            val authenticatedRequest = unauthenticatedRequest
+                .cookie(validCookie)
+                .header("Authorization", "Bearer $validJwt")
+
+            val response = handlerWithAuthentication(authenticatedRequest)
+
+            assertThat(response.status, equalTo(OK))
+            assertThat(response.bodyString(), equalTo(cookieUser.userId))
         }
     }
 
