@@ -204,6 +204,9 @@ class AuthenticationTest {
             val response = authentication.authenticateUserApi(request)
 
             assertThat(response.status, equalTo(OK))
+            assertThat(response.header("Content-Type"), equalTo("application/json; charset=utf-8"))
+            assertThat(response.header("Cache-Control"), equalTo("no-store"))
+            assertThat(response.header("Pragma"), equalTo("no-cache"))
             assertThat(response.cookies(), equalTo(listOf(validCookie(userId))))
 
             val jwtString: RFC6749Body = jacksonObjectMapper().readValue(response.bodyString())

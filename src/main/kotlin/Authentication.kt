@@ -120,7 +120,10 @@ class Authentication(private val config: Configuration, private val users: UserM
     private fun Response.withLoginCookieFor(user: User): Response = cookie(cookieFor(user))
 
     private fun Response.withJwtFor(user: User): Response =
-        this.header("Content-Type", ContentType.APPLICATION_JSON.toHeaderValue()).body(rfc6749BodyFor(user))
+        this.header("Content-Type", ContentType.APPLICATION_JSON.toHeaderValue())
+            .header("Cache-Control", "no-store")
+            .header("Pragma", "no-cache")
+            .body(rfc6749BodyFor(user))
 
     private fun rfc6749BodyFor(user: User): String =
         jacksonObjectMapper().writeValueAsString(
