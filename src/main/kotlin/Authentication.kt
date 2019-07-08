@@ -11,7 +11,9 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.http4k.core.Request
 import org.http4k.core.Response
-import org.http4k.core.Status
+import org.http4k.core.Status.Companion.OK
+import org.http4k.core.Status.Companion.SEE_OTHER
+import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.core.Uri
 import org.http4k.core.body.formAsMap
 import org.http4k.core.cookie.Cookie
@@ -47,20 +49,29 @@ class Authentication(private val config: Configuration, private val users: UserM
         request.authenticatedUser().map { user ->
             val formAsMap: Map<String, List<String?>> = request.formAsMap()
             val redirectUri = formAsMap["redirect"]?.single()
-            logger.info("User ${user.userId} was successfully logged in, redirecting to $redirectUri")
-            Response(Status.SEE_OTHER).header("Location", redirectUri).withLoginCookieFor(user).withJwtFor(user)
+            logger.info("User ${user.userId} was successfully logged in${redirectUri?.let { ", redirecting to $it" }.orEmpty()}")
+            Response(SEE_OTHER).header("Location", redirectUri).withLoginCookieFor(user)
         }.orElse { error ->
             logger.warn("Unsuccessful login attempt: ${error.message}")
-            Response(Status.SEE_OTHER).header("Location", login).body(error.message)
+            Response(SEE_OTHER).header("Location", login).body(error.message)
+        }
+
+    fun authenticateUserApi(request: Request): Response =
+        request.authenticatedUser().map { user ->
+            logger.info("User ${user.userId} was successfully logged in")
+            Response(OK).withLoginCookieFor(user).withJwtFor(user)
+        }.orElse { error ->
+            logger.warn("Unsuccessful login attempt: ${error.message}")
+            Response(UNAUTHORIZED).body(error.message)
         }
 
     fun logout(): Response =
-        Response(Status.SEE_OTHER).header("Location", login).invalidateCookie(LOGIN.cookieName).invalidateCookie(REDIRECT.cookieName)
+        Response(SEE_OTHER).header("Location", login).invalidateCookie(LOGIN.cookieName).invalidateCookie(REDIRECT.cookieName)
 
     fun ifAuthenticated(
         request: Request,
         then: (AuthenticatedRequest) -> Response,
-        otherwise: Response = Response(Status.SEE_OTHER).header("Location", login).cookie(redirectCookie(request.uri.plusDashboardFragmentIdentifier()))
+        otherwise: Response = Response(SEE_OTHER).header("Location", login).cookie(redirectCookie(request.uri.plusDashboardFragmentIdentifier()))
     ): Response =
         request.cookie(LOGIN.cookieName).isValid().flatMap { cookie ->
             cookie.authenticatedUser().map { user ->
@@ -73,21 +84,6 @@ class Authentication(private val config: Configuration, private val users: UserM
             }.orElse {
                 otherwise
             }
-        }
-
-    private fun Request.authenticatedJwtUser(): Result<Error, User> =
-        try {
-            header("Authorization")?.let { token ->
-                val parsed = jwtParser.parseClaimsJws(token.substringAfter("Bearer "))
-                val userId: String = parsed.body["userId"].toString()
-                users.findUser(userId).map { user ->
-                    user.asSuccess()
-                }.orElse { err ->
-                    error(err.message)
-                }
-            } ?: error("Authorization header was missing")
-        } catch (e: Exception) {
-            Failure(Error(e.message ?: "Error while authenticating via JWT"))
         }
 
     private fun Request.authenticatedUser(): Result<Error, User> {
@@ -103,6 +99,21 @@ class Authentication(private val config: Configuration, private val users: UserM
             else                                     -> user.firstOrFailure().flatMap { users.findUser(it) }
         }
     }
+
+    private fun Request.authenticatedJwtUser(): Result<Error, User> =
+        try {
+            header("Authorization")?.let { token ->
+                val parsed = jwtParser.parseClaimsJws(token.substringAfter("Bearer "))
+                val userId: String = parsed.body["userId"].toString()
+                users.findUser(userId).map { user ->
+                    user.asSuccess()
+                }.orElse { err ->
+                    error(err.message)
+                }
+            } ?: error("Authorization header was missing")
+        } catch (e: Exception) {
+            Failure(Error(e.message ?: "Error while authenticating via JWT"))
+        }
 
     private fun Response.withLoginCookieFor(user: User): Response = cookie(cookieFor(user))
 

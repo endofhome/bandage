@@ -3,6 +3,7 @@ package unit.tests
 import Authentication
 import Authentication.Companion.Cookies
 import Authentication.Companion.Cookies.LOGIN
+import RouteMappings.api
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
@@ -19,6 +20,7 @@ import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Status.Companion.SEE_OTHER
+import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.core.Uri
 import org.http4k.core.body.form
 import org.http4k.core.cookie.Cookie
@@ -37,6 +39,17 @@ class AuthenticationTest {
     private val config = dummyConfiguration()
     private val userManagement = UserManagement(config)
     private val authentication = Authentication(config, userManagement)
+    private fun validCookie(userId: String) =
+        Cookie(
+            name = LOGIN.cookieName,
+            value = "${config.get(API_KEY)}_$userId",
+            maxAge = 94608000L,
+            expires = null,
+            domain = null,
+            path = index,
+            secure = false,
+            httpOnly = true
+        )
 
     @Nested
     @DisplayName("Authenticating user at login")
@@ -51,24 +64,10 @@ class AuthenticationTest {
                 .form("redirect", dashboard)
 
             val response = authentication.authenticateUser(request)
-            val validCookie = Cookie(
-                name = LOGIN.cookieName,
-                value = "${config.get(API_KEY)}_$userId",
-                maxAge = 94608000L,
-                expires = null,
-                domain = null,
-                path = index,
-                secure = false,
-                httpOnly = true
-            )
 
             assertThat(response.status, equalTo(SEE_OTHER))
             assertThat(response.header("Location"), equalTo(dashboard))
-            assertThat(response.cookies(), equalTo(listOf(validCookie)))
-
-            val jwt = authentication.jwtParser.parseClaimsJws(response.bodyString())
-            val userIdFromJwt = jwt.body["userId"].toString()
-            assertThat(userIdFromJwt, equalTo(userId))
+            assertThat(response.cookies(), equalTo(listOf(validCookie(userId))))
         }
 
         @Test
@@ -186,6 +185,41 @@ class AuthenticationTest {
         assertThat(response.status, equalTo(SEE_OTHER))
         assertThat(response.header("Location"), equalTo(login))
         assertThat(response.cookies(), equalTo(invalidatedCookies))
+    }
+
+    @Nested
+    @DisplayName("Authenticating user via API")
+    inner class AuthenticatingUserViaApi {
+        @Test
+        fun `handles valid login`() {
+            val userId = "1"
+            val request = Request(Method.POST, "$api$login")
+                .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+                .form("user", userId)
+                .form("password", config.get(PASSWORD))
+
+            val response = authentication.authenticateUserApi(request)
+
+            assertThat(response.status, equalTo(OK))
+            assertThat(response.cookies(), equalTo(listOf(validCookie(userId))))
+
+            val jwt = authentication.jwtParser.parseClaimsJws(response.bodyString())
+            val userIdFromJwt = jwt.body["userId"].toString()
+            assertThat(userIdFromJwt, equalTo(userId))
+        }
+
+        @Test
+        fun `handles invalid login`() {
+            val request = Request(Method.POST, "$api$login")
+                .with(Header.CONTENT_TYPE of ContentType.APPLICATION_FORM_URLENCODED)
+                .form("user", "1")
+                .form("password", "password1")
+
+            val response = authentication.authenticateUserApi(request)
+
+            assertThat(response.status, equalTo(UNAUTHORIZED))
+            assertThat(response.bodyString(), equalTo("Incorrect password"))
+        }
     }
 
     @Nested

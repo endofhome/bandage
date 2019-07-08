@@ -97,7 +97,8 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
     }
 
     private val apiRoutes: RoutingHttpHandler = with(authentication) { routes(
-            tracks       bind GET  to { request -> ifAuthenticated(request, then = { Tracks(metadataStorage) }, otherwise = Response(UNAUTHORIZED)) },
+            login        bind POST  to { request -> authenticateUserApi(request) },
+            tracks       bind GET   to { request -> ifAuthenticated(request, then = { Tracks(metadataStorage) }, otherwise = Response(UNAUTHORIZED)) },
             metadata     bind POST  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  EditTrackMetadata(authenticatedRequest, metadataStorage) }) }
         )
     }
