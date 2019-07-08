@@ -3,12 +3,15 @@ package unit.tests
 import Authentication
 import Authentication.Companion.Cookies
 import Authentication.Companion.Cookies.LOGIN
+import Authentication.RFC6749Body
 import RouteMappings.api
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
 import User
 import UserManagement
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import config.BandageConfigItem.API_KEY
@@ -203,7 +206,8 @@ class AuthenticationTest {
             assertThat(response.status, equalTo(OK))
             assertThat(response.cookies(), equalTo(listOf(validCookie(userId))))
 
-            val jwt = authentication.jwtParser.parseClaimsJws(response.bodyString())
+            val jwtString: RFC6749Body = jacksonObjectMapper().readValue(response.bodyString())
+            val jwt = authentication.jwtParser.parseClaimsJws(jwtString.access_token)
             val userIdFromJwt = jwt.body["userId"].toString()
             assertThat(userIdFromJwt, equalTo(userId))
         }

@@ -3,12 +3,14 @@ import Authentication.Companion.Cookies.REDIRECT
 import RouteMappings.dashboard
 import RouteMappings.index
 import RouteMappings.login
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.PASSWORD
 import config.Configuration
 import io.jsonwebtoken.JwtParser
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
+import org.http4k.core.ContentType
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.OK
@@ -118,9 +120,19 @@ class Authentication(private val config: Configuration, private val users: UserM
     private fun Response.withLoginCookieFor(user: User): Response = cookie(cookieFor(user))
 
     private fun Response.withJwtFor(user: User): Response =
-        this.body(jwtFor(user))
+        this.header("Content-Type", ContentType.APPLICATION_JSON.toHeaderValue()).body(rfc6749BodyFor(user))
 
-    internal fun jwtFor(user: User): String = Jwts.builder().claim("userId", user.userId).signWith(secretKey).compact()
+    private fun rfc6749BodyFor(user: User): String =
+        jacksonObjectMapper().writeValueAsString(
+            RFC6749Body(
+                access_token = jwtFor(user),
+                token_type = "Bearer"
+            )
+        )
+
+    internal fun jwtFor(user: User) = Jwts.builder().claim("userId", user.userId).signWith(secretKey).compact()
+
+    data class RFC6749Body(val access_token: String, val token_type: String, val expires_in: String? = null, val refresh_token: String? = null)
 
     private fun cookieFor(user: User): Cookie =
         Cookie(
