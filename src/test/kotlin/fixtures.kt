@@ -12,6 +12,7 @@ val exampleAudioTrackMetadata = AudioTrackMetadata(
     "some artist",
     "some album",
     "some title",
+    listOf("first working title", "second working title"),
     "mp3",
     BitRate("320000"),
     Duration("21"),

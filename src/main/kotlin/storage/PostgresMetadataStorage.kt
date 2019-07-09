@@ -209,6 +209,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
             "artist": "$artist",
             "album": "$album",
             "title": "$title",
+            "workingTitles": ${workingTitles.map { workingTitle -> "\"$workingTitle\"" }},
             "format": "$format",
             ${bitRate?.let { bitRate -> """"bitrate": "${bitRate.value}",""" }.orEmpty()}
             ${duration?.let { duration -> """"duration": "${duration.value}",""" }.orEmpty()}
@@ -235,6 +236,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
                 postgresMetadata.artist,
                 postgresMetadata.album,
                 postgresMetadata.title,
+                postgresMetadata.workingTitles?.map { it } ?: emptyList(),
                 postgresMetadata.format,
                 postgresMetadata.bitrate.toBitRate(),
                 postgresMetadata.duration?.toDuration(),
@@ -278,6 +280,7 @@ private data class PostgresAudioMetadata(
     val artist: String,
     val album: String,
     val title: String,
+    val workingTitles: List<String>?,
     val format: String,
     val bitrate: String,
     val duration: String?,

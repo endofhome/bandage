@@ -15,6 +15,10 @@ audio {
     color: black;
 }
 
+.working-title-link {
+    color: #850001;
+}
+
 .navbar-contents {
     width: 100%;
     text-align: right;

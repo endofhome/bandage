@@ -4,6 +4,8 @@ import AuthenticatedRequest
 import Bandage.StaticConfig.view
 import DateTimePatterns
 import User
+import handlers.Dashboard.ViewModels.TitleType.TITLE
+import handlers.Dashboard.ViewModels.TitleType.WORKING_TITLE
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
 import org.http4k.core.Status.Companion.OK
@@ -72,9 +74,18 @@ object Dashboard {
 
     private fun AudioTrackMetadataEnhancer.EnhancedAudioTrackMetadata.viewModel(): ViewModels.AudioTrackMetadata =
         this.base.let {
+            val undesirableTitle = it.title == "untitled" || it.title.isEmpty() || it.title.isBlank()
+
+            val (title, titleType) = if (undesirableTitle && it.workingTitles.isNotEmpty()) {
+                it.workingTitles.first() to WORKING_TITLE
+            } else {
+                it.title to TITLE
+            }
+
             ViewModels.AudioTrackMetadata(
                 "${it.uuid}",
-                it.title,
+                title,
+                titleType,
                 it.format,
                 it.bitRate?.presentationFormat(),
                 it.duration?.presentationFormat(),
@@ -93,11 +104,17 @@ object Dashboard {
         data class AudioTrackMetadata(
             val uuid: String,
             val title: String,
+            val titleType: TitleType,
             val format: String,
             val bitRate: String?,
             val duration: String?,
             val playUrl: String,
             val takeNumber: String?
         )
+
+        enum class TitleType(val key: String) {
+            TITLE("title"),
+            WORKING_TITLE("working-title")
+        }
     }
 }
