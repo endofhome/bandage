@@ -25,16 +25,16 @@ object TrackMetadata {
         return Response(Status.OK).with(Bandage.StaticConfig.view of TrackMetadataPage(authenticatedRequest.user, trackMetadata))
     }
 
-    data class TrackMetadataPage(val loggedInUser: User, val trackMetadata: ViewModels.AudioFileMetadata) : ViewModel {
+    data class TrackMetadataPage(val loggedInUser: User, val trackMetadata: ViewModels.AudioTrackMetadata) : ViewModel {
         override fun template() = "track_metadata"
     }
 
-    private fun AudioTrackMetadata.viewModel(): ViewModels.AudioFileMetadata =
+    private fun AudioTrackMetadata.viewModel(): ViewModels.AudioTrackMetadata =
         this.let {
             with(AudioTrackMetadata) {
                 val pattern = DateTimePatterns.shortPatternFor(it.recordedTimestampPrecision)
                 val dateTimeFormatter = DateTimeFormatter.ofPattern(pattern)
-                ViewModels.AudioFileMetadata(
+                ViewModels.AudioTrackMetadata(
                     it.uuid.toString(),
                     it.artist,
                     it.title,
@@ -50,7 +50,7 @@ object TrackMetadata {
         }
 
     object ViewModels {
-        data class AudioFileMetadata(
+        data class AudioTrackMetadata(
             val uuid: String,
             val artist: String,
             val title: String,
