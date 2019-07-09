@@ -1,12 +1,18 @@
 {{> header loggedInUser}}
 <body>
 <div class="container-fluid d-flex h-100">
-    <div class="justify-content-center align-self-center mx-auto" id="main-container">
+    <input class="justify-content-center align-self-center mx-auto" id="main-container">
         <h4 class="container-fluid" data-test="heading">{{trackMetadata.title}}</h4>
         <form class="form-group" action="/api/tracks/{{trackMetadata.uuid}}" method="POST">
             <label for="artist">Artist</label>
             <input readonly class="form-control full-width" id="artist" type="artist" name="artist" value="{{trackMetadata.artist}}" data-test="artist"/>
             <label for="title">Title</label>
+            {{#if trackMetadata.workingTitles}}
+                <label>Working titles</label>
+                {{#each trackMetadata.workingTitles}}
+                    <input readonly class="form-control full-width" id="working-title-{{@index}}" type="working-title-{{@index}}" name="working-title-{{@index}}" value="{{this}}" data-test="working-title-{{@index}}"/>
+                {{/each}}
+            {{/if}}
             <input class="form-control full-width" id="title" type="title" name="title" value="{{trackMetadata.title}}" data-test="title"/>
             <label for="duration">Duration</label>
             <input readonly class="form-control full-width" id="duration" type="duration" name="duration" value="{{trackMetadata.duration}}" data-test="duration"/>
