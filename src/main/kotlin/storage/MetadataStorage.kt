@@ -9,6 +9,8 @@ import result.Result.Failure
 import result.asSuccess
 import result.map
 import result.orElse
+import storage.AudioTrackMetadata.TitleType.TITLE
+import storage.AudioTrackMetadata.TitleType.WORKING_TITLE
 import storage.Collection.ExistingCollection
 import storage.Collection.NewCollection
 import java.io.FileReader
@@ -54,6 +56,21 @@ data class AudioTrackMetadata(
         private fun String.emptyIfZero(): String =
             if (this != "0") "$this:"
             else ""
+    }
+
+    fun preferredTitle(): Pair<String, TitleType> {
+        val undesirableTitle = title == "untitled" || title.isEmpty() || title.isBlank()
+
+        return if (undesirableTitle && workingTitles.isNotEmpty()) {
+            workingTitles.first() to WORKING_TITLE
+        } else {
+            title to TITLE
+        }
+    }
+
+    enum class TitleType(val key: String) {
+        TITLE("title"),
+        WORKING_TITLE("working-title")
     }
 }
 
