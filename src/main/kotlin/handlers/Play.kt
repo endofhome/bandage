@@ -41,12 +41,13 @@ object Play {
                 DateTimePatterns.filenamePatternFor(metadata.recordedTimestampPrecision)
             )
             val dateTime = metadata.recordedTimestamp.format(dateTimePattern)
+            val (title: String) = enhancedMetadata.base.preferredTitle()
             val headers: Headers = listOf(
                 "Accept-Ranges" to "bytes",
                 "Content-Length" to metadata.fileSize.toString(),
                 "Content-Range" to "bytes 0-${metadata.fileSize - 1}/${metadata.fileSize}",
                 "content-disposition" to "attachment; filename=${
-                    listOf(dateTime, "${enhancedMetadata.base.title}${enhancedMetadata.takeNumber?.let { " (take $it)" }.orEmpty()}").joinToString(" ")
+                    listOf(dateTime, "$title${enhancedMetadata.takeNumber?.let { " (take $it)" }.orEmpty()}").joinToString(" ")
                 }.${metadata.format}"
             )
             Response(OK).body(audioStream).headers(headers)
