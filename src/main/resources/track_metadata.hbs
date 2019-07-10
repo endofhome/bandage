@@ -1,7 +1,7 @@
 {{> header loggedInUser}}
 <body>
 <div class="container-fluid d-flex h-100">
-    <input class="justify-content-center align-self-center mx-auto" id="main-container">
+    <div class="justify-content-center align-self-center mx-auto" id="main-container">
         <h4 class="container-fluid" data-test="heading">{{trackMetadata.title}}</h4>
         <form class="form-group" action="/api/tracks/{{trackMetadata.uuid}}" method="POST">
             <label for="artist">Artist</label>
