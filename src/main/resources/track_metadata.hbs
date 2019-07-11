@@ -8,13 +8,8 @@
             <input readonly class="form-control full-width" id="artist" type="artist" name="artist" value="{{trackMetadata.artist}}" data-test="artist"/>
             <label for="title">Title</label>
             <input class="form-control full-width" id="title" type="title" name="title" value="{{trackMetadata.title}}" data-test="title"/>
-            {{#if trackMetadata.workingTitles}}
-            <label>Working titles</label>
-            {{#each trackMetadata.workingTitles}}
-            <label for="working-title-{{@index}}"></label>
-            <input class="form-control full-width" id="working-title-{{@index}}" type="working-title-{{@index}}" name="working-title-{{@index}}" value="{{this}}" data-test="working-title-{{@index}}"/>
-            {{/each}}
-            {{/if}}
+            <label>Working title</label>
+            <input class="form-control full-width" id="working-title" type="working-title" name="working-title" value="{{trackMetadata.workingTitle}}" data-test="working-title"/>
             <label for="duration">Duration</label>
             <input readonly class="form-control full-width" id="duration" type="duration" name="duration" value="{{trackMetadata.duration}}" data-test="duration"/>
             <label for="format">Format</label>

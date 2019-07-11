@@ -204,39 +204,47 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
         }
 
     object JsonSerialisation {
-        fun AudioTrackMetadata.toJsonString(): String =
-            """{
-            "artist": "$artist",
-            "album": "$album",
-            "title": "$title",
-            "workingTitles": ${workingTitles.map { workingTitle -> "\"$workingTitle\"" }},
-            "format": "$format",
-            ${bitRate?.let { bitRate -> """"bitrate": "${bitRate.value}",""" }.orEmpty()}
-            ${duration?.let { duration -> """"duration": "${duration.value}",""" }.orEmpty()}
-            "size": "$fileSize",
-            "recordedDate": "$recordedDate",
-            "recordedTimestamp": "$recordedTimestamp",
-            "recordedTimestampPrecision": "${recordedTimestampPrecision.name}",
-            "uploadedTimestamp": "$uploadedTimestamp",
-            "passwordProtectedLink": "$passwordProtectedLink",
-            "path": "$path",
-            ${collections.let { collections ->
+        private fun tooManyWorkingTitles(trackUuid: UUID, numberOfWorkingTitles: Int) =
+            IllegalStateException("Working titles are temporarily limited to one, $trackUuid has $numberOfWorkingTitles")
+
+        fun AudioTrackMetadata.toJsonString(): String {
+            if (workingTitles.size > 1) throw tooManyWorkingTitles(uuid, workingTitles.size)
+
+            return """{
+                    "artist": "$artist",
+                    "album": "$album",
+                    "title": "$title",
+                    "workingTitles": ${workingTitles.map { workingTitle -> "\"$workingTitle\"" }},
+                    "format": "$format",
+                    ${bitRate?.let { bitRate -> """"bitrate": "${bitRate.value}",""" }.orEmpty()}
+                    ${duration?.let { duration -> """"duration": "${duration.value}",""" }.orEmpty()}
+                    "size": "$fileSize",
+                    "recordedDate": "$recordedDate",
+                    "recordedTimestamp": "$recordedTimestamp",
+                    "recordedTimestampPrecision": "${recordedTimestampPrecision.name}",
+                    "uploadedTimestamp": "$uploadedTimestamp",
+                    "passwordProtectedLink": "$passwordProtectedLink",
+                    "path": "$path",
+                    ${collections.let { collections ->
                 if (collections.isNotEmpty()) { """"collections": ${collections.map { "\"${it.uuid}\"" }},""" } else { "" }
             }}
-            "sha256": "$hash"
-        }""".trimIndent()
+                    "sha256": "$hash"
+                }""".trimIndent()
+        }
 
         fun String.toAudioTrackMetadataWith(uuid: UUID): AudioTrackMetadata {
             val postgresMetadata: PostgresAudioMetadata = run {
                 jacksonObjectMapper().readValue(this)
             }
 
+            postgresMetadata.workingTitles?.let { if (it.size > 1) throw tooManyWorkingTitles(uuid, it.size) }
+
             return AudioTrackMetadata(
                 uuid,
                 postgresMetadata.artist,
                 postgresMetadata.album,
                 postgresMetadata.title,
-                postgresMetadata.workingTitles?.map { it } ?: emptyList(),
+                postgresMetadata.workingTitles?.map { it }?.take(1) ?: emptyList(),
                 postgresMetadata.format,
                 postgresMetadata.bitrate.toBitRate(),
                 postgresMetadata.duration?.toDuration(),
