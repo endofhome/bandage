@@ -46,7 +46,7 @@ object TrackMetadata {
                     it.playUrl.toString(),
                     it.recordedTimestamp.format(dateTimeFormatter),
                     it.uploadedTimestamp.format(dateTimeFormatter),
-                    it.collections.map { it.title }.ifEmpty { null }
+                    it.collections.map { it.title }
                 )
             }
         }
@@ -64,7 +64,7 @@ object TrackMetadata {
             val playUrl: String,
             val recordedTimestamp: String,
             val uploadedTimestamp: String,
-            val collections: List<String>? = null
+            val collections: List<String>
         )
     }
 }
