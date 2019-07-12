@@ -37,6 +37,7 @@ object TrackMetadata {
                 ViewModels.AudioTrackMetadata(
                     it.uuid.toString(),
                     it.artist,
+                    it.preferredTitle().first,
                     it.title,
                     it.workingTitles.firstOrNull().orEmpty(),
                     it.format,
@@ -54,6 +55,7 @@ object TrackMetadata {
         data class AudioTrackMetadata(
             val uuid: String,
             val artist: String,
+            val heading: String,
             val title: String,
             val workingTitle: String,
             val format: String,

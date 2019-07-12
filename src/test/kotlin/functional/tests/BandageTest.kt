@@ -282,7 +282,7 @@ class BandageTest {
         assertThat(driver.currentUrl, equalTo("/tracks/${exampleAudioTrackMetadata.uuid}"))
 
         val heading = driver.findElement(By.cssSelector("h4[data-test=\"heading\"]")) ?: fail("Heading for ${exampleAudioTrackMetadata.uuid} is unavailable")
-        assertThat(heading.text, equalTo(exampleAudioTrackMetadata.title))
+        assertThat(heading.text, equalTo(exampleAudioTrackMetadata.preferredTitle().first))
         val artist = driver.findElement(By.cssSelector("input[data-test=\"artist\"]")) ?: fail("Artist for ${exampleAudioTrackMetadata.uuid} is unavailable")
         assertThat(artist.getAttribute("value"), equalTo(exampleAudioTrackMetadata.artist))
         val title = driver.findElement(By.cssSelector("input[data-test=\"title\"]")) ?: fail("Title for ${exampleAudioTrackMetadata.uuid} is unavailable")
