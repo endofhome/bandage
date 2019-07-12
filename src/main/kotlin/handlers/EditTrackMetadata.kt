@@ -20,13 +20,17 @@ object EditTrackMetadata {
         val uuid = try { UUID.fromString(id) } catch (e: Exception) { return Response(BAD_REQUEST) }
         val formAsMap = authenticatedRequest.request.formAsMap()
         val newTitle = formAsMap["title"]?.single() ?: return Response(BAD_REQUEST)
+        val newWorkingTitle = formAsMap["working_title"]?.single() ?: return Response(BAD_REQUEST)
 
         val foundTrack = metadataStorage.findTrack(uuid).map { it }.orElse { null }
             ?: return Response(NOT_FOUND)
-        val updatedTrack = foundTrack.copy(title = newTitle)
+        val updatedTrack = foundTrack.copy(
+            title = newTitle,
+            workingTitles = listOf(newWorkingTitle)
+        )
 
         return metadataStorage.updateTrack(updatedTrack).map {
-            Response(SEE_OTHER).header("Location", "${dashboard}?highlighted=$uuid#$uuid")
+            Response(SEE_OTHER).header("Location", "$dashboard?highlighted=$uuid#$uuid")
         }.orElse {
             Response(INTERNAL_SERVER_ERROR)
         }

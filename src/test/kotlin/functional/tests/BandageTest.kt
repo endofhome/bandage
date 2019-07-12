@@ -304,7 +304,7 @@ class BandageTest {
     }
 
     @Test
-    fun `title of audio track can be updated`() {
+    fun `title and working title of audio track can be updated`() {
         val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata))
         val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
         val driver = Http4kWebDriver(bandage)
@@ -315,12 +315,18 @@ class BandageTest {
         title.clear()
         title.sendKeys("a new title")
 
+        val workingTitle = driver.findElement(By.cssSelector("input[data-test=\"working-title\"]")) ?: fail("Working title for ${exampleAudioTrackMetadata.uuid} is unavailable")
+        workingTitle.clear()
+        workingTitle.sendKeys("a new working title")
+
         val editButton = driver.findElement(By.cssSelector("button[data-test=\"edit-metadata\"]")) ?: fail("Title for ${exampleAudioTrackMetadata.uuid} is unavailable")
         editButton.click()
 
         assertThat(driver.status, equalTo(OK))
         assertThat(driver.currentUrl, equalTo("/dashboard?highlighted=${exampleAudioTrackMetadata.uuid}#${exampleAudioTrackMetadata.uuid}"))
-        assertThat(metadataStorage.findTrack(exampleAudioTrackMetadata.uuid).expectSuccess()?.title, equalTo("a new title"))
+        val updatedMetadata = metadataStorage.findTrack(exampleAudioTrackMetadata.uuid).expectSuccess()
+        assertThat(updatedMetadata?.title, equalTo("a new title"))
+        assertThat(updatedMetadata?.workingTitles?.first(), equalTo("a new working title"))
 
         val highlightedElements = driver.findElements(By.cssSelector(".highlighted")) ?: fail("No highlighted elements")
         assertThat(highlightedElements.single().getAttribute("data-test"), equalTo(trackToView.getAttribute("data-test")))

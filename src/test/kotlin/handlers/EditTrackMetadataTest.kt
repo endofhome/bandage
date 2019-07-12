@@ -68,9 +68,9 @@ class EditTrackMetadataTest {
     fun `uuid does not exist in metadata storage returns 404 NOT FOUND`() {
         val authenticatedRequest = AuthenticatedRequest(
             RoutedRequest(
-                Request(GET, "/tracks/${UUID.nameUUIDFromBytes("this track does not exist".toByteArray())}").form(
-                    "title", "some value"
-                ),
+                Request(GET, "/tracks/${UUID.nameUUIDFromBytes("this track does not exist".toByteArray())}")
+                    .form("title", "some value")
+                    .form("working_title", "some value"),
                 UriTemplate.from("/tracks/{id}")
             ),
             exampleUser
@@ -86,9 +86,9 @@ class EditTrackMetadataTest {
     fun `update to metadata failed returns 500 INTERNAL SERVER ERROR`() {
         val authenticatedRequest = AuthenticatedRequest(
             RoutedRequest(
-                Request(GET, "/tracks/${exampleAudioTrackMetadata.uuid}").form(
-                    "title", "some value"
-                ),
+                Request(GET, "/tracks/${exampleAudioTrackMetadata.uuid}")
+                    .form("title", "some value")
+                    .form("working_title", "some value"),
                 UriTemplate.from("/tracks/{id}")
             ),
             exampleUser
