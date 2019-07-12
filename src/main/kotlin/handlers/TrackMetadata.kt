@@ -62,8 +62,8 @@ object TrackMetadata {
             val bitRate: String?,
             val duration: String?,
             val playUrl: String,
-            val recordedTimestamp: String? = null,
-            val uploadedTimestamp: String = "",
+            val recordedTimestamp: String,
+            val uploadedTimestamp: String,
             val collections: List<String>? = null
         )
     }
