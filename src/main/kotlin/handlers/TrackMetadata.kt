@@ -12,6 +12,7 @@ import org.http4k.template.ViewModel
 import result.map
 import result.orElse
 import storage.AudioTrackMetadata
+import storage.HasPreferredTitle
 import storage.MetadataStorage
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -22,10 +23,22 @@ object TrackMetadata {
             metadataStorage.findTrack(UUID.fromString(id)).map { it?.viewModel() }.orElse { null }
         } ?: return Response(Status.NOT_FOUND)
 
-        return Response(Status.OK).with(Bandage.StaticConfig.view of TrackMetadataPage(authenticatedRequest.user, trackMetadata))
+        val (title, titleType) = trackMetadata.preferredTitle()
+        val playerMetadata = Dashboard.ViewModels.AudioTrackMetadata(
+            trackMetadata.uuid,
+            title,
+            titleType,
+            trackMetadata.format,
+            trackMetadata.bitRate,
+            trackMetadata.duration,
+            trackMetadata.playUrl,
+            trackMetadata.playUrl
+        )
+
+        return Response(Status.OK).with(Bandage.StaticConfig.view of TrackMetadataPage(authenticatedRequest.user, trackMetadata, playerMetadata))
     }
 
-    data class TrackMetadataPage(val loggedInUser: User, val trackMetadata: ViewModels.AudioTrackMetadata) : ViewModel {
+    data class TrackMetadataPage(val loggedInUser: User, val trackMetadata: ViewModels.AudioTrackMetadata, val playerMetadata: Dashboard.ViewModels.AudioTrackMetadata) : ViewModel {
         override fun template() = "track_metadata"
     }
 
@@ -56,7 +69,7 @@ object TrackMetadata {
             val uuid: String,
             val artist: String,
             val heading: String,
-            val title: String,
+            override val title: String,
             val workingTitle: String,
             val format: String,
             val bitRate: String?,
@@ -65,6 +78,8 @@ object TrackMetadata {
             val recordedTimestamp: String,
             val uploadedTimestamp: String,
             val collections: List<String>
-        )
+        ) : HasPreferredTitle {
+            override val workingTitles: List<String> = listOf(workingTitle)
+        }
     }
 }

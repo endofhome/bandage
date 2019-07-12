@@ -9,10 +9,10 @@ import result.Result.Failure
 import result.asSuccess
 import result.map
 import result.orElse
-import storage.AudioTrackMetadata.TitleType.TITLE
-import storage.AudioTrackMetadata.TitleType.WORKING_TITLE
 import storage.Collection.ExistingCollection
 import storage.Collection.NewCollection
+import storage.HasPreferredTitle.TitleType.TITLE
+import storage.HasPreferredTitle.TitleType.WORKING_TITLE
 import java.io.FileReader
 import java.io.FileWriter
 import java.math.BigDecimal
@@ -24,8 +24,8 @@ data class AudioTrackMetadata(
     val uuid: UUID,
     val artist: String,
     val album: String,
-    val title: String = "untitled",
-    val workingTitles: List<String> = emptyList(),
+    override val title: String = "untitled",
+    override val workingTitles: List<String> = emptyList(),
     val format: String,
     val bitRate: BitRate?,
     val duration: Duration?,
@@ -38,7 +38,7 @@ data class AudioTrackMetadata(
     val path: String,
     val hash: String,
     val collections: List<ExistingCollection> = emptyList()
-) {
+) : HasPreferredTitle {
     val playUrl: Uri = "${environment.config.baseUrl}$play/$uuid".toUri()
 
     companion object {
@@ -57,6 +57,11 @@ data class AudioTrackMetadata(
             if (this != "0") "$this:"
             else ""
     }
+}
+
+interface HasPreferredTitle {
+    val title: String
+    val workingTitles: List<String>
 
     fun preferredTitle(): Pair<String, TitleType> {
         val undesirableTitle = title == "untitled" || title.isEmpty() || title.isBlank()

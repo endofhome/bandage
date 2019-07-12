@@ -13,8 +13,8 @@ import result.Result.Failure
 import result.Result.Success
 import result.map
 import storage.AudioTrackMetadata.Companion.presentationFormat
-import storage.AudioTrackMetadata.TitleType
 import storage.AudioTrackMetadataEnhancer
+import storage.HasPreferredTitle.TitleType
 import storage.MetadataStorage
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

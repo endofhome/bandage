@@ -32,7 +32,7 @@ object Tracks {
         ViewModels.Track(
             "$uuid",
             artist,
-            title,
+            preferredTitle().first,
             "$recordedTimestamp",
             recordedTimestampPrecision.name,
             "$uploadedTimestamp",
