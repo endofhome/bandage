@@ -1,5 +1,6 @@
 package storage
 
+import com.dropbox.core.DbxApiException
 import com.dropbox.core.DbxDownloader
 import com.dropbox.core.DbxException
 import com.dropbox.core.DbxHost
@@ -12,6 +13,7 @@ import com.dropbox.core.v2.files.DownloadErrorException
 import com.dropbox.core.v2.files.FileMetadata
 import com.dropbox.core.v2.files.FolderMetadata
 import com.dropbox.core.v2.files.Metadata
+import com.dropbox.core.v2.files.WriteMode
 import com.dropbox.core.v2.sharing.DbxUserSharingRequests
 import com.dropbox.core.v2.sharing.RequestedVisibility
 import com.dropbox.core.v2.sharing.SharedLinkMetadata
@@ -25,6 +27,8 @@ import result.flatMap
 import result.map
 import result.orElse
 import result.partition
+import java.io.ByteArrayInputStream
+import java.io.IOException
 import java.io.InputStream
 import java.util.Date
 
@@ -39,6 +43,9 @@ class DropboxFileStorage(private val dropboxClient: SimpleDropboxClient) : FileS
     override fun downloadFile(remotePath: String, destinationPath: String): Result<Error, java.io.File> =
         dropboxClient.downloadFile(remotePath, destinationPath)
 
+    override fun uploadFile(file: java.io.File, destinationPath: String): Result<Error, java.io.File> =
+        dropboxClient.uploadFile(file, destinationPath)
+
     override fun stream(uri: Uri): Result<Error, InputStream> =
         dropboxClient.streamFromPasswordProtectedUri(uri)
 
@@ -51,6 +58,7 @@ class DropboxFileStorage(private val dropboxClient: SimpleDropboxClient) : FileS
 interface SimpleDropboxClient {
     fun listFolders(): Result<Error, List<Folder>>
     fun readTextFile(filename: String): Result<Error, List<String>>
+    fun uploadFile(file: java.io.File, destinationPath: String): Result<Error, java.io.File>
     fun downloadFile(remotePath: String, destinationPath: String): Result<Error, java.io.File>
     fun streamFromPasswordProtectedUri(uri: Uri): Result<Error, InputStream>
     fun createPasswordProtectedLink(remotePathLower: String, password: String, expiryDate: Date? = null): Result<Error, Uri>
@@ -66,7 +74,6 @@ class HttpDropboxClient(identifier: String, accessToken: String) : SimpleDropbox
             headers.add(HttpRequestor.Header("Authorization", "Bearer $accessToken"))
         }
     }
-
     override fun listFolders(): Result<Error, List<Folder>> =
         filesRecursive().map { files ->
             val (foldersMetadata, filesMetadata) = files.partition { it is FolderMetadata }
@@ -104,6 +111,24 @@ class HttpDropboxClient(identifier: String, accessToken: String) : SimpleDropbox
                     inputStream.close()
                 }
             }
+
+    override fun uploadFile(file: java.io.File, destinationPath: String): Result<Error, java.io.File> {
+        return try {
+            ByteArrayInputStream(file.readBytes()).use { inputStream ->
+                client.files().uploadBuilder(destinationPath)
+                    .withMode(WriteMode.ADD)
+                    .uploadAndFinish(inputStream)
+            }
+            file.asSuccess()
+        } catch (e: Exception) {
+            when (e) {
+                is DbxApiException,
+                is DbxException,
+                is IOException      -> Failure(Error("Error writing file $destinationPath to Dropbox"))
+                else                -> throw e
+            }
+        }
+    }
 
     override fun readTextFile(filename: String): Result<Error, List<String>> =
         downloaderFor(filename).flatMap { downloader ->

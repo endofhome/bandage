@@ -12,6 +12,9 @@ open class DummyFileStorage : FileStorage {
     override fun downloadFile(remotePath: String, destinationPath: String): Result<Error, File> =
         TODO("not implemented")
 
+    override fun uploadFile(file: File, destinationPath: String): Result<Error, File> =
+        TODO("not implemented")
+
     override fun publicLink(path: String, permission: FileStoragePermission): Result<Error, Uri> =
         TODO("not implemented")
 
