@@ -36,10 +36,17 @@ object PreProcessMetadata {
     }
 
     fun metadataReader(filePath: String): BufferedReader {
-        val ffprobeMetadata = "lib/ffprobe -v quiet -print_format json -show_format -show_streams".split(" ").plus(filePath)
+        val ffprobeMetadata = "lib/${ffprobeForCurrentOs()} -v quiet -print_format json -show_format -show_streams".split(" ").plus(filePath)
         val process = ProcessBuilder().command(ffprobeMetadata).start()
         return BufferedReader(InputStreamReader(process.inputStream))
     }
+
+    private fun ffprobeForCurrentOs(): String =
+        if (System.getProperty("os.name").toLowerCase().startsWith("mac")) {
+            "ffprobe_darwin"
+        } else {
+            "ffprobe_linux_x64"
+        }
 
     fun hashFile(file: ByteArray): String {
         val digest = MessageDigest.getInstance("SHA-256")
