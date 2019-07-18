@@ -36,7 +36,7 @@ object PreProcessMetadata {
     }
 
     fun metadataReader(filePath: String): BufferedReader {
-        val ffprobeMetadata = "ffprobe -v quiet -print_format json -show_format -show_streams".split(" ").plus(filePath)
+        val ffprobeMetadata = "lib/ffprobe -v quiet -print_format json -show_format -show_streams".split(" ").plus(filePath)
         val process = ProcessBuilder().command(ffprobeMetadata).start()
         return BufferedReader(InputStreamReader(process.inputStream))
     }
