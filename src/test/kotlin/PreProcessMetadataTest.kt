@@ -21,7 +21,7 @@ internal class PreProcessMetadataTest {
             bitRate = BitRate("48000"),
             duration = Duration("5.089000"),
             fileSize = 31046,
-            recordedTimestamp = ZonedDateTime.of(2019, 7, 17, 17, 51, 14, 494000000, UTC),
+            recordedTimestamp = ZonedDateTime.of(2019, 7, 17, 17, 51, 14, 0, UTC),
             recordedTimestampPrecision = ChronoUnit.SECONDS,
             hash = "d16670c5d6d17eeacba658150e0f853b2ba29e14783efb1e4f9692984db564ce"
         )

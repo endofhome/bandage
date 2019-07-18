@@ -8,8 +8,10 @@ import storage.toDuration
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.attribute.FileTime
 import java.security.MessageDigest
-import java.time.Instant
 import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -60,9 +62,15 @@ object PreProcessMetadata {
     private fun String.escapeSpaces() = replace(" ", "\\ ")
 
     private fun extractTimestamp(file: File): Pair<ZonedDateTime, ChronoUnit> {
-        val timestamp = ZonedDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), UTC)
+        val ctime = Files.getAttribute(Paths.get(file.path), "unix:ctime") as FileTime
+        val timestamp = ZonedDateTime.ofInstant(ctime.toInstant(), UTC).removeNanos()
         return timestamp to SECONDS
     }
+
+    private fun ZonedDateTime.removeNanos(): ZonedDateTime =
+        run {
+            this.minusNanos(nano.toLong())
+        }
 }
 
 data class PreProcessedAudioTrackMetadata(
