@@ -2,6 +2,8 @@ package scripts
 
 import Bandage
 import Bandage.StaticConfig.appName
+import FfprobeInfo
+import PreProcessMetadata.metadataReader
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import config.BandageConfig

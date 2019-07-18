@@ -2,7 +2,9 @@ package scripts
 
 import Bandage
 import Bandage.StaticConfig.appName
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import FfprobeInfo
+import PreProcessMetadata.hashFile
+import PreProcessMetadata.metadataReader
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import config.BandageConfig
@@ -20,9 +22,6 @@ import storage.LocalCsvMetadataStorage
 import storage.MetadataStorage
 import storage.toBitRate
 import storage.toDuration
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.security.MessageDigest
 import java.time.Instant.EPOCH
 import java.time.ZoneOffset.UTC
 import java.time.temporal.ChronoUnit
@@ -78,56 +77,6 @@ fun seedDatabase(metadataStorage: MetadataStorage) {
         }
     }.orElse { throw RuntimeException(it.message) }
 }
-
-fun metadataReader(tempFileName: String): BufferedReader {
-    val ffprobeMetadata =
-        "ffprobe -v quiet -print_format json -show_format -show_streams $tempFileName".split(" ").toMutableList()
-    val process = ProcessBuilder().command(ffprobeMetadata).start()
-    return BufferedReader(InputStreamReader(process.inputStream))
-}
-
-private fun hashFile(file: ByteArray): String {
-    val digest = MessageDigest.getInstance("SHA-256")
-    val hashAsBytes = digest.digest(file)
-
-    return hashAsBytes.map { byte ->
-        String.format("%02x", byte)
-    }.joinToString("")
-}
-
-data class FfprobeInfo(
-    val streams: List<Stream>,
-    val format: Format
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Stream(
-    val bit_rate: String
-)
-
-data class Format(
-    val filename: String,
-    val nb_streams: Int,
-    val nb_programs: Int,
-    val format_long_name: String,
-    val start_time: String?,
-    val probe_score: Int,
-    val format_name: String,
-    val duration: String?,
-    val size: String,
-    val bit_rate: String,
-    val tags: Tags?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Tags(
-    val genre: String?,
-    val comment: String?,
-    val artist: String?,
-    val album: String?,
-    val title: String?,
-    val date: String?
-)
 
 fun main() {
     seedDatabase(LocalCsvMetadataStorage)
