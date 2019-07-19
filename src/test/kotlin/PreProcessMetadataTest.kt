@@ -9,6 +9,8 @@ import java.io.File
 import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
+import java.time.temporal.ChronoUnit.DAYS
+import java.time.temporal.ChronoUnit.SECONDS
 
 internal class PreProcessMetadataTest {
     private val baseExpected = PreProcessedAudioTrackMetadata(
@@ -42,17 +44,40 @@ internal class PreProcessMetadataTest {
         fun `with pattern yyyy-MM-dd`() {
             val testFileName = "${baseTestFileDir}2019-07-17 - Some recording.mp3"
             val tempFile = baseTestFile.copyTo(File(testFileName), overwrite = true)
-            try {
-                val expected = baseExpected.copy(
-                    recordedTimestamp = ZonedDateTime.of(2019, 7, 17, 0, 0, 0, 0, UTC),
-                    recordedTimestampPrecision = ChronoUnit.DAYS
-                )
-                val actual = PreProcessMetadata(tempFile)
+            testFile(
+                file = tempFile,
+                expectedTimestamp = ZonedDateTime.of(2019, 7, 17, 0, 0, 0, 0, UTC),
+                expectedPrecision = DAYS
+            )
+        }
 
-                assertThat(actual, equalTo(expected))
-            } finally {
-                tempFile.delete()
-            }
+        @Test
+        fun `with pattern yyyy-MM-dd_hh-mm-ss`() {
+            val testFileName = "${baseTestFileDir}2016-11-26_17-59-24.mp3"
+            val tempFile = baseTestFile.copyTo(File(testFileName), overwrite = true)
+            testFile(
+                file = tempFile,
+                expectedTimestamp = ZonedDateTime.of(2016, 11, 26, 17, 59, 24, 0, UTC),
+                expectedPrecision = SECONDS
+            )
+        }
+    }
+
+    private fun testFile(
+        file: File,
+        expectedTimestamp: ZonedDateTime?,
+        expectedPrecision: ChronoUnit
+    ) {
+        try {
+            val expected = baseExpected.copy(
+                recordedTimestamp = expectedTimestamp,
+                recordedTimestampPrecision = expectedPrecision
+            )
+            val actual = PreProcessMetadata(file)
+
+            assertThat(actual, equalTo(expected))
+        } finally {
+            file.delete()
         }
     }
 }
