@@ -8,21 +8,15 @@ import storage.toDuration
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.attribute.FileTime
 import java.security.MessageDigest
-import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
-import java.time.temporal.ChronoUnit.SECONDS
 
 object PreProcessMetadata {
     operator fun invoke(file: File): PreProcessedAudioTrackMetadata {
         val reader = metadataReader(file.path.escapeSpaces())
         val fileInfoJsonString = reader.readLines().joinToString("")
         val ffprobeInfo: FfprobeInfo = jacksonObjectMapper().readValue(fileInfoJsonString)
-        val (timestamp, precision) = extractTimestamp(file)
 
         return PreProcessedAudioTrackMetadata(
             artist = ffprobeInfo.format.tags?.artist,
@@ -31,8 +25,8 @@ object PreProcessMetadata {
             bitRate = ffprobeInfo.streams.firstOrNull()?.bit_rate?.toBitRate(),
             duration = ffprobeInfo.format.duration?.toDuration(),
             fileSize = ffprobeInfo.format.size.toInt(),
-            recordedTimestamp = timestamp,
-            recordedTimestampPrecision = precision,
+            recordedTimestamp = null,
+            recordedTimestampPrecision = null,
             hash = hashFile(file.readBytes())
         )
     }
@@ -60,17 +54,6 @@ object PreProcessMetadata {
     }
 
     private fun String.escapeSpaces() = replace(" ", "\\ ")
-
-    private fun extractTimestamp(file: File): Pair<ZonedDateTime, ChronoUnit> {
-        val ctime = Files.getAttribute(Paths.get(file.path), "unix:ctime") as FileTime
-        val timestamp = ZonedDateTime.ofInstant(ctime.toInstant(), UTC).removeNanos()
-        return timestamp to SECONDS
-    }
-
-    private fun ZonedDateTime.removeNanos(): ZonedDateTime =
-        run {
-            this.minusNanos(nano.toLong())
-        }
 }
 
 data class PreProcessedAudioTrackMetadata(
@@ -80,8 +63,8 @@ data class PreProcessedAudioTrackMetadata(
     val bitRate: BitRate?,
     val duration: Duration?,
     val fileSize: Int,
-    val recordedTimestamp: ZonedDateTime,
-    val recordedTimestampPrecision: ChronoUnit,
+    val recordedTimestamp: ZonedDateTime?,
+    val recordedTimestampPrecision: ChronoUnit?,
     val hash: String
 )
 
