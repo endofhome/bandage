@@ -35,17 +35,15 @@ internal class PreProcessMetadataTest {
     }
 
     @Nested
-    @DisplayName("can pre-process mp3 file with only date in filename")
-    inner class AuthenticatingUserAtLogin {
+    @DisplayName("can pre-process mp3 file with date/timestamp in filename")
+    inner class PreProcessMp3WithTimestamps {
         private val baseTestFileDir = "src/test/resources/files/"
         private val baseTestFile = File("${baseTestFileDir}440Hz-5sec.mp3")
 
         @Test
         fun `with pattern yyyy-MM-dd`() {
-            val testFileName = "${baseTestFileDir}2019-07-17 - Some recording.mp3"
-            val tempFile = baseTestFile.copyTo(File(testFileName), overwrite = true)
             testFile(
-                file = tempFile,
+                filename = "2019-07-17 - Some recording.mp3",
                 expectedTimestamp = ZonedDateTime.of(2019, 7, 17, 0, 0, 0, 0, UTC),
                 expectedPrecision = DAYS
             )
@@ -53,31 +51,30 @@ internal class PreProcessMetadataTest {
 
         @Test
         fun `with pattern yyyy-MM-dd_hh-mm-ss`() {
-            val testFileName = "${baseTestFileDir}2016-11-26_17-59-24.mp3"
-            val tempFile = baseTestFile.copyTo(File(testFileName), overwrite = true)
             testFile(
-                file = tempFile,
+                filename = "2016-11-26_17-59-24.mp3",
                 expectedTimestamp = ZonedDateTime.of(2016, 11, 26, 17, 59, 24, 0, UTC),
                 expectedPrecision = SECONDS
             )
         }
-    }
 
-    private fun testFile(
-        file: File,
-        expectedTimestamp: ZonedDateTime?,
-        expectedPrecision: ChronoUnit
-    ) {
-        try {
-            val expected = baseExpected.copy(
-                recordedTimestamp = expectedTimestamp,
-                recordedTimestampPrecision = expectedPrecision
-            )
-            val actual = PreProcessMetadata(file)
+        private fun testFile(
+            filename: String,
+            expectedTimestamp: ZonedDateTime,
+            expectedPrecision: ChronoUnit
+        ) {
+            val file = baseTestFile.copyTo(File("$baseTestFileDir$filename"), overwrite = true)
+            try {
+                val expected = baseExpected.copy(
+                    recordedTimestamp = expectedTimestamp,
+                    recordedTimestampPrecision = expectedPrecision
+                )
+                val actual = PreProcessMetadata(file)
 
-            assertThat(actual, equalTo(expected))
-        } finally {
-            file.delete()
+                assertThat(actual, equalTo(expected))
+            } finally {
+                file.delete()
+            }
         }
     }
 }
