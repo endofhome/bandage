@@ -19,7 +19,7 @@ test {
 dependencies {
     def http4kVersion = "3.163.0"
     def jacksonVersion = "2.9.9"
-    def junitVersion = "5.4.0"
+    def junitVersion = "5.5.0"
     def logbackVersion = "1.2.3"
 
     implementation group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jdk8" 
