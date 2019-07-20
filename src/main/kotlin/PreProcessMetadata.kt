@@ -49,15 +49,29 @@ object PreProcessMetadata {
     private fun File.extractTimestamp(): Pair<ZonedDateTime?, ChronoUnit?> {
         val pattern1 = Regex("\\d{4}-\\d{2}-\\d{2}")
         val pattern2 = Regex("\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}")
+        val pattern3 = Regex("\\d{6}-\\d{6}")
 
+        fun splitIntoPairs(acc: List<String>, remaining: String): List<String> {
+            if (remaining.isEmpty()) return acc
+            return splitIntoPairs(acc + remaining.take(2), remaining.drop(2))
+        }
 
-        return pattern2.find(path)?.let {
-            val values = it.value.replace("_", "-").split("-").map(String::toInt)
+        return pattern3.find(path)?.let { matchResult ->
+            val (date, time) = matchResult.value.split("-")
+            val pairs = listOf(date, time).flatMap { dateOrTime -> splitIntoPairs(emptyList(), dateOrTime) }
+            val (year, month, day, hour, minute) = pairs.mapIndexed { i, e ->
+                if (i == 0) { ("20$e").toInt() }
+                else { e.toInt() }
+            }
+            ZonedDateTime.of(year, month, day, hour, minute, pairs[5].toInt(), 0, UTC) to ChronoUnit.SECONDS
+        }
+        ?: pattern2.find(path)?.let { matchResult ->
+            val values = matchResult.value.replace("_", "-").split("-").map(String::toInt)
             val (year, month, day, hour, minute) = values
             ZonedDateTime.of(year, month, day, hour, minute, values[5], 0, UTC) to ChronoUnit.SECONDS
         }
-        ?: pattern1.find(path)?.let {
-            val (year, month, day) = it.value.split("-").map(String::toInt)
+        ?: pattern1.find(path)?.let { matchResult ->
+            val (year, month, day) = matchResult.value.split("-").map(String::toInt)
             ZonedDateTime.of(year, month, day, 0, 0, 0, 0, UTC) to ChronoUnit.DAYS
         }
         ?: null to null
