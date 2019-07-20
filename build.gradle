@@ -33,7 +33,6 @@ dependencies {
     implementation group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "$jacksonVersion"
     implementation group: "com.fasterxml.jackson.module", name: "jackson-module-kotlin", version: "$jacksonVersion"
     implementation group: "org.slf4j", name: "slf4j-api", version: "1.7.26"
-    implementation group: "org.slf4j", name: "slf4j-api", version: "1.7.26"
     implementation group: "ch.qos.logback", name: "logback-classic", version: logbackVersion
     implementation group: "ch.qos.logback", name: "logback-core", version: logbackVersion
     implementation group: "io.sentry", name: "sentry-logback", version: "1.7.16"
