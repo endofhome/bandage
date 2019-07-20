@@ -42,7 +42,7 @@ dependencies {
     runtime group: "io.jsonwebtoken", name: "jjwt-jackson", version: "0.10.5"
 
     testImplementation group: "org.junit.jupiter", name: "junit-jupiter-api", version: junitVersion
-    testImplementation group: "com.natpryce", name: "hamkrest", version: "1.6.0.0"
+    testImplementation group: "com.natpryce", name: "hamkrest", version: "1.7.0.0"
     testImplementation group: "org.http4k", name: "http4k-testing-webdriver", version: http4kVersion
     testImplementation group: "org.http4k", name: "http4k-testing-approval", version: http4kVersion
 
