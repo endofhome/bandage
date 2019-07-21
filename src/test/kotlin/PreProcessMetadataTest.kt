@@ -1,6 +1,5 @@
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -86,7 +85,6 @@ internal class PreProcessMetadataTest {
             )
         }
 
-        @Disabled
         @Test
         fun `with pattern ddMMyyyy`() {
             testFile(
