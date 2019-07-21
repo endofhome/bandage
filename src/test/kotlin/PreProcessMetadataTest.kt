@@ -67,6 +67,15 @@ internal class PreProcessMetadataTest {
             )
         }
 
+        @Test
+        fun `with pattern dd-MM-yyyy`() {
+            testFile(
+                filename = "IBG - Andrew bassline part 1 27-11-2005.mp3",
+                expectedTimestamp = ZonedDateTime.of(2005, 11, 27, 0, 0, 0, 0, UTC),
+                expectedPrecision = DAYS
+            )
+        }
+
         private fun testFile(
             filename: String,
             expectedTimestamp: ZonedDateTime,

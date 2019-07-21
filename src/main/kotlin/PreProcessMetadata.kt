@@ -50,13 +50,18 @@ object PreProcessMetadata {
         val pattern1 = Regex("\\d{4}-\\d{2}-\\d{2}")
         val pattern2 = Regex("\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}")
         val pattern3 = Regex("\\d{6}-\\d{6}")
+        val pattern4 = Regex("\\d{2}-\\d{2}-\\d{4}")
 
         fun splitIntoPairs(acc: List<String>, remaining: String): List<String> {
             if (remaining.isEmpty()) return acc
             return splitIntoPairs(acc + remaining.take(2), remaining.drop(2))
         }
 
-        return pattern3.find(path)?.let { matchResult ->
+        return pattern4.find(path)?.let { matchResult ->
+            val (day, month, year) = matchResult.value.split("-").map(String::toInt)
+            ZonedDateTime.of(year, month, day, 0, 0, 0, 0, UTC) to ChronoUnit.DAYS
+        }
+        ?: pattern3.find(path)?.let { matchResult ->
             val (date, time) = matchResult.value.split("-")
             val pairs = listOf(date, time).flatMap { dateOrTime -> splitIntoPairs(emptyList(), dateOrTime) }
             val (year, month, day, hour, minute) = pairs.mapIndexed { i, e ->
