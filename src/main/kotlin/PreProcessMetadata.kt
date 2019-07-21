@@ -51,17 +51,33 @@ object PreProcessMetadata {
         val pattern2 = Regex("\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}")
         val pattern3 = Regex("\\d{6}-\\d{6}")
         val pattern4 = Regex("\\d{2}-\\d{2}-\\d{4}")
+        val pattern5 = Regex("\\d{8}")
 
-        fun splitIntoPairs(acc: List<String>, remaining: String): List<String> {
-            if (remaining.isEmpty()) return acc
-            return splitIntoPairs(acc + remaining.take(2), remaining.drop(2))
+        return pattern5.find(path)?.let { matchResult ->
+            fun splitWithYearFirst(acc: List<String>, remaining: String): List<String> {
+                return when {
+                    remaining.isEmpty() -> acc
+                    acc.isEmpty()       -> splitWithYearFirst(acc + remaining.take(4), remaining.drop(4))
+                    else                -> splitWithYearFirst(acc + remaining.take(2), remaining.drop(2))
+                }
+            }
+
+            return try {
+                val (year, month, day) = splitWithYearFirst(emptyList(), matchResult.value).map { it.toInt() }
+                ZonedDateTime.of(year, month, day, 0, 0, 0, 0, UTC) to ChronoUnit.DAYS
+            } catch (e: Exception) {
+                error(e)
+            }
         }
-
-        return pattern4.find(path)?.let { matchResult ->
+        ?: pattern4.find(path)?.let { matchResult ->
             val (day, month, year) = matchResult.value.split("-").map(String::toInt)
             ZonedDateTime.of(year, month, day, 0, 0, 0, 0, UTC) to ChronoUnit.DAYS
         }
         ?: pattern3.find(path)?.let { matchResult ->
+            fun splitIntoPairs(acc: List<String>, remaining: String): List<String> {
+                if (remaining.isEmpty()) return acc
+                return splitIntoPairs(acc + remaining.take(2), remaining.drop(2))
+            }
             val (date, time) = matchResult.value.split("-")
             val pairs = listOf(date, time).flatMap { dateOrTime -> splitIntoPairs(emptyList(), dateOrTime) }
             val (year, month, day, hour, minute) = pairs.mapIndexed { i, e ->

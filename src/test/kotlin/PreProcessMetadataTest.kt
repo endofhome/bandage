@@ -1,5 +1,6 @@
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -71,6 +72,25 @@ internal class PreProcessMetadataTest {
         fun `with pattern dd-MM-yyyy`() {
             testFile(
                 filename = "IBG - Andrew bassline part 1 27-11-2005.mp3",
+                expectedTimestamp = ZonedDateTime.of(2005, 11, 27, 0, 0, 0, 0, UTC),
+                expectedPrecision = DAYS
+            )
+        }
+
+        @Test
+        fun `with pattern yyyyMMdd`() {
+            testFile(
+                filename = "IBG - Andrew bassline part 1 20051127.mp3",
+                expectedTimestamp = ZonedDateTime.of(2005, 11, 27, 0, 0, 0, 0, UTC),
+                expectedPrecision = DAYS
+            )
+        }
+
+        @Disabled
+        @Test
+        fun `with pattern ddMMyyyy`() {
+            testFile(
+                filename = "IBG - Andrew bassline part 1 27112005.mp3",
                 expectedTimestamp = ZonedDateTime.of(2005, 11, 27, 0, 0, 0, 0, UTC),
                 expectedPrecision = DAYS
             )
