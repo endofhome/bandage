@@ -54,12 +54,15 @@ object PreProcessMetadata {
         }
 
     private fun File.extractTimestamp(): Pair<ZonedDateTime?, ChronoUnit?> =
-        timestampExtractors.mapNotNull {
-            when (val extracted = it.tryToExtract(this.path)) {
-                null -> null
-                else -> extracted
-            }
-        }.getOrElse(0) { null to null }
+        timestampExtractors.tryToExtract(path)
+
+    private fun List<TimestampExtractor>.tryToExtract(fromPath: String): Pair<ZonedDateTime?, ChronoUnit?> {
+        this.forEach {
+            val extracted = it.tryToExtract(fromPath)
+            if (extracted != null) return extracted
+        }
+        return null to null
+    }
 
     fun hashFile(file: ByteArray): String {
         val digest = MessageDigest.getInstance("SHA-256")
