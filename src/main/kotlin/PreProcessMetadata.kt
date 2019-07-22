@@ -9,11 +9,18 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
 import java.security.MessageDigest
-import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
 object PreProcessMetadata {
+    private val timestampExtractors = listOf(
+        TimestampExtractor5,
+        TimestampExtractor4,
+        TimestampExtractor3,
+        TimestampExtractor2,
+        TimestampExtractor1
+    )
+
     operator fun invoke(file: File): PreProcessedAudioTrackMetadata {
         val reader = metadataReader(file.path)
         val fileInfoJsonString = reader.readLines().joinToString("")
@@ -46,22 +53,13 @@ object PreProcessMetadata {
             "ffprobe_linux_x64"
         }
 
-    private fun File.extractTimestamp(): Pair<ZonedDateTime?, ChronoUnit?> {
-        val timestampExtractors = listOf(
-            TimestampExtractor5,
-            TimestampExtractor4,
-            TimestampExtractor3,
-            TimestampExtractor2,
-            TimestampExtractor1
-        )
-
-        return timestampExtractors.mapNotNull {
+    private fun File.extractTimestamp(): Pair<ZonedDateTime?, ChronoUnit?> =
+        timestampExtractors.mapNotNull {
             when (val extracted = it.tryToExtract(this.path)) {
                 null -> null
                 else -> extracted
             }
         }.getOrElse(0) { null to null }
-    }
 
     fun hashFile(file: ByteArray): String {
         val digest = MessageDigest.getInstance("SHA-256")
@@ -118,86 +116,3 @@ data class Tags(
     val title: String?,
     val date: String?
 )
-
-object TimestampExtractor1 : TimestampExtractor {
-    private val regex = Regex("\\d{4}-\\d{2}-\\d{2}")
-
-    override fun tryToExtract(fromPath: String): Pair<ZonedDateTime, ChronoUnit>? =
-        regex.find(fromPath)?.let {
-            val (year, month, day) = it.value.split("-").map(String::toInt)
-            return ZonedDateTime.of(year, month, day, 0, 0, 0, 0, UTC) to ChronoUnit.DAYS
-        }
-}
-
-object TimestampExtractor2 : TimestampExtractor {
-    private val regex = Regex("\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}")
-
-    override fun tryToExtract(fromPath: String): Pair<ZonedDateTime, ChronoUnit>? =
-        regex.find(fromPath)?.let {
-            val values = it.value.replace("_", "-").split("-").map(String::toInt)
-            val (year, month, day, hour, minute) = values
-            ZonedDateTime.of(year, month, day, hour, minute, values[5], 0, UTC) to ChronoUnit.SECONDS
-        }
-}
-
-object TimestampExtractor3 : TimestampExtractor {
-    private val regex = Regex("\\d{6}-\\d{6}")
-
-    override fun tryToExtract(fromPath: String): Pair<ZonedDateTime, ChronoUnit>? =
-        regex.find(fromPath)?.let {
-            fun splitIntoPairs(acc: List<String>, remaining: String): List<String> {
-                if (remaining.isEmpty()) return acc
-                return splitIntoPairs(acc + remaining.take(2), remaining.drop(2))
-            }
-            val (date, time) = it.value.split("-")
-            val pairs = listOf(date, time).flatMap { dateOrTime -> splitIntoPairs(emptyList(), dateOrTime) }
-            val (year, month, day, hour, minute) = pairs.mapIndexed { i, e ->
-                if (i == 0) { ("20$e").toInt() }
-                else { e.toInt() }
-            }
-            ZonedDateTime.of(year, month, day, hour, minute, pairs[5].toInt(), 0, UTC) to ChronoUnit.SECONDS
-        }
-}
-
-object TimestampExtractor4 : TimestampExtractor {
-    private val regex = Regex("\\d{2}-\\d{2}-\\d{4}")
-
-    override fun tryToExtract(fromPath: String): Pair<ZonedDateTime, ChronoUnit>? =
-        regex.find(fromPath)?.let {
-            val (day, month, year) = it.value.split("-").map(String::toInt)
-            ZonedDateTime.of(year, month, day, 0, 0, 0, 0, UTC) to ChronoUnit.DAYS
-        }
-}
-
-object TimestampExtractor5 : TimestampExtractor {
-    private val regex = Regex("\\d{8}")
-
-    override fun tryToExtract(fromPath: String): Pair<ZonedDateTime, ChronoUnit>? =
-        regex.find(fromPath)?.let {
-            fun splitWithYearFirst(acc: List<String>, remaining: String): List<String> =
-                when {
-                    remaining.isEmpty() -> acc
-                    acc.isEmpty() -> splitWithYearFirst(acc + remaining.take(4), remaining.drop(4))
-                    else -> splitWithYearFirst(acc + remaining.take(2), remaining.drop(2))
-                }
-
-            fun splitWithDayFirst(acc: List<String>, remaining: String): List<String> =
-                when {
-                    remaining.isEmpty() -> acc
-                    acc.size == 2 -> splitWithDayFirst(acc + remaining.take(4), remaining.drop(4))
-                    else -> splitWithDayFirst(acc + remaining.take(2), remaining.drop(2))
-                }
-
-            return try {
-                val (year, month, day) = splitWithYearFirst(emptyList(), it.value).map { it.toInt() }
-                ZonedDateTime.of(year, month, day, 0, 0, 0, 0, UTC) to ChronoUnit.DAYS
-            } catch (e: Exception) {
-                val (day, month, year) = splitWithDayFirst(emptyList(), it.value).map { it.toInt() }
-                ZonedDateTime.of(year, month, day, 0, 0, 0, 0, UTC) to ChronoUnit.DAYS
-            }
-        }
-}
-
-interface TimestampExtractor {
-    fun tryToExtract(fromPath: String): Pair<ZonedDateTime, ChronoUnit>?
-}
