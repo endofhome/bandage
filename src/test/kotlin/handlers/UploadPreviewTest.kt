@@ -8,6 +8,7 @@ import org.http4k.core.Method
 import org.http4k.core.MultipartFormBody
 import org.http4k.core.Request
 import org.http4k.core.Status.Companion.BAD_REQUEST
+import org.http4k.core.Status.Companion.OK
 import org.junit.jupiter.api.Test
 
 internal class UploadPreviewTest {
@@ -33,5 +34,19 @@ internal class UploadPreviewTest {
         val response = UploadPreview(AuthenticatedRequest(request, user))
 
         assertThat(response.status, equalTo(BAD_REQUEST))
+    }
+
+    @Test
+    fun `returns 400 BAD REQUEST when multipart form body and correct content-type header are provided, but no file`() {
+        val multipartBody = MultipartFormBody()
+        val request = Request(Method.POST, "http://dont.care")
+            .header("content-type", "multipart/form-data; boundary=${multipartBody.boundary}")
+            .body(multipartBody)
+
+        val user = User("some-user-id", "some-full-name")
+
+        val response = UploadPreview(AuthenticatedRequest(request, user))
+
+        assertThat(response.status, equalTo(OK))
     }
 }
