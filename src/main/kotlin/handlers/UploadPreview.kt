@@ -9,7 +9,8 @@ import org.http4k.core.Status.Companion.OK
 object UploadPreview {
     operator fun invoke(authenticatedRequest: AuthenticatedRequest): Response {
         try {
-            MultipartFormBody.from(authenticatedRequest.request)
+            val body = MultipartFormBody.from(authenticatedRequest.request)
+            body.file("file") ?: return Response(BAD_REQUEST)
         } catch (e: Exception) {
             return Response(BAD_REQUEST)
         }
