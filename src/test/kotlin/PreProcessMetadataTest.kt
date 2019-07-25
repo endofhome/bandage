@@ -113,4 +113,18 @@ internal class PreProcessMetadataTest {
             }
         }
     }
+
+    @Test
+    fun `unmatched characters in filename are returned to be re-used as the title, if there is no title tag present in file`() {
+        val file = File("src/test/resources/files/Some great tune 2019-07-24.mp3")
+        val expected = baseExpected.copy(
+            workingTitle = "Some great tune",
+            recordedTimestamp = ZonedDateTime.of(2019, 7, 24, 0, 0, 0, 0, UTC),
+            recordedTimestampPrecision = DAYS,
+            hash = "e2715c74b5f018eae5db69a7dc1a94aaa6e71f10d1c6693c419a2d29c7ad899e"
+        )
+        val actual = PreProcessMetadata(file)
+
+        assertThat(actual, equalTo(expected))
+    }
 }

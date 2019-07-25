@@ -25,11 +25,11 @@ object PreProcessMetadata {
         val reader = metadataReader(file.path)
         val fileInfoJsonString = reader.readLines().joinToString("")
         val ffprobeInfo: FfprobeInfo = jacksonObjectMapper().readValue(fileInfoJsonString)
-        val (timestamp, precision) = file.extractTimestamp()
+        val (timestamp, precision, leftoverChars) = file.extractTimestamp()
 
         return PreProcessedAudioTrackMetadata(
             artist = ffprobeInfo.format.tags?.artist,
-            workingTitle = ffprobeInfo.format.tags?.title,
+            workingTitle = ffprobeInfo.format.tags?.title ?: leftoverChars,
             format = ffprobeInfo.format.format_name,
             bitRate = ffprobeInfo.streams.firstOrNull()?.bit_rate?.toBitRate(),
             duration = ffprobeInfo.format.duration?.toDuration(),
@@ -53,15 +53,15 @@ object PreProcessMetadata {
             "ffprobe_linux_x64"
         }
 
-    private fun File.extractTimestamp(): Pair<ZonedDateTime?, ChronoUnit?> =
-        timestampExtractors.tryToExtract(path)
+    private fun File.extractTimestamp(): Triple<ZonedDateTime?, ChronoUnit?, String> =
+        timestampExtractors.tryToExtract(this)
 
-    private fun List<TimestampExtractor>.tryToExtract(fromPath: String): Pair<ZonedDateTime?, ChronoUnit?> {
+    private fun List<TimestampExtractor>.tryToExtract(from: File): Triple<ZonedDateTime?, ChronoUnit?, String> {
         this.forEach {
-            val extracted = it.tryToExtract(fromPath)
+            val extracted = it.tryToExtract(from)
             if (extracted != null) return extracted
         }
-        return null to null
+        return Triple(null, null, from.name)
     }
 
     fun hashFile(file: ByteArray): String {
