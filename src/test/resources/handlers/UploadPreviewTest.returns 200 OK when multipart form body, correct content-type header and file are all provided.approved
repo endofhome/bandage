@@ -18,7 +18,7 @@
 <body>
 <div class="container-fluid d-flex h-100">
     <div class="justify-content-center align-self-center mx-auto" id="main-container">
-        <h4 class="container-fluid" data-test="heading">440Hz Sine Wave</h4>
+        <h4 class="container-fluid" data-test="heading">Preview metadata</h4>
         <form class="form-group" action="/api/tracks/" method="POST">
             <label for="artist">Artist</label>
             <input readonly class="form-control full-width" id="artist" type="artist" name="artist" value="Test Tone Generator" data-test="artist"/>
@@ -27,11 +27,11 @@
             <label>Working title</label>
             <input class="form-control full-width" id="working-title" type="working-title" name="working_title" value="440Hz Sine Wave" data-test="working-title"/>
             <label for="duration">Duration</label>
-            <input readonly class="form-control full-width" id="duration" type="duration" name="duration" value="5.089000" data-test="duration"/>
+            <input readonly class="form-control full-width" id="duration" type="duration" name="duration" value="0:05" data-test="duration"/>
             <label for="format">Format</label>
             <input readonly class="form-control full-width" id="format" type="format" name="format" value="mp3" data-test="format"/>
             <label for="bitrate">Bitrate</label>
-            <input readonly class="form-control full-width" id="bitrate" type="bitrate" name="bitrate" value="48000 kbps" data-test="bitrate"/>
+            <input readonly class="form-control full-width" id="bitrate" type="bitrate" name="bitrate" value="48 kbps" data-test="bitrate"/>
             <label for="recorded">Recorded on</label>
             <input readonly class="form-control full-width" id="recordedOn" type="recordedOn" name="recordedOn"  data-test="recordedOn"/>
             <br>

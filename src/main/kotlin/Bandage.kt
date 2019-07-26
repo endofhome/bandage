@@ -11,6 +11,8 @@ import RouteMappings.metadata
 import RouteMappings.play
 import RouteMappings.playWithPath
 import RouteMappings.tracks
+import RouteMappings.upload
+import RouteMappings.uploadPreview
 import api.Tracks
 import com.github.jknack.handlebars.Handlebars
 import com.github.jknack.handlebars.helper.ConditionalHelpers
@@ -24,6 +26,8 @@ import handlers.EditTrackMetadata
 import handlers.Login
 import handlers.Play
 import handlers.TrackMetadata
+import handlers.Upload
+import handlers.UploadPreview
 import http.Filters.CatchAll
 import http.Filters.EnforceHttpsOnHeroku
 import http.HttpConfig.environment
@@ -97,24 +101,27 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
     }
 
     private val apiRoutes: RoutingHttpHandler = with(authentication) { routes(
-            login        bind POST  to { request -> authenticateUserApi(request) },
-            tracks       bind GET   to { request -> ifAuthenticated(request, then = { Tracks(metadataStorage) }, otherwise = Response(UNAUTHORIZED)) },
-            metadata     bind POST  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  EditTrackMetadata(authenticatedRequest, metadataStorage) }) }
-        )
-    }
+            login         bind POST  to { request -> authenticateUserApi(request) },
+            tracks        bind GET   to { request -> ifAuthenticated(request, then = { Tracks(metadataStorage) }, otherwise = Response(UNAUTHORIZED)) },
+            metadata      bind POST  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  EditTrackMetadata(authenticatedRequest, metadataStorage) }) }
+
+
+    ) }
 
     private val routes = with(authentication) { routes(
-            index        bind GET  to { redirectTo(dashboard) },
-            login        bind GET  to { request -> ifAuthenticated(request, then = { redirectTo(index) }, otherwise = Login(request, userManagement)) },
-            login        bind POST to { request -> authenticateUser(request) },
-            logout       bind GET  to { logout() },
-            dashboard    bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  Dashboard(authenticatedRequest, metadataStorage) }) },
-            metadata     bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  TrackMetadata(authenticatedRequest, metadataStorage) }) },
-            playWithPath bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(UNAUTHORIZED)) },
+            index         bind GET  to { redirectTo(dashboard) },
+            login         bind GET  to { request -> ifAuthenticated(request, then = { redirectTo(index) }, otherwise = Login(request, userManagement)) },
+            login         bind POST to { request -> authenticateUser(request) },
+            logout        bind GET  to { logout() },
+            dashboard     bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  Dashboard(authenticatedRequest, metadataStorage) }) },
+            metadata      bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  TrackMetadata(authenticatedRequest, metadataStorage) }) },
+            upload        bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest -> Upload(authenticatedRequest) }) },
+            uploadPreview bind POST  to { request -> ifAuthenticated(request, then = { authenticatedRequest -> UploadPreview(authenticatedRequest, System.getenv("BANDAGE_ARTIST_OVERRIDE")) }) },
+            playWithPath  bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(UNAUTHORIZED)) },
 
-            api          bind apiRoutes,
+            api           bind apiRoutes,
 
-            "/public"    bind static(ResourceLoader.Directory("public")),
+            "/public"     bind static(ResourceLoader.Directory("public")),
 
             legacyRoutes
         )

@@ -1,0 +1,19 @@
+{{> header loggedInUser}}
+<body>
+<div class="container-fluid d-flex h-100">
+    <div class="justify-content-center align-self-center mx-auto" id="main-container">
+        <h4 class="container-fluid" data-test="heading">Upload track</h4>
+        <br>
+        <br>
+        <form class="form-group" action="/upload-preview" method="POST" enctype="multipart/form-data" name="upload-track">
+            <input type="file" name="file" />
+            <br>
+            <br>
+            <br>
+            <button class="form-control full-width btn btn-dark" type="submit" data-test="upload-track">Upload</button>
+        </form>
+    </div>
+</div>
+
+</body>
+{{> footer}}

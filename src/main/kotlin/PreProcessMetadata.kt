@@ -22,17 +22,17 @@ object PreProcessMetadata {
         TimestampExtractor1
     )
 
-    operator fun invoke(file: File): PreProcessedAudioTrackMetadata {
+    operator fun invoke(file: File, artistOverride: String? = ""): PreProcessedAudioTrackMetadata {
         val reader = metadataReader(file.path)
         val fileInfoJsonString = reader.readLines().joinToString("")
         val ffprobeInfo: FfprobeInfo = jacksonObjectMapper().readValue(fileInfoJsonString)
         val (timestamp, precision, leftoverChars) = file.extractTimestamp()
 
         return PreProcessedAudioTrackMetadata(
-            artist = ffprobeInfo.format.tags?.artist,
+            artist = artistOverride.takeIf { it != "" } ?: ffprobeInfo.format.tags?.artist,
             workingTitle = ffprobeInfo.format.tags?.title ?: leftoverChars,
             format = ffprobeInfo.format.format_name,
-            bitRate = ffprobeInfo.streams.firstOrNull()?.bit_rate?.toBitRate(),
+            bitRate = ffprobeInfo.streams.firstOrNull { it.bit_rate != null }?.bit_rate?.toBitRate(),
             duration = ffprobeInfo.format.duration?.toDuration(),
             fileSize = ffprobeInfo.format.size.toInt(),
             recordedTimestamp = timestamp,
@@ -94,7 +94,7 @@ data class FfprobeInfo(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Stream(
-    val bit_rate: String
+    val bit_rate: String?
 )
 
 data class Format(
