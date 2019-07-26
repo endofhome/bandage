@@ -12,9 +12,9 @@ import org.http4k.template.ViewModel
 import result.Result.Failure
 import result.Result.Success
 import result.map
-import storage.AudioTrackMetadata.Companion.presentationFormat
 import storage.AudioTrackMetadataEnhancer
 import storage.HasPreferredTitle.TitleType
+import storage.HasPresentationFormat.Companion.presentationFormat
 import storage.MetadataStorage
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

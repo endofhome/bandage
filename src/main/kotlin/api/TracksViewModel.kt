@@ -12,7 +12,7 @@ import org.http4k.template.viewModel
 import result.map
 import result.orElse
 import storage.AudioTrackMetadata
-import storage.AudioTrackMetadata.Companion.presentationFormat
+import storage.HasPresentationFormat.Companion.presentationFormat
 import storage.MetadataStorage
 
 object Tracks {

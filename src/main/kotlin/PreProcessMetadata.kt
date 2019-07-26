@@ -3,6 +3,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import storage.BitRate
 import storage.Duration
+import storage.HasPresentationFormat
 import storage.toBitRate
 import storage.toDuration
 import java.io.BufferedReader
@@ -84,7 +85,7 @@ data class PreProcessedAudioTrackMetadata(
     val recordedTimestamp: ZonedDateTime?,
     val recordedTimestampPrecision: ChronoUnit?,
     val hash: String
-)
+): HasPresentationFormat
 
 data class FfprobeInfo(
     val streams: List<Stream>,

@@ -38,25 +38,8 @@ data class AudioTrackMetadata(
     val path: String,
     val hash: String,
     val collections: List<ExistingCollection> = emptyList()
-) : HasPreferredTitle {
+) : HasPreferredTitle, HasPresentationFormat {
     val playUrl: Uri = "${environment.config.baseUrl}$play/$uuid".toUri()
-
-    companion object {
-        fun BitRate.presentationFormat(): String = (this.value.toBigDecimal() / BigDecimal(1000)).toString()
-
-        fun Duration.presentationFormat(): String {
-            val (rawSeconds, _) = this.value.split(".")
-            val duration = java.time.Duration.ofSeconds(rawSeconds.toLong())
-            val hours = duration.toHoursPart().toString().emptyIfZero()
-            val minutes = duration.toMinutesPart()
-            val seconds = duration.toSecondsPart().toString().padStart(2, '0')
-            return "$hours$minutes:$seconds"
-        }
-
-        private fun String.emptyIfZero(): String =
-            if (this != "0") "$this:"
-            else ""
-    }
 }
 
 interface HasPreferredTitle {
@@ -76,6 +59,25 @@ interface HasPreferredTitle {
     enum class TitleType(val key: String) {
         TITLE("title"),
         WORKING_TITLE("working-title")
+    }
+}
+
+interface HasPresentationFormat {
+    companion object {
+        fun BitRate.presentationFormat(): String = (this.value.toBigDecimal() / BigDecimal(1000)).toString()
+
+        fun Duration.presentationFormat(): String {
+            val (rawSeconds, _) = this.value.split(".")
+            val duration = java.time.Duration.ofSeconds(rawSeconds.toLong())
+            val hours = duration.toHoursPart().toString().emptyIfZero()
+            val minutes = duration.toMinutesPart()
+            val seconds = duration.toSecondsPart().toString().padStart(2, '0')
+            return "$hours$minutes:$seconds"
+        }
+
+        private fun String.emptyIfZero(): String =
+            if (this != "0") "$this:"
+            else ""
     }
 }
 

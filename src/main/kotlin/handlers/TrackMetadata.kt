@@ -13,6 +13,7 @@ import result.map
 import result.orElse
 import storage.AudioTrackMetadata
 import storage.HasPreferredTitle
+import storage.HasPresentationFormat.Companion.presentationFormat
 import storage.MetadataStorage
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -42,27 +43,25 @@ object TrackMetadata {
         override fun template() = "track_metadata"
     }
 
-    private fun AudioTrackMetadata.viewModel(): ViewModels.AudioTrackMetadata =
-        this.let {
-            with(AudioTrackMetadata) {
-                val pattern = DateTimePatterns.shortPatternFor(it.recordedTimestampPrecision)
-                val dateTimeFormatter = DateTimeFormatter.ofPattern(pattern)
-                ViewModels.AudioTrackMetadata(
-                    it.uuid.toString(),
-                    it.artist,
-                    it.preferredTitle().first,
-                    it.title,
-                    it.workingTitles.firstOrNull().orEmpty(),
-                    it.format,
-                    it.bitRate?.presentationFormat(),
-                    it.duration?.presentationFormat(),
-                    it.playUrl.toString(),
-                    it.recordedTimestamp.format(dateTimeFormatter),
-                    it.uploadedTimestamp.format(dateTimeFormatter),
-                    it.collections.map { it.title }
-                )
-            }
-        }
+    private fun AudioTrackMetadata.viewModel(): ViewModels.AudioTrackMetadata {
+        val pattern = DateTimePatterns.shortPatternFor(this.recordedTimestampPrecision)
+        val dateTimeFormatter = DateTimeFormatter.ofPattern(pattern)
+
+        return ViewModels.AudioTrackMetadata(
+            uuid.toString(),
+            artist,
+            preferredTitle().first,
+            title,
+            workingTitles.firstOrNull().orEmpty(),
+            format,
+            bitRate?.presentationFormat(),
+            duration?.presentationFormat(),
+            playUrl.toString(),
+            recordedTimestamp.format(dateTimeFormatter),
+            uploadedTimestamp.format(dateTimeFormatter),
+            collections.map { it.title }
+        )
+    }
 
     object ViewModels {
         data class AudioTrackMetadata(
