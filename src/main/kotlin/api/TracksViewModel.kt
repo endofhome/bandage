@@ -1,6 +1,6 @@
 package api
 
-import Bandage.StaticConfig.logger
+import Logging.logger
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.http4k.core.Body
 import org.http4k.core.ContentType

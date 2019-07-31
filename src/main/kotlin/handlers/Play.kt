@@ -1,7 +1,7 @@
 package handlers
 
-import Bandage.StaticConfig.logger
 import DateTimePatterns
+import Logging.logger
 import RouteMappings.play
 import org.http4k.core.Headers
 import org.http4k.core.Request

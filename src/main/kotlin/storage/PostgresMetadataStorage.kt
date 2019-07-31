@@ -1,6 +1,6 @@
 package storage
 
-import Bandage.StaticConfig.logger
+import Logging.logger
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import config.BandageConfigItem.METADATA_DB_HOST

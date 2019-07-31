@@ -1,7 +1,7 @@
 import Bandage.StaticConfig.configurationFilesDir
 import Bandage.StaticConfig.defaultPort
 import Bandage.StaticConfig.filters
-import Bandage.StaticConfig.logger
+import Logging.logger
 import RouteMappings.api
 import RouteMappings.dashboard
 import RouteMappings.index
@@ -50,8 +50,6 @@ import org.http4k.server.Jetty
 import org.http4k.server.asServer
 import org.http4k.template.HandlebarsTemplates
 import org.http4k.template.viewModel
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import storage.DropboxFileStorageFactory
 import storage.FileStorage
 import storage.FileStorageFactory
@@ -88,7 +86,6 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
                 .then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
                 .then(CatchAll())
         val configurationFilesDir: Path = Paths.get("configuration")
-        val logger: Logger = LoggerFactory.getLogger(Bandage::class.java)
     }
 
     private val userManagement = UserManagement(providedConfig)

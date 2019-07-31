@@ -1,9 +1,9 @@
 package handlers
 
 import AuthenticatedRequest
-import Bandage.StaticConfig.logger
 import Bandage.StaticConfig.view
 import DateTimePatterns
+import Logging.logger
 import User
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR

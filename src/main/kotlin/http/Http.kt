@@ -1,7 +1,7 @@
 package http
 
 import Bandage.StaticConfig.defaultPort
-import Bandage.StaticConfig.logger
+import Logging.logger
 import http.HttpConfig.PerEnvironment.LOCAL
 import http.HttpConfig.PerEnvironment.PRODUCTION
 import http.HttpConfig.probablyOnHeroku
