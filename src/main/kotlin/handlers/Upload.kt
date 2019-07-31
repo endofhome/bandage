@@ -2,11 +2,13 @@ package handlers
 
 import AuthenticatedRequest
 import Bandage
+import Bandage.StaticConfig.logger
 import PreProcessMetadata
 import User
 import handlers.UploadPreview.ViewModels.PreProcessedAudioTrackMetadata
 import org.http4k.core.MultipartFormBody
 import org.http4k.core.Response
+import org.http4k.core.Status
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
@@ -16,11 +18,12 @@ import java.io.File
 
 object UploadPreview {
     operator fun invoke(authenticatedRequest: AuthenticatedRequest, artistOverride: String = ""): Response {
+        val user = authenticatedRequest.user
         val formFile = try {
             val body = MultipartFormBody.from(authenticatedRequest.request)
-            body.file("file") ?: return Response(BAD_REQUEST)
+            body.file("file") ?: return loggedResponse(BAD_REQUEST, "Missing 'file' form part when previewing upload metadata", user)
         } catch (e: Exception) {
-            return Response(BAD_REQUEST)
+            return loggedResponse(BAD_REQUEST, e.message, user)
         }
         val fileBytes = formFile.content.use { inputstream ->
             inputstream.readAllBytes()
@@ -66,3 +69,5 @@ object UploadPreview {
 data class PreviewUploadTrackMetadataPage(val loggedInUser: User, val trackMetadata: PreProcessedAudioTrackMetadata) : ViewModel {
     override fun template() = "preview_upload_track_metadata"
 }
+
+private fun loggedResponse(status: Status, logMessage: String?, user: User) = Response(status).also { logger.warn("User ${user.userId}: $logMessage") }

@@ -53,7 +53,7 @@ object Filters {
                     } catch (e: Exception) {
                         val sw = StringWriter()
                         e.printStackTrace(PrintWriter(sw))
-                        logger.error(sw.toString())
+                        logger.warn(sw.toString())
                         Response(errorStatus).body(sw.toString())
                     }
                 }

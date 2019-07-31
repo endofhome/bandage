@@ -1,6 +1,7 @@
 package handlers
 
 import AuthenticatedRequest
+import Bandage.StaticConfig.logger
 import Bandage.StaticConfig.view
 import DateTimePatterns
 import User
@@ -55,7 +56,10 @@ object Dashboard {
 
                 Response(OK).with(view of DashboardPage(authenticatedRequest.user, dateGroupedTracks.value, highlighted, nowPlaying))
             }
-            is Failure -> Response(INTERNAL_SERVER_ERROR)
+            is Failure -> {
+                logger.warn(dateGroupedTracks.reason.message)
+                Response(INTERNAL_SERVER_ERROR)
+            }
         }
     }
 

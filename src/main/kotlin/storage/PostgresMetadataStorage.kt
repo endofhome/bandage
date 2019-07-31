@@ -59,7 +59,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
             }.asSuccess()
         } catch (e: Exception) {
             val errorMessage = "Error reading all tracks metadata"
-            logger.error("$errorMessage\n${e.message}\n${e.stackTrace}")
+            logger.warn("$errorMessage\n${e.message}\n${e.stackTrace}")
             Failure(Error(errorMessage))
         }
 

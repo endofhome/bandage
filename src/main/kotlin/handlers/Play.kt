@@ -1,5 +1,6 @@
 package handlers
 
+import Bandage.StaticConfig.logger
 import DateTimePatterns
 import RouteMappings.play
 import org.http4k.core.Headers
@@ -51,6 +52,9 @@ object Play {
                 }.${metadata.format}"
             )
             Response(OK).body(audioStream).headers(headers)
-        }.orElse { Response(NOT_FOUND) }
+        }.orElse {
+            logger.warn(it.message)
+            Response(NOT_FOUND)
+        }
     }
 }

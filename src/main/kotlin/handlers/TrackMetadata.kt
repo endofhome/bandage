@@ -2,15 +2,17 @@ package handlers
 
 import AuthenticatedRequest
 import Bandage
+import Bandage.StaticConfig.logger
 import DateTimePatterns
 import User
 import org.http4k.core.Response
 import org.http4k.core.Status
+import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.with
 import org.http4k.routing.path
 import org.http4k.template.ViewModel
-import result.map
-import result.orElse
+import result.Result.Failure
+import result.Result.Success
 import storage.AudioTrackMetadata
 import storage.HasPreferredTitle
 import storage.HasPresentationFormat.Companion.presentationFormat
@@ -20,9 +22,15 @@ import java.util.UUID
 
 object TrackMetadata {
     operator fun invoke(authenticatedRequest: AuthenticatedRequest, metadataStorage: MetadataStorage): Response {
+        val user = authenticatedRequest.user
         val trackMetadata = authenticatedRequest.request.path("id")?.let { id ->
-            metadataStorage.findTrack(UUID.fromString(id)).map { it?.viewModel() }.orElse { null }
-        } ?: return Response(Status.NOT_FOUND)
+            val foundTrack = metadataStorage.findTrack(UUID.fromString(id))
+            when (foundTrack) {
+                is Success -> foundTrack.value?.viewModel() ?: return loggedResponse(NOT_FOUND, "Track $id was not found in metadata storage", user)
+                is Failure -> return loggedResponse(NOT_FOUND, foundTrack.reason.message, user)
+            }
+
+        } ?: return loggedResponse(NOT_FOUND, "Missing 'id' path parameter in request for track metadata", user)
 
         val (title, titleType) = trackMetadata.preferredTitle()
         val playerMetadata = Dashboard.ViewModels.AudioTrackMetadata(
@@ -82,3 +90,5 @@ object TrackMetadata {
         }
     }
 }
+
+private fun loggedResponse(status: Status, logMessage: String?, user: User) = Response(status).also { logger.warn("User ${user.userId}: $logMessage") }

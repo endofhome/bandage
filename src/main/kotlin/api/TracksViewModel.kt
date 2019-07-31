@@ -1,5 +1,6 @@
 package api
 
+import Bandage.StaticConfig.logger
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.http4k.core.Body
 import org.http4k.core.ContentType
@@ -22,7 +23,8 @@ object Tracks {
     operator fun invoke(metadataStorage: MetadataStorage): Response =
         metadataStorage.tracks().map { tracks ->
             Response(OK).with(jsonView of TracksViewModel(tracks.sortedByDescending { it.recordedTimestamp }.map { it.viewModel() }))
-        }.orElse {
+        }.orElse { error ->
+            logger.warn(error.message)
             Response(INTERNAL_SERVER_ERROR)
         }
 

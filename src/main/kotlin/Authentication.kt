@@ -80,11 +80,12 @@ class Authentication(private val config: Configuration, private val users: UserM
             cookie.authenticatedUser().map { user ->
                 then(AuthenticatedRequest(request, user))
             }
-        }.orElse { err ->
-            logger.warn(err.message)
+        }.orElse { error ->
+            logger.warn(error.message)
             request.authenticatedJwtUser().map { user ->
                 then(AuthenticatedRequest(request, user))
             }.orElse {
+                logger.warn(error.message)
                 otherwise
             }
         }
