@@ -1,11 +1,9 @@
 package handlers
 
 import AuthenticatedRequest
-import Bandage.StaticConfig.logger
+import Logging.loggedResponse
 import RouteMappings.dashboard
-import User
 import org.http4k.core.Response
-import org.http4k.core.Status
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
 import org.http4k.core.Status.Companion.NOT_FOUND
@@ -45,6 +43,4 @@ object EditTrackMetadata {
     }
 
     private fun missingFormFieldMessage(fieldName: String) = "'$fieldName' field was unavailable when handling request to edit track metadata"
-
-    private fun loggedResponse(status: Status, logMessage: String?, user: User) = Response(status).also { logger.warn("User ${user.userId}: $logMessage") }
 }

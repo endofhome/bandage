@@ -2,13 +2,12 @@ package handlers
 
 import AuthenticatedRequest
 import Bandage
-import Bandage.StaticConfig.logger
+import Logging.loggedResponse
 import PreProcessMetadata
 import User
 import handlers.UploadPreview.ViewModels.PreProcessedAudioTrackMetadata
 import org.http4k.core.MultipartFormBody
 import org.http4k.core.Response
-import org.http4k.core.Status
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
@@ -69,5 +68,3 @@ object UploadPreview {
 data class PreviewUploadTrackMetadataPage(val loggedInUser: User, val trackMetadata: PreProcessedAudioTrackMetadata) : ViewModel {
     override fun template() = "preview_upload_track_metadata"
 }
-
-private fun loggedResponse(status: Status, logMessage: String?, user: User) = Response(status).also { logger.warn("User ${user.userId}: $logMessage") }

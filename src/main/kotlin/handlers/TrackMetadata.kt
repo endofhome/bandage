@@ -2,8 +2,8 @@ package handlers
 
 import AuthenticatedRequest
 import Bandage
-import Bandage.StaticConfig.logger
 import DateTimePatterns
+import Logging.loggedResponse
 import User
 import org.http4k.core.Response
 import org.http4k.core.Status
@@ -90,5 +90,3 @@ object TrackMetadata {
         }
     }
 }
-
-private fun loggedResponse(status: Status, logMessage: String?, user: User) = Response(status).also { logger.warn("User ${user.userId}: $logMessage") }
