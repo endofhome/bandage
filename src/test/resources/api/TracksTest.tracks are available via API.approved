@@ -7,7 +7,7 @@
     "recordedTimestampPrecision": "MINUTES",
     "uploadedTimestamp": "1970-01-01T12:00Z",
     "format": "mp3",
-    "bitRate": "320",
+    "bitRate": "320 kbps",
     "fileSize": 12345,
     "playUrl": "http://localhost:7000/play/e4da3b7f-bbce-3345-9777-2b0674a318d5"
   },
@@ -31,7 +31,7 @@
     "recordedTimestampPrecision": "MINUTES",
     "uploadedTimestamp": "1970-01-01T12:00Z",
     "format": "mp3",
-    "bitRate": "320",
+    "bitRate": "320 kbps",
     "duration": "0:21",
     "fileSize": 12345,
     "playUrl": "http://localhost:7000/play/c81e728d-9d4c-3f63-af06-7f89cc14862c",
@@ -50,7 +50,7 @@
     "recordedTimestampPrecision": "MINUTES",
     "uploadedTimestamp": "1970-01-01T12:00Z",
     "format": "mp3",
-    "bitRate": "320",
+    "bitRate": "320 kbps",
     "duration": "0:21",
     "fileSize": 12345,
     "playUrl": "http://localhost:7000/play/c4ca4238-a0b9-3382-8dcc-509a6f75849b"

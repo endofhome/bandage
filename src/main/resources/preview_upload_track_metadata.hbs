@@ -15,7 +15,7 @@
             <label for="format">Format</label>
             <input readonly class="form-control full-width" id="format" type="format" name="format" value="{{trackMetadata.format}}" data-test="format"/>
             <label for="bitrate">Bitrate</label>
-            <input readonly class="form-control full-width" id="bitrate" type="bitrate" name="bitrate" value="{{trackMetadata.bitRate}} kbps" data-test="bitrate"/>
+            <input readonly class="form-control full-width" id="bitrate" type="bitrate" name="bitrate" value="{{trackMetadata.bitRate}}" data-test="bitrate"/>
             <label for="recorded">Recorded on</label>
             <input readonly class="form-control full-width" id="recordedOn" type="recordedOn" name="recordedOn" {{#if trackMetadata.recordedTimestamp}}value="{{trackMetadata.recordedTimestamp}}"{{/if}} data-test="recordedOn"/>
             <br>

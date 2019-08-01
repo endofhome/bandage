@@ -64,7 +64,7 @@ interface HasPreferredTitle {
 
 interface HasPresentationFormat {
     companion object {
-        fun BitRate.presentationFormat(): String = (this.value.toBigDecimal() / BigDecimal(1000)).toString()
+        fun BitRate.presentationFormat(): String = (this.value.toBigDecimal() / BigDecimal(1000)).toString() + " kbps"
 
         fun Duration.presentationFormat(): String {
             val (rawSeconds, _) = this.value.split(".")

@@ -1,7 +1,7 @@
 {{#if title}}
     <footer class="footer fixed-bottom top">
         <div id="audio-player-metadata" data-test="[audio-player-metadata]">
-            {{title}} | {{duration}} | {{format}} ({{bitRate}} kbps)
+            {{title}} | {{duration}} | {{format}} ({{bitRate}})
         </div>
         <div id="audio-player">
             <audio controls {{#if autoPlayAudio}}autoplay{{/if}} preload="metadata" data-test="[play_file-{{uuid}}]">
