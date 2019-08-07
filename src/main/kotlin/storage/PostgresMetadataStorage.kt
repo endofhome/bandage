@@ -20,6 +20,7 @@ import result.map
 import result.orElse
 import storage.Collection.ExistingCollection
 import java.sql.ResultSet
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boolean? = null) : MetadataStorage {
@@ -204,6 +205,8 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
         }
 
     object JsonSerialisation {
+        private val timestampFormatter = DateTimeFormatter.ISO_DATE_TIME
+
         private fun tooManyWorkingTitles(trackUuid: UUID, numberOfWorkingTitles: Int) =
             IllegalStateException("Working titles are temporarily limited to one, $trackUuid has $numberOfWorkingTitles")
 
@@ -220,7 +223,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
                     ${duration?.let { duration -> """"duration": "${duration.value}",""" }.orEmpty()}
                     "size": "$fileSize",
                     "recordedDate": "$recordedDate",
-                    "recordedTimestamp": "$recordedTimestamp",
+                    "recordedTimestamp": "${timestampFormatter.format(recordedTimestamp)}",
                     "recordedTimestampPrecision": "${recordedTimestampPrecision.name}",
                     "uploadedTimestamp": "$uploadedTimestamp",
                     "passwordProtectedLink": "$passwordProtectedLink",

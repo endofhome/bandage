@@ -3,23 +3,26 @@
 <div class="container-fluid d-flex h-100">
     <div class="justify-content-center align-self-center mx-auto" id="main-container">
         <h4 class="container-fluid" data-test="heading">Preview metadata</h4>
-        <form class="form-group" action="/api/tracks/{{trackMetadata.uuid}}" method="POST">
+        <form class="form-group" action="upload" method="POST">
             <label for="artist">Artist</label>
-            <input readonly class="form-control full-width" id="artist" type="artist" name="artist" value="{{trackMetadata.artist}}" data-test="artist"/>
+            <input readonly class="form-control full-width" id="artist" name="artist" value="{{trackMetadata.artist}}" data-test="artist"/>
             <label for="title">Title</label>
-            <input class="form-control full-width" id="title" type="title" name="title" value="{{trackMetadata.title}}" data-test="title"/>
+            <input class="form-control full-width" id="title" name="title" value="{{trackMetadata.title}}" data-test="title"/>
             <label>Working title</label>
-            <input class="form-control full-width" id="working-title" type="working-title" name="working_title" value="{{trackMetadata.workingTitle}}" data-test="working-title"/>
+            <input class="form-control full-width" id="working-title" name="working_title" value="{{trackMetadata.workingTitle}}" data-test="working-title"/>
+            <input id="duration-raw" type="hidden" name="duration_raw" value="{{trackMetadata.durationRaw}}" data-test="duration-raw" />
             <label for="duration">Duration</label>
-            <input readonly class="form-control full-width" id="duration" type="duration" name="duration" value="{{trackMetadata.duration}}" data-test="duration"/>
+            <input readonly class="form-control full-width" id="duration" name="duration" value="{{trackMetadata.duration}}" data-test="duration" />
             <label for="format">Format</label>
-            <input readonly class="form-control full-width" id="format" type="format" name="format" value="{{trackMetadata.format}}" data-test="format"/>
+            <input readonly class="form-control full-width" id="format" name="format" value="{{trackMetadata.format}}" data-test="format"/>
+            <input id="bitrate-raw" type="hidden" name="bitrate_raw" value="{{trackMetadata.bitRateRaw}}" data-test="bitrate-raw" />
             <label for="bitrate">Bitrate</label>
-            <input readonly class="form-control full-width" id="bitrate" type="bitrate" name="bitrate" value="{{trackMetadata.bitRate}}" data-test="bitrate"/>
+            <input readonly class="form-control full-width" id="bitrate" name="bitrate" value="{{trackMetadata.bitRate}}" data-test="bitrate" />
             <label for="recorded">Recorded on</label>
-            <input readonly class="form-control full-width" id="recordedOn" type="recordedOn" name="recordedOn" {{#if trackMetadata.recordedTimestamp}}value="{{trackMetadata.recordedTimestamp}}"{{/if}} data-test="recordedOn"/>
+            <input readonly class="form-control full-width" id="recordedOn" name="recordedOn" {{trackMetadata.recordedTimestamp}} data-test="recordedOn"/>
+            <input readonly class="form-control full-width" id="filename" type="hidden" name="filename" value="{{trackMetadata.filename}}" data-test="filename"/>
             <br>
-            <button class="form-control full-width btn btn-dark" type="hidden" formenctype="application/x-www-form-urlencoded" formmethod="post" name="upload-track" data-test="upload-track">Upload</button>
+            <button class="form-control full-width btn btn-dark" formenctype="application/x-www-form-urlencoded" formmethod="post" name="upload-track" data-test="upload-track">Upload</button>
         </form>
     </div>
 </div>

@@ -17,6 +17,7 @@ import api.Tracks
 import com.github.jknack.handlebars.Handlebars
 import com.github.jknack.handlebars.helper.ConditionalHelpers
 import config.BandageConfig
+import config.BandageConfigItem.DROPBOX_LINK_PASSWORD
 import config.Configuration
 import config.RequiredConfig
 import config.ValidateConfig
@@ -27,6 +28,7 @@ import handlers.Login
 import handlers.Play
 import handlers.TrackMetadata
 import handlers.Upload
+import handlers.UploadForm
 import handlers.UploadPreview
 import http.Filters.CatchAll
 import http.Filters.EnforceHttpsOnHeroku
@@ -105,15 +107,17 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
 
     ) }
 
-    private val routes = with(authentication) { routes(
+    private val routes = with(authentication) {
+        routes(
             index         bind GET  to { redirectTo(dashboard) },
             login         bind GET  to { request -> ifAuthenticated(request, then = { redirectTo(index) }, otherwise = Login(request, userManagement)) },
             login         bind POST to { request -> authenticateUser(request) },
             logout        bind GET  to { logout() },
             dashboard     bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  Dashboard(authenticatedRequest, metadataStorage) }) },
             metadata      bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  TrackMetadata(authenticatedRequest, metadataStorage) }) },
-            upload        bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest -> Upload(authenticatedRequest) }) },
-            uploadPreview bind POST  to { request -> ifAuthenticated(request, then = { authenticatedRequest -> UploadPreview(authenticatedRequest, System.getenv("BANDAGE_ARTIST_OVERRIDE")) }) },
+            upload        bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest -> UploadForm(authenticatedRequest) }) },
+            upload        bind POST to { request -> ifAuthenticated(request, then = { Upload(request, metadataStorage, fileStorage, providedConfig.get(DROPBOX_LINK_PASSWORD)) }) },
+            uploadPreview bind POST to { request -> ifAuthenticated(request, then = { authenticatedRequest -> UploadPreview(authenticatedRequest) }) },
             playWithPath  bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(UNAUTHORIZED)) },
 
             api           bind apiRoutes,

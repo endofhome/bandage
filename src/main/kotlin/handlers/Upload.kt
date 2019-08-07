@@ -1,70 +1,117 @@
 package handlers
 
-import AuthenticatedRequest
-import Bandage
-import Logging.loggedResponse
-import PreProcessMetadata
-import User
+import Logging.logger
+import RouteMappings.dashboard
 import handlers.UploadPreview.ViewModels.PreProcessedAudioTrackMetadata
-import org.http4k.core.MultipartFormBody
+import handlers.UploadPreview.tempDir
+import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.BAD_REQUEST
-import org.http4k.core.Status.Companion.OK
-import org.http4k.core.with
-import org.http4k.template.ViewModel
+import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
+import org.http4k.core.Status.Companion.SEE_OTHER
+import org.http4k.core.body.formAsMap
+import result.flatMap
+import result.map
+import result.orElse
+import storage.AudioTrackMetadata
+import storage.FileStorage
+import storage.FileStoragePermission.PasswordProtected
 import storage.HasPresentationFormat.Companion.presentationFormat
+import storage.MetadataStorage
+import storage.toBitRate
+import storage.toDuration
 import java.io.File
+import java.time.Instant
+import java.time.ZoneOffset.UTC
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
+import java.util.UUID
 
-object UploadPreview {
-    operator fun invoke(authenticatedRequest: AuthenticatedRequest, artistOverride: String = ""): Response {
-        val user = authenticatedRequest.user
-        val formFile = try {
-            val body = MultipartFormBody.from(authenticatedRequest.request)
-            body.file("file") ?: return loggedResponse(BAD_REQUEST, "Missing 'file' form part when previewing upload metadata", user)
+object Upload {
+    operator fun invoke(request: Request, metadataStorage: MetadataStorage, fileStorage: FileStorage, fileStoragePassword: String): Response {
+        val preProcessedAudioTrackMetadata: PreProcessedAudioTrackMetadata = try {
+            val formAsMap = request.formAsMap()
+
+            val artist = formAsMap.singleOrLog("artist") ?: return Response(BAD_REQUEST)
+            val workingTitle = formAsMap.singleOrLog("working_title") ?: return Response(BAD_REQUEST)
+            val duration = formAsMap.singleOrLog("duration_raw") ?: return Response(BAD_REQUEST)
+            val format = formAsMap.singleOrLog("format") ?: return Response(BAD_REQUEST)
+            val bitRate = formAsMap.singleOrLog("bitrate_raw") ?: return Response(BAD_REQUEST)
+            val recordedTimestamp = formAsMap.singleOrLog("recordedOn") ?: return Response(BAD_REQUEST)
+            val filename = formAsMap.singleOrLog("filename") ?: return Response(BAD_REQUEST)
+
+            PreProcessedAudioTrackMetadata(
+                artist,
+                null,
+                workingTitle,
+                format,
+                bitRate.toBitRate().presentationFormat(),
+                bitRate,
+                duration.toDuration().presentationFormat(),
+                duration,
+                recordedTimestamp,
+                "some hash",
+                filename
+            )
         } catch (e: Exception) {
-            return loggedResponse(BAD_REQUEST, e.message, user)
-        }
-        val fileBytes = formFile.content.use { inputstream ->
-            inputstream.readAllBytes()
+            logger.warn(e.message)
+            return Response(BAD_REQUEST)
         }
 
-        val tempDir = File("/tmp/${Bandage.StaticConfig.appName.toLowerCase()}")
-        if (!tempDir.exists()) {
-            tempDir.mkdir()
+        val recordedTimestamp = preProcessedAudioTrackMetadata.recordedTimestamp?.let { if (it != "") ZonedDateTime.parse(it) else null }
+            ?: ZonedDateTime.now() // TODO default will go away once this is handled properly in separate fields. Or perhaps no timestamp should be allowed?
+
+        val foldername = recordedTimestamp.toFoldername()
+        val destinationPath = "/$foldername/${preProcessedAudioTrackMetadata.filename}"
+        val tempFile = File("$tempDir/${preProcessedAudioTrackMetadata.filename}")
+
+        return fileStorage.uploadFile(tempFile, destinationPath).flatMap {
+            fileStorage.publicLink(destinationPath, PasswordProtected(fileStoragePassword)).map { passwordProtectedLink ->
+                val uuid = UUID.randomUUID()
+                metadataStorage.addTracks(
+                    listOf(
+                        AudioTrackMetadata(
+                            uuid,
+                            preProcessedAudioTrackMetadata.artist.orEmpty(),
+                            "",
+                            "untitled",
+                            preProcessedAudioTrackMetadata.workingTitle?.let { listOf(it) }.orEmpty(),
+                            preProcessedAudioTrackMetadata.format,
+                            preProcessedAudioTrackMetadata.bitRateRaw?.toBitRate(),
+                            preProcessedAudioTrackMetadata.durationRaw?.toDuration(),
+                            tempFile.length().toInt(),
+                            "",
+                            recordedTimestamp,
+                            ChronoUnit.SECONDS, // TODO
+                            Instant.now().atZone(UTC),
+                            passwordProtectedLink,
+                            destinationPath,
+                            preProcessedAudioTrackMetadata.hash,
+                            emptyList()
+                        )
+                    )
+                )
+                uuid
+            }.map { uuid ->
+                Response(SEE_OTHER).header("Location", "$dashboard?highlighted=$uuid}")
+            }
+        }.orElse {
+            logger.warn(it.message)
+            Response(INTERNAL_SERVER_ERROR)
         }
-
-        val file = File("$tempDir/${formFile.filename.substringAfterLast('/')}").also { it.writeBytes(fileBytes) }
-        val preProcessedAudioTrackMetadata = PreProcessMetadata(file, artistOverride)
-        val trackMetadata = PreProcessedAudioTrackMetadata(
-            preProcessedAudioTrackMetadata.artist,
-            preProcessedAudioTrackMetadata.workingTitle,
-            preProcessedAudioTrackMetadata.workingTitle,
-            preProcessedAudioTrackMetadata.format,
-            preProcessedAudioTrackMetadata.bitRate?.presentationFormat(),
-            preProcessedAudioTrackMetadata.duration?.presentationFormat(),
-            preProcessedAudioTrackMetadata.recordedTimestamp?.toString() // TODO should be separate values
-        )
-        val viewModel = PreviewUploadTrackMetadataPage(authenticatedRequest.user, trackMetadata)
-
-        return Response(OK).with(Bandage.StaticConfig.view of viewModel)
-        // TODO need to upload the file somewhere immediately, in case the app crashes/is shut down and replaced
-        // TODO and then when the user uploads, just add the metadata, and possibly move the file
-        // TODO if the user doesn't upload in a certain timeframe, delete the file.
     }
 
-    object ViewModels {
-        data class PreProcessedAudioTrackMetadata(
-            val artist: String?,
-            val heading: String?,
-            val workingTitle: String?,
-            val format: String,
-            val bitRate: String?,
-            val duration: String?,
-            val recordedTimestamp: String? // TODO should be separate values for each time unit
-        )
-    }
-}
+    private fun ZonedDateTime.toFoldername(): String = "$year-${monthValue.pad()}-${dayOfMonth.pad()}"
 
-data class PreviewUploadTrackMetadataPage(val loggedInUser: User, val trackMetadata: PreProcessedAudioTrackMetadata) : ViewModel {
-    override fun template() = "preview_upload_track_metadata"
+    private fun Int.pad() = toString().padStart(2, '0')
+
+    private fun Map<String, List<String?>>.singleOrLog(field: String): String? {
+        val extracted = this[field]?.single()
+        return if (extracted != null) {
+            extracted
+        } else {
+            logger.warn("Failure to extract '$field' field from form during file upload")
+            null
+        }
+    }
 }
