@@ -51,7 +51,7 @@ object UploadPreview {
             DisassembledTimestamp(1970, null, null, null, null, null)
         }
         val trackMetadata = ViewModels.PreProcessedAudioTrackMetadata(
-            preProcessedAudioTrackMetadata.artist,
+            System.getenv("${Bandage.StaticConfig.appName.toUpperCase()}_ARTIST_OVERRIDE") ?: preProcessedAudioTrackMetadata.artist,
             preProcessedAudioTrackMetadata.workingTitle, // TODO not required
             preProcessedAudioTrackMetadata.workingTitle,
             preProcessedAudioTrackMetadata.format,
