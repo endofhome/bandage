@@ -18,6 +18,7 @@ import storage.HasPreferredTitle
 import storage.HasPresentationFormat.Companion.presentationFormat
 import storage.MetadataStorage
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 object TrackMetadata {
@@ -52,8 +53,8 @@ object TrackMetadata {
     }
 
     private fun AudioTrackMetadata.viewModel(): ViewModels.AudioTrackMetadata {
-        val pattern = DateTimePatterns.shortPatternFor(this.recordedTimestampPrecision)
-        val dateTimeFormatter = DateTimeFormatter.ofPattern(pattern)
+        val recordedPattern = DateTimePatterns.shortPatternFor(this.recordedTimestampPrecision)
+        val uploadedPattern = DateTimePatterns.shortPatternFor(ChronoUnit.SECONDS)
 
         return ViewModels.AudioTrackMetadata(
             uuid.toString(),
@@ -65,8 +66,8 @@ object TrackMetadata {
             bitRate?.presentationFormat(),
             duration?.presentationFormat(),
             playUrl.toString(),
-            recordedTimestamp.format(dateTimeFormatter),
-            uploadedTimestamp.format(dateTimeFormatter),
+            recordedTimestamp.format(DateTimeFormatter.ofPattern(recordedPattern)),
+            uploadedTimestamp.format(DateTimeFormatter.ofPattern(uploadedPattern)),
             collections.map { it.title }
         )
     }
