@@ -37,9 +37,18 @@ object Upload {
             val duration = formAsMap.singleOrLog("duration_raw") ?: return Response(BAD_REQUEST)
             val format = formAsMap.singleOrLog("format") ?: return Response(BAD_REQUEST)
             val bitRate = formAsMap.singleOrLog("bitrate_raw") ?: return Response(BAD_REQUEST)
-            val recordedTimestamp = formAsMap.singleOrLog("recordedOn") ?: return Response(BAD_REQUEST)
+            val recordedYear = formAsMap.singleOrLog("recordedYear") ?: return Response(BAD_REQUEST)
+            val recordedMonth = formAsMap.singleOrLog("recordedMonth") ?: return Response(BAD_REQUEST)
+            val recordedDay = formAsMap.singleOrLog("recordedDay") ?: return Response(BAD_REQUEST)
+            val recordedHour = formAsMap.singleOrLog("recordedHour") ?: return Response(BAD_REQUEST)
+            val recordedMinute = formAsMap.singleOrLog("recordedMinute") ?: return Response(BAD_REQUEST)
+            val recordedSecond = formAsMap.singleOrLog("recordedSecond") ?: return Response(BAD_REQUEST)
             val filename = formAsMap.singleOrLog("filename") ?: return Response(BAD_REQUEST)
 
+            val monthRange = 1..12
+            val dayRange = 1..31
+            val hourRange = 0..23
+            val timeRange = 0..59
             PreProcessedAudioTrackMetadata(
                 artist,
                 null,
@@ -49,17 +58,30 @@ object Upload {
                 bitRate,
                 duration.toDuration().presentationFormat(),
                 duration,
-                recordedTimestamp,
                 "some hash",
-                filename
+                filename,
+                recordedYear.toInt(),
+                recordedMonth.ifEmpty { null }?.toInt()?.also { require(it in monthRange) { "$it was not between ${monthRange.first} and ${monthRange.last}" } },
+                recordedDay.ifEmpty { null }?.toInt().also { require(it in dayRange) { "$it was not between ${dayRange.first} and ${dayRange.last}" } },
+                recordedHour.ifEmpty { null }?.also { require(it.toInt() in hourRange) { "$it was not between ${hourRange.first} and ${hourRange.last}" } },
+                recordedMinute.ifEmpty { null }?.also { require(it.toInt() in timeRange) { "$it was not between ${timeRange.first} and ${timeRange.last}" } },
+                recordedSecond.ifEmpty { null }?.also { require(it.toInt() in timeRange) { "$it was not between ${timeRange.first} and ${timeRange.last}" } }
             )
         } catch (e: Exception) {
             logger.warn(e.message)
             return Response(BAD_REQUEST)
         }
 
-        val recordedTimestamp = preProcessedAudioTrackMetadata.recordedTimestamp?.let { if (it != "") ZonedDateTime.parse(it) else null }
-            ?: ZonedDateTime.now() // TODO default will go away once this is handled properly in separate fields. Or perhaps no timestamp should be allowed?
+
+        val (recordedTimestamp: ZonedDateTime, recordedTimestampPrecision: ChronoUnit) =
+            AssembleTimestamp(
+                preProcessedAudioTrackMetadata.recordedYear!!, // TODO remove "!!"
+                preProcessedAudioTrackMetadata.recordedMonth,
+                preProcessedAudioTrackMetadata.recordedDay,
+                preProcessedAudioTrackMetadata.recordedHour?.toInt(),
+                preProcessedAudioTrackMetadata.recordedMinute?.toInt(),
+                preProcessedAudioTrackMetadata.recordedSecond?.toInt()
+            ) // TODO handle failure
 
         val foldername = recordedTimestamp.toFoldername()
         val destinationPath = "/$foldername/${preProcessedAudioTrackMetadata.filename}"
@@ -82,7 +104,7 @@ object Upload {
                             tempFile.length().toInt(),
                             "",
                             recordedTimestamp,
-                            ChronoUnit.SECONDS, // TODO
+                            recordedTimestampPrecision,
                             Instant.now().atZone(UTC),
                             passwordProtectedLink,
                             destinationPath,
@@ -114,4 +136,102 @@ object Upload {
             null
         }
     }
+}
+
+object AssembleTimestamp {
+    operator fun invoke(
+        recordedYear: Int,
+        recordedMonth: Int?,
+        recordedDay: Int?,
+        recordedHour: Int?,
+        recordedMinute: Int?,
+        recordedSecond: Int?
+    ): Pair<ZonedDateTime, ChronoUnit> {
+        // TODO possibly put the require() here rather, as it matters here the most.
+
+        val precisionList = listOf(
+            recordedMonth to ChronoUnit.MONTHS,
+            recordedDay to ChronoUnit.DAYS,
+            recordedHour to ChronoUnit.HOURS,
+            recordedMinute to ChronoUnit.MINUTES,
+            recordedSecond to ChronoUnit.SECONDS
+        )
+
+        val initialPair = ZonedDateTime.of(recordedYear, 1, 1, 0, 0, 0, 0, UTC) to ChronoUnit.YEARS
+
+        fun recurse(timestampToPrecision: Pair<ZonedDateTime,ChronoUnit>, nextPair: Pair<Int?,ChronoUnit>?, remainder: List<Pair<Int?, ChronoUnit>>): Pair<ZonedDateTime, ChronoUnit> {
+            return if (nextPair?.first == null) {
+                timestampToPrecision
+            } else {
+                val amountToAdd = if (nextPair.second == ChronoUnit.MONTHS || nextPair.second == ChronoUnit.DAYS) {
+                    nextPair.first!!.toLong() - 1L
+                } else {
+                    nextPair.first!!.toLong()
+                }
+
+                val newTimestamp = timestampToPrecision.first.plus(amountToAdd, nextPair.second) // TODO remove "!!"
+                recurse(newTimestamp to nextPair.second, remainder.firstOrNull(), remainder.drop(1))
+            }
+        }
+
+        return recurse(initialPair, precisionList.firstOrNull(), precisionList.drop(1))
+    }
+}
+
+object DisassembleTimestamp {
+    operator fun invoke(
+        timestamp: ZonedDateTime,
+        precision: ChronoUnit
+    ): DisassembledTimestamp {
+
+        val precisionList = listOf(
+            ChronoUnit.YEARS,
+            ChronoUnit.MONTHS,
+            ChronoUnit.DAYS,
+            ChronoUnit.HOURS,
+            ChronoUnit.MINUTES,
+            ChronoUnit.SECONDS
+        )
+
+        // TODO handle with Result?
+        require(precision in precisionList) { "Precision $precision is not in supported list: $precisionList" }
+
+        fun validChronoUnits(units: List<ChronoUnit>, next: ChronoUnit?, remainder: List<ChronoUnit>, stop: Boolean = false): List<ChronoUnit> {
+            return if (next == null || stop) {
+                units
+            } else {
+                // TODO remove "!!"
+                validChronoUnits(units + next!!, remainder.firstOrNull(), remainder.drop(1), next == precision)
+            }
+        }
+
+        val unitsToTake = validChronoUnits(listOf(ChronoUnit.YEARS), precisionList.first(), precisionList.drop(1))
+        val initialDisassembledTimestamp = DisassembledTimestamp(timestamp.year, null, null, null, null, null)
+
+        fun recurse(disassembledTimestamp: DisassembledTimestamp, next: ChronoUnit?, remainder: List<ChronoUnit>): DisassembledTimestamp {
+            return if (next == null) {
+                disassembledTimestamp
+            } else {
+                when (next) {
+                    ChronoUnit.YEARS -> recurse(disassembledTimestamp.copy(year = timestamp.year), remainder.firstOrNull(), remainder.drop(1))
+                    ChronoUnit.MONTHS -> recurse(disassembledTimestamp.copy(month = timestamp.monthValue), remainder.firstOrNull(), remainder.drop(1))
+                    ChronoUnit.DAYS -> recurse(disassembledTimestamp.copy(day = timestamp.dayOfMonth), remainder.firstOrNull(), remainder.drop(1))
+                    ChronoUnit.HOURS -> recurse(disassembledTimestamp.copy(hour = timestamp.hour), remainder.firstOrNull(), remainder.drop(1))
+                    ChronoUnit.MINUTES -> recurse(disassembledTimestamp.copy(minute = timestamp.minute), remainder.firstOrNull(), remainder.drop(1))
+                    ChronoUnit.SECONDS -> recurse(disassembledTimestamp.copy(second = timestamp.second), remainder.firstOrNull(), remainder.drop(1))
+                    else -> TODO("unsupported operation")
+                }
+            }
+        }
+
+        return recurse(initialDisassembledTimestamp, unitsToTake.firstOrNull(), unitsToTake.drop(1))
+    }
+
+}
+
+data class DisassembledTimestamp(val year: Int, val month: Int?, val day: Int?, val hour: Int?, val minute: Int?, val second: Int?)
+
+fun main() {
+    val blah = DisassembleTimestamp(ZonedDateTime.of(12, 11, 10, 9, 8, 7, 0, UTC), ChronoUnit.YEARS)
+    println("blah = ${blah}")
 }

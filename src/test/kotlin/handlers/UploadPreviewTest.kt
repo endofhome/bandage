@@ -9,7 +9,6 @@ import org.http4k.core.FormFile
 import org.http4k.core.Method
 import org.http4k.core.MultipartFormBody
 import org.http4k.core.Request
-import org.http4k.core.Status
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.OK
 import org.http4k.testing.ApprovalTest
@@ -74,6 +73,6 @@ internal class UploadPreviewTest {
         val response = UploadPreview(AuthenticatedRequest(request, user))
 
         assertThat(response.status, equalTo(OK))
-        approver.assertApproved(response, Status.OK)
+        approver.assertApproved(response, OK)
     }
 }

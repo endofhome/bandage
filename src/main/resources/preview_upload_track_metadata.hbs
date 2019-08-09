@@ -6,20 +6,68 @@
         <form class="form-group" action="upload" method="POST">
             <label for="artist">Artist</label>
             <input readonly class="form-control full-width" id="artist" name="artist" value="{{trackMetadata.artist}}" data-test="artist"/>
+
             <label for="title">Title</label>
             <input class="form-control full-width" id="title" name="title" value="{{trackMetadata.title}}" data-test="title"/>
+
             <label>Working title</label>
             <input class="form-control full-width" id="working-title" name="working_title" value="{{trackMetadata.workingTitle}}" data-test="working-title"/>
+
             <input id="duration-raw" type="hidden" name="duration_raw" value="{{trackMetadata.durationRaw}}" data-test="duration-raw" />
             <label for="duration">Duration</label>
+
             <input readonly class="form-control full-width" id="duration" name="duration" value="{{trackMetadata.duration}}" data-test="duration" />
             <label for="format">Format</label>
+
             <input readonly class="form-control full-width" id="format" name="format" value="{{trackMetadata.format}}" data-test="format"/>
             <input id="bitrate-raw" type="hidden" name="bitrate_raw" value="{{trackMetadata.bitRateRaw}}" data-test="bitrate-raw" />
+
             <label for="bitrate">Bitrate</label>
             <input readonly class="form-control full-width" id="bitrate" name="bitrate" value="{{trackMetadata.bitRate}}" data-test="bitrate" />
-            <label for="recorded">Recorded on</label>
-            <input readonly class="form-control full-width" id="recordedOn" name="recordedOn" {{trackMetadata.recordedTimestamp}} data-test="recordedOn"/>
+
+            <label for="recorded">Recorded year</label>
+            <input class="form-control full-width" id="recordedYear" name="recordedYear" data-test="recordedYear" {{#if trackMetadata.recordedYear}}value="{{trackMetadata.recordedYear}}"{{/if}}/>
+
+            <label for="recorded">Recorded month</label>
+            <select class="form-control full-width" id="recordedMonth" name="recordedMonth" data-test="recordedMonth">
+                <option></option>
+                {{#each months}}
+                <option value="{{this.number}}"{{#eq trackMetadata.recordedMonth this.number}} selected{{/eq}}>{{this.name}}</option>
+                {{/each}}
+            </select>
+
+            <label for="recorded">Recorded day</label>
+            <select class="form-control full-width" id="recordedDay" name="recordedDay" data-test="recordedDay">
+                <option></option>
+                {{#each days}}
+                    <option value="{{this}}"{{#eq trackMetadata.recordedDay this}} selected{{/eq}}>{{this}}</option>
+                {{/each}}
+            </select>
+
+            <label for="recorded">Recorded hour</label>
+            <select class="form-control full-width" id="recordedHour" name="recordedHour" data-test="recordedHour">
+                <option></option>
+                {{#each hours}}
+                    <option value="{{this}}"{{#eq trackMetadata.recordedHour this}} selected{{/eq}}>{{this}}</option>
+                {{/each}}
+            </select>
+
+            <label for="recorded">Recorded minute</label>
+            <select class="form-control full-width" id="recordedMinute" name="recordedMinute" data-test="recordedMinute">
+                <option></option>
+                {{#each minutes}}
+                    <option value="{{this}}"{{#eq trackMetadata.recordedMinute this}} selected{{/eq}}>{{this}}</option>
+                {{/each}}
+            </select>
+
+            <label for="recorded">Recorded second</label>
+            <select class="form-control full-width" id="recordedSecond" name="recordedSecond" data-test="recordedSecond">
+                <option></option>
+                {{#each minutes}}
+                    <option value="{{this}}"{{#eq trackMetadata.recordedSecond this}} selected{{/eq}}>{{this}}</option>
+                {{/each}}
+            </select>
+
             <input readonly class="form-control full-width" id="filename" type="hidden" name="filename" value="{{trackMetadata.filename}}" data-test="filename"/>
             <br>
             <button class="form-control full-width btn btn-dark" formenctype="application/x-www-form-urlencoded" formmethod="post" name="upload-track" data-test="upload-track">Upload</button>
