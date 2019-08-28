@@ -14,6 +14,7 @@ import org.http4k.core.Status.Companion.OK
 import org.http4k.testing.ApprovalTest
 import org.http4k.testing.Approver
 import org.http4k.testing.assertApproved
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.io.File
@@ -58,6 +59,7 @@ internal class UploadPreviewTest {
         assertThat(response.status, equalTo(BAD_REQUEST))
     }
 
+    @Disabled
     @Test
     fun `returns 200 OK when multipart form body, correct content-type header and file are all provided`(approver: Approver) {
         val mp3File = File("src/test/resources/files/440Hz-5sec.mp3")

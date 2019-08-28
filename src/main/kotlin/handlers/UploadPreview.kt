@@ -13,6 +13,8 @@ import org.http4k.core.with
 import org.http4k.template.ViewModel
 import storage.HasPresentationFormat.Companion.presentationFormat
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -33,16 +35,21 @@ object UploadPreview {
             return Response(BAD_REQUEST)
         }
 
-        val fileBytes = formFile.content.use { inputstream ->
-            inputstream.readAllBytes()
-        }
-
         if (!tempDir.exists()) {
             tempDir.mkdir()
         }
 
         val filename = formFile.filename.substringAfterLast('/')
-        val file = File("$tempDir/$filename").also { it.writeBytes(fileBytes) }
+        val file = File("$tempDir/$filename")
+
+        formFile.content.use { inputstream ->
+            Files.copy(
+                inputstream,
+                file.toPath(),
+                StandardCopyOption.REPLACE_EXISTING
+            )
+        }
+
         val preProcessedAudioTrackMetadata = PreProcessMetadata(file, artistOverride)
         val (year, month, day, hour, minute, second) = if (preProcessedAudioTrackMetadata.recordedTimestamp != null && preProcessedAudioTrackMetadata.recordedTimestampPrecision != null) {
             DisassembleTimestamp(preProcessedAudioTrackMetadata.recordedTimestamp, preProcessedAudioTrackMetadata.recordedTimestampPrecision)
