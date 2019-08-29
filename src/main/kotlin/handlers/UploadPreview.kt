@@ -60,6 +60,7 @@ object UploadPreview {
         val trackMetadata = ViewModels.PreProcessedAudioTrackMetadata(
             System.getenv("${Bandage.StaticConfig.appName.toUpperCase()}_ARTIST_OVERRIDE") ?: preProcessedAudioTrackMetadata.artist,
             preProcessedAudioTrackMetadata.workingTitle, // TODO not required
+            null,
             preProcessedAudioTrackMetadata.workingTitle,
             preProcessedAudioTrackMetadata.format,
             preProcessedAudioTrackMetadata.bitRate?.presentationFormat(),
@@ -87,6 +88,7 @@ object UploadPreview {
         data class PreProcessedAudioTrackMetadata(
             val artist: String?,
             val heading: String?,
+            val title: String?,
             val workingTitle: String?,
             val format: String,
             val bitRate: String?,

@@ -33,6 +33,7 @@ object Upload {
             val formAsMap = request.formAsMap()
 
             val artist = formAsMap.singleOrLog("artist") ?: return Response(BAD_REQUEST)
+            val title = formAsMap.singleOrLog("title") ?: return Response(BAD_REQUEST)
             val workingTitle = formAsMap.singleOrLog("working_title") ?: return Response(BAD_REQUEST)
             val duration = formAsMap.singleOrLog("duration_raw") ?: return Response(BAD_REQUEST)
             val format = formAsMap.singleOrLog("format") ?: return Response(BAD_REQUEST)
@@ -52,6 +53,7 @@ object Upload {
             PreProcessedAudioTrackMetadata(
                 artist,
                 null,
+                title,
                 workingTitle,
                 format,
                 bitRate.toBitRate().presentationFormat(),
@@ -96,7 +98,7 @@ object Upload {
                             uuid,
                             preProcessedAudioTrackMetadata.artist.orEmpty(),
                             "",
-                            "untitled",
+                            preProcessedAudioTrackMetadata.title ?: "untitled",
                             preProcessedAudioTrackMetadata.workingTitle?.let { listOf(it) }.orEmpty(),
                             preProcessedAudioTrackMetadata.format,
                             preProcessedAudioTrackMetadata.bitRateRaw?.toBitRate(),
