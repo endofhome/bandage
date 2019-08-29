@@ -12,6 +12,7 @@
         <div class="navbar-contents">
             <span id="navbar-username" data-test="user-short-name">some-full-name</span>
             <span><a href="/logout" id="logout"data-test="logout">Logout</a></span>
+            <div><a href="/upload" id="upload" data-test="upload">Upload track</a></div>
         </div>
     </nav>
 

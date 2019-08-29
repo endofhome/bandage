@@ -74,19 +74,21 @@ internal class UploadPreviewTest {
         val user = User("some-user-id", "some-full-name")
 
         val response: MemoryResponse = UploadPreview(AuthenticatedRequest(request, user)) as MemoryResponse
-        val redactedResponse = response.copy(body = Body(
-            response.bodyString().replace(
-                System.getenv("${Bandage.StaticConfig.appName.toUpperCase()}_ARTIST_OVERRIDE").map {
-                    val intValue = it.toInt()
-                    if (intValue in 33..47) {
-                        "&#x${Integer.toHexString(intValue)};"
-                    } else {
-                        "$it"
-                    }
-                }.joinToString(""),
-                "*** REDACTED ${Bandage.StaticConfig.appName.toUpperCase()}_ARTIST_OVERRIDE ***"
-            )
-        ))
+        val redactedResponse = if (System.getenv("${Bandage.StaticConfig.appName.toUpperCase()}_ARTIST_OVERRIDE") != null) {
+            response.copy(body = Body(
+                response.bodyString().replace(
+                    System.getenv("${Bandage.StaticConfig.appName.toUpperCase()}_ARTIST_OVERRIDE").map {
+                        val intValue = it.toInt()
+                        if (intValue in 33..47) {
+                            "&#x${Integer.toHexString(intValue)};"
+                        } else {
+                            "$it"
+                        }
+                    }.joinToString(""),
+                    "*** REDACTED ${Bandage.StaticConfig.appName.toUpperCase()}_ARTIST_OVERRIDE ***"
+                )
+            ))
+        } else response
 
         assertThat(response.status, equalTo(OK))
         approver.assertApproved(redactedResponse, OK)
