@@ -69,6 +69,7 @@
             </select>
 
             <input readonly class="form-control full-width" id="filename" type="hidden" name="filename" value="{{trackMetadata.filename}}" data-test="filename"/>
+            <input readonly class="form-control full-width" id="hash" type="hidden" name="hash" value="{{trackMetadata.hash}}" data-test="hash"/>
             <br>
             <button class="form-control full-width btn btn-dark" formenctype="application/x-www-form-urlencoded" formmethod="post" name="upload-track" data-test="upload-track">Upload</button>
         </form>

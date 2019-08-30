@@ -45,6 +45,7 @@ object Upload {
             val recordedMinute = formAsMap.singleOrLog("recordedMinute") ?: return Response(BAD_REQUEST)
             val recordedSecond = formAsMap.singleOrLog("recordedSecond") ?: return Response(BAD_REQUEST)
             val filename = formAsMap.singleOrLog("filename") ?: return Response(BAD_REQUEST)
+            val hash = formAsMap.singleOrLog("hash") ?: return Response(BAD_REQUEST)
 
             val monthRange = 1..12
             val dayRange = 1..31
@@ -60,7 +61,7 @@ object Upload {
                 bitRate,
                 duration.toDuration().presentationFormat(),
                 duration,
-                "some hash",
+                hash,
                 filename,
                 recordedYear.toInt(),
                 recordedMonth.ifEmpty { null }?.toInt()?.also { require(it in monthRange) { "$it was not between ${monthRange.first} and ${monthRange.last}" } },
