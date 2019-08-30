@@ -42,6 +42,7 @@ import org.http4k.core.Response
 import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.core.then
+import org.http4k.filter.ServerFilters
 import org.http4k.filter.ServerFilters.ReplaceResponseContentsWithStaticFile
 import org.http4k.routing.ResourceLoader
 import org.http4k.routing.RoutingHttpHandler
@@ -86,6 +87,7 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
         val view = Body.viewModel(renderer, ContentType.TEXT_HTML).toLens()
         val filters = EnforceHttpsOnHeroku()
                 .then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
+                .then(ServerFilters.GZip())
                 .then(CatchAll())
         val configurationFilesDir: Path = Paths.get("configuration")
     }
