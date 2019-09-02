@@ -35,7 +35,10 @@ object Filters {
         private fun enforceHttpsOnHeroku(handle: HttpHandler, request: Request): Response =
             if (insecureHttp(request) && probablyOnHeroku) {
                 Response(Status.SEE_OTHER)
-                    .header("Location", request.uri.copy(scheme = PRODUCTION.config.protocol).toString())
+                    .header("Location", request.uri.copy(
+                        scheme = PRODUCTION.config.protocol,
+                        host = PRODUCTION.config.host).toString()
+                    )
             } else {
                 handle(request)
             }
