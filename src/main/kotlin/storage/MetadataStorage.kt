@@ -144,14 +144,14 @@ class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataSt
     override fun findTrack(uuid: UUID): Result<Error, AudioTrackMetadata?> =
         store.map { it.find { audioFileMetadata -> audioFileMetadata.uuid == uuid } }
 
-    override fun addTracks(newMetadata: List<AudioTrackMetadata>) = TODO("not yet implemented")
-    override fun updateTrack(updatedMetadata: AudioTrackMetadata) = TODO("not yet implemented")
+    override fun addTracks(newMetadata: List<AudioTrackMetadata>) = error("not yet implemented")
+    override fun updateTrack(updatedMetadata: AudioTrackMetadata) = error("not yet implemented")
     override fun addExistingTrackToCollection(existingTrack: AudioTrackMetadata, collection: Collection) =
-        TODO("not yet implemented")
-    override fun findCollection(uuid: UUID) = TODO("not yet implemented")
-    override fun updateCollection(updatedCollection: ExistingCollection) = TODO("not yet implemented")
+        error("not yet implemented")
+    override fun findCollection(uuid: UUID) = error("not yet implemented")
+    override fun updateCollection(updatedCollection: ExistingCollection) = error("not yet implemented")
     override fun addCollection(newCollection: NewCollection, firstElement: AudioTrackMetadata) =
-        TODO("not yet implemented")
+        error("not yet implemented")
 
     private fun List<String>.dropHeader() = if (this[0] == headerLine.removeSuffix(lineSeparator)) drop(1) else this
 }
@@ -210,13 +210,13 @@ object LocalCsvMetadataStorage : MetadataStorage {
         fileWriter.close()
     }
 
-    override fun updateTrack(updatedMetadata: AudioTrackMetadata) = TODO("not implemented")
+    override fun updateTrack(updatedMetadata: AudioTrackMetadata) = error("not implemented")
     override fun addExistingTrackToCollection(existingTrack: AudioTrackMetadata, collection: Collection) =
-        TODO("not yet implemented")
-    override fun findCollection(uuid: UUID) = TODO("not implemented")
-    override fun updateCollection(updatedCollection: ExistingCollection) = TODO("not yet implemented")
+        error("not yet implemented")
+    override fun findCollection(uuid: UUID) = error("not implemented")
+    override fun updateCollection(updatedCollection: ExistingCollection) = error("not yet implemented")
     override fun addCollection(newCollection: NewCollection, firstElement: AudioTrackMetadata) =
-        TODO("not yet implemented")
+        error("not yet implemented")
 
     private fun List<String>.dropHeader() = if (this[0] == headerLine.removeSuffix(lineSeparator)) drop(1) else this
 }

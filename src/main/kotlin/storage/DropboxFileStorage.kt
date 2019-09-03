@@ -68,7 +68,7 @@ class HttpDropboxClient(identifier: String, accessToken: String) : SimpleDropbox
     private val requestConfig: DbxRequestConfig = DbxRequestConfig.newBuilder(identifier).build()
     private val client: DbxClientV2 = DbxClientV2(requestConfig, accessToken)
     private val rawClient: DbxRawClientV2 = object : DbxRawClientV2(requestConfig, DbxHost.DEFAULT, null, null) {
-        override fun withPathRoot(pathRoot: PathRoot): DbxRawClientV2 = TODO("not implemented")
+        override fun withPathRoot(pathRoot: PathRoot): DbxRawClientV2 = error("not implemented")
 
         override fun addAuthHeaders(headers: MutableList<HttpRequestor.Header>) {
             headers.add(HttpRequestor.Header("Authorization", "Bearer $accessToken"))
