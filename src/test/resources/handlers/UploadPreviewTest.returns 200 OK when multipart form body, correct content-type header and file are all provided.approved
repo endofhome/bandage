@@ -21,8 +21,8 @@
     <div class="justify-content-center align-self-center mx-auto" id="main-container">
         <h4 class="container-fluid" data-test="heading">Preview metadata</h4>
         <form class="form-group" action="upload" method="POST">
-            <label for="artist">Artist</label>
-            <input readonly class="form-control full-width" id="artist" name="artist" value="*** REDACTED BANDAGE_ARTIST_OVERRIDE ***" data-test="artist"/>
+            <label for="artist">Artist</label><span class="form-required">*</span>
+            <input readonly class="form-control full-width" id="artist" name="artist" value="*** REDACTED BANDAGE_ARTIST_OVERRIDE ***" data-test="artist" required/>
 
             <label for="title">Title</label>
             <input class="form-control full-width" id="title" name="title" value="" data-test="title"/>
@@ -42,8 +42,8 @@
             <label for="bitrate">Bitrate</label>
             <input readonly class="form-control full-width" id="bitrate" name="bitrate" value="48 kbps" data-test="bitrate" />
 
-            <label for="recorded">Recorded year</label>
-            <input class="form-control full-width" id="recordedYear" name="recordedYear" data-test="recordedYear" value="1970"/>
+            <label for="recorded">Recorded year</label><span class="form-required">*</span>
+            <input class="form-control full-width" id="recordedYear" name="recordedYear" data-test="recordedYear" value="1970" required/>
 
             <label for="recorded">Recorded month</label>
             <select class="form-control full-width" id="recordedMonth" name="recordedMonth" data-test="recordedMonth">

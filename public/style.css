@@ -50,3 +50,8 @@ audio::-webkit-media-controls-panel {
 .top > * {
     vertical-align: top;
 }
+
+.form-required {
+    color: red;
+    padding-left: 2%;
+}
