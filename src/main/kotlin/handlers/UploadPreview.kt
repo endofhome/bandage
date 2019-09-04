@@ -2,13 +2,16 @@ package handlers
 
 import AuthenticatedRequest
 import Bandage
+import Bandage.StaticConfig.disallowedFileExtensions
 import PreProcessMetadata
+import RouteMappings.upload
 import User
 import handlers.UploadPreview.ViewModels
 import org.http4k.core.MultipartFormBody
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.OK
+import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.core.with
 import org.http4k.template.ViewModel
 import storage.HasPresentationFormat.Companion.presentationFormat
@@ -35,12 +38,17 @@ object UploadPreview {
             return Response(BAD_REQUEST)
         }
 
+        val filename = formFile.filename.substringAfterLast('/')
+        val file = File("$tempDir/$filename")
+
+        if (disallowedFileExtensions.contains(file.extension)) {
+            return Response(SEE_OTHER)
+                .header("Location", "$upload?unsupported-file-type=${file.extension}")
+        }
+
         if (!tempDir.exists()) {
             tempDir.mkdir()
         }
-
-        val filename = formFile.filename.substringAfterLast('/')
-        val file = File("$tempDir/$filename")
 
         formFile.content.use { inputstream ->
             Files.copy(

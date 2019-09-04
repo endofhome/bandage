@@ -7,6 +7,9 @@
         <br>
         <form class="form-group" action="/upload-preview" method="POST" enctype="multipart/form-data" name="upload-track">
             <input type="file" name="file" />
+            {{#if unsupportedFileType}}
+                <div id="error-message">{{unsupportedFileType}} files are currently unsupported.</div>
+            {{/if}}
             <br>
             <br>
             <br>

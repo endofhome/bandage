@@ -90,6 +90,7 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
                 .then(ServerFilters.GZip())
                 .then(CatchAll())
         val configurationFilesDir: Path = Paths.get("configuration")
+        val disallowedFileExtensions = listOf("txt", "csv", "zip")
     }
 
     private val userManagement = UserManagement(providedConfig)
@@ -105,8 +106,6 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
             login         bind POST  to { request -> authenticateUserApi(request) },
             tracks        bind GET   to { request -> ifAuthenticated(request, then = { Tracks(metadataStorage) }, otherwise = Response(UNAUTHORIZED)) },
             metadata      bind POST  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  EditTrackMetadata(authenticatedRequest, metadataStorage) }) }
-
-
     ) }
 
     private val routes = with(authentication) {

@@ -2,6 +2,7 @@ package handlers
 
 import AuthenticatedRequest
 import Bandage
+import RouteMappings.upload
 import User
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -14,6 +15,7 @@ import org.http4k.core.MultipartFormBody
 import org.http4k.core.Request
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.OK
+import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.testing.ApprovalTest
 import org.http4k.testing.Approver
 import org.http4k.testing.assertApproved
@@ -59,6 +61,30 @@ internal class UploadPreviewTest {
         val response = UploadPreview(AuthenticatedRequest(request, user))
 
         assertThat(response.status, equalTo(BAD_REQUEST))
+    }
+
+    @Test
+    fun `redirect to upload form when file type is disallowed`() {
+        val disallowedFileTypes = listOf("txt", "csv", "zip").map { it to File("src/test/resources/files/empty-file.$it") }
+        val disallowedRequests = disallowedFileTypes.map { (fileType, file) ->
+            val multipartBody = MultipartFormBody().plus(
+                "file" to FormFile(file.path, ContentType.OCTET_STREAM, file.inputStream())
+            )
+            fileType to Request(Method.POST, "http://dont.care")
+                            .header("content-type", "multipart/form-data; boundary=${multipartBody.boundary}")
+                            .body(multipartBody)
+        }
+
+        val user = User("some-user-id", "some-full-name")
+
+        val responses = disallowedRequests.map { (fileType, request) ->
+            fileType to UploadPreview(AuthenticatedRequest(request, user))
+        }
+
+        responses.forEach { (fileType, response) ->
+            assertThat(response.status, equalTo(SEE_OTHER))
+            assertThat(response.header("Location"), equalTo("$upload?unsupported-file-type=$fileType"))
+        }
     }
 
     @Test
