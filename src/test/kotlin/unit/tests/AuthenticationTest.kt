@@ -210,7 +210,7 @@ class AuthenticationTest {
             assertThat(response.cookies(), equalTo(listOf(validCookie(userId))))
 
             val jwtString: RFC6749Body = jacksonObjectMapper().readValue(response.bodyString())
-            val jwt = authentication.jwtParser.parseClaimsJws(jwtString.access_token)
+            val jwt = authentication.jwtParser.parseClaimsJws(jwtString.access_token    )
             val userIdFromJwt = jwt.body["userId"].toString()
             assertThat(userIdFromJwt, equalTo(userId))
         }

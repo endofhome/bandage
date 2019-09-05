@@ -38,6 +38,7 @@ object Upload {
             val duration = formAsMap.singleOrLog("duration_raw") ?: return Response(BAD_REQUEST)
             val format = formAsMap.singleOrLog("format") ?: return Response(BAD_REQUEST)
             val bitRate = formAsMap.singleOrLog("bitrate_raw") ?: return Response(BAD_REQUEST)
+            // TODO use snake case
             val recordedYear = formAsMap.singleOrLog("recordedYear") ?: return Response(BAD_REQUEST)
             val recordedMonth = formAsMap.singleOrLog("recordedMonth") ?: return Response(BAD_REQUEST)
             val recordedDay = formAsMap.singleOrLog("recordedDay") ?: return Response(BAD_REQUEST)
