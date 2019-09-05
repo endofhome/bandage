@@ -97,7 +97,28 @@ internal class UploadTest {
         assertThat(invalidResponses.map { it.status }, allElements(equalTo(BAD_REQUEST)))
     }
 
-    private fun request(month: Int = 1, day: Int = 1, hour: Int = 0): Request =
+    @Test
+    fun `minute values must be within 0 and 59`() {
+        val validMinutes = 0..59
+        val invalidBoundaryMinutes = listOf(-1, 60)
+        val randomInvalidHours = (1..10).map { (Math.random() * 100).toInt() }.filter { ! validMinutes.contains(it) }
+        val validRequests = validMinutes.map { request(minutes = it)}
+        val invalidRequest = (invalidBoundaryMinutes + randomInvalidHours).map { request(minutes = it) }
+
+        val validResponses = validRequests.map {
+            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
+        }
+
+        val invalidResponses = invalidRequest.map {
+            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
+        }
+
+        assertThat(validResponses.map { it.status }, allElements(equalTo(SEE_OTHER)))
+        assertThat(validResponses.map { it.header("Location")!! }, allElements(startsWith("$dashboard?highlighted=")))
+        assertThat(invalidResponses.map { it.status }, allElements(equalTo(BAD_REQUEST)))
+    }
+
+    private fun request(month: Int = 1, day: Int = 1, hour: Int = 0, minutes: Int = 0): Request =
         Request(GET, "some-url")
             .form("artist", "some artist")
             .form("title", "")
@@ -110,7 +131,7 @@ internal class UploadTest {
             .form("recordedMonth", "$month")
             .form("recordedDay", "$day")
             .form("recordedHour", "$hour")
-            .form("recordedMinute", "")
+            .form("recordedMinute", "$minutes")
             .form("recordedSecond", "")
             .form("filename", "")
             .form("hash", "")
