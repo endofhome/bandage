@@ -38,8 +38,8 @@ internal class UploadTest {
         val invalidBoundaryMonths = listOf(0, 13)
         val negativeMonth = listOf(-1)
         val randomInvalidMonths = (1..10).map { (Math.random() * 100).toInt() }.filter { ! validMonths.contains(it) }
-        val validRequests = validMonths.map { request(it)}
-        val invalidRequest = (invalidBoundaryMonths + negativeMonth + randomInvalidMonths).map { request(it) }
+        val validRequests = validMonths.map { request(month = it)}
+        val invalidRequest = (invalidBoundaryMonths + negativeMonth + randomInvalidMonths).map { request(month = it) }
 
         val validResponses = validRequests.map {
             Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
@@ -54,7 +54,29 @@ internal class UploadTest {
         assertThat(invalidResponses.map { it.status }, allElements(equalTo(BAD_REQUEST)))
     }
 
-    private fun request(i: Int): Request =
+    @Test
+    fun `day values must be within 1 and 2`() {
+        val validDays = 1..31
+        val invalidBoundaryDays = listOf(0, 32)
+        val negativeDay = listOf(-1)
+        val randomInvalidDays = (1..10).map { (Math.random() * 100).toInt() }.filter { ! validDays.contains(it) }
+        val validRequests = validDays.map { request(day = it)}
+        val invalidRequest = (invalidBoundaryDays + negativeDay + randomInvalidDays).map { request(day = it) }
+
+        val validResponses = validRequests.map {
+            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
+        }
+
+        val invalidResponses = invalidRequest.map {
+            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
+        }
+
+        assertThat(validResponses.map { it.status }, allElements(equalTo(SEE_OTHER)))
+        assertThat(validResponses.map { it.header("Location")!! }, allElements(startsWith("$dashboard?highlighted=")))
+        assertThat(invalidResponses.map { it.status }, allElements(equalTo(BAD_REQUEST)))
+    }
+
+    private fun request(month: Int = 1, day: Int = 1): Request =
         Request(GET, "some-url")
             .form("artist", "some artist")
             .form("title", "")
@@ -64,8 +86,8 @@ internal class UploadTest {
             .form("bitrate_raw", "")
             // TODO use snake case
             .form("recordedYear", "1968")
-            .form("recordedMonth", "$i")
-            .form("recordedDay", "")
+            .form("recordedMonth", "$month")
+            .form("recordedDay", "$day")
             .form("recordedHour", "")
             .form("recordedMinute", "")
             .form("recordedSecond", "")
