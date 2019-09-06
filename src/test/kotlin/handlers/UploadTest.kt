@@ -7,6 +7,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.startsWith
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
+import org.http4k.core.Response
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.core.Uri
@@ -39,19 +40,11 @@ internal class UploadTest {
         val negativeMonth = listOf(-1)
         val randomInvalidMonths = (1..10).map { (Math.random() * 100).toInt() }.filter { ! validMonths.contains(it) }
         val validRequests = validMonths.map { request(month = it)}
-        val invalidRequest = (invalidBoundaryMonths + negativeMonth + randomInvalidMonths).map { request(month = it) }
+        val invalidRequests = (invalidBoundaryMonths + negativeMonth + randomInvalidMonths).map { request(month = it) }
 
-        val validResponses = validRequests.map {
-            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
-        }
-        
-        val invalidResponses = invalidRequest.map {
-            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
-        }
+        val (validResponses, invalidResponses) = handleRequests(validRequests, invalidRequests)
 
-        assertThat(validResponses.map { it.status }, allElements(equalTo(SEE_OTHER)))
-        assertThat(validResponses.map { it.header("Location")!! }, allElements(startsWith("$dashboard?highlighted=")))
-        assertThat(invalidResponses.map { it.status }, allElements(equalTo(BAD_REQUEST)))
+        assertExpectedResponses(validResponses, invalidResponses)
     }
 
     @Test
@@ -61,19 +54,11 @@ internal class UploadTest {
         val negativeDay = listOf(-1)
         val randomInvalidDays = (1..10).map { (Math.random() * 100).toInt() }.filter { ! validDays.contains(it) }
         val validRequests = validDays.map { request(day = it)}
-        val invalidRequest = (invalidBoundaryDays + negativeDay + randomInvalidDays).map { request(day = it) }
+        val invalidRequests = (invalidBoundaryDays + negativeDay + randomInvalidDays).map { request(day = it) }
 
-        val validResponses = validRequests.map {
-            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
-        }
+        val (validResponses, invalidResponses) = handleRequests(validRequests, invalidRequests)
 
-        val invalidResponses = invalidRequest.map {
-            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
-        }
-
-        assertThat(validResponses.map { it.status }, allElements(equalTo(SEE_OTHER)))
-        assertThat(validResponses.map { it.header("Location")!! }, allElements(startsWith("$dashboard?highlighted=")))
-        assertThat(invalidResponses.map { it.status }, allElements(equalTo(BAD_REQUEST)))
+        assertExpectedResponses(validResponses, invalidResponses)
     }
 
     @Test
@@ -82,19 +67,11 @@ internal class UploadTest {
         val invalidBoundaryHours = listOf(-1, 24)
         val randomInvalidHours = (1..10).map { (Math.random() * 100).toInt() }.filter { ! validHours.contains(it) }
         val validRequests = validHours.map { request(hour = it)}
-        val invalidRequest = (invalidBoundaryHours + randomInvalidHours).map { request(hour = it) }
+        val invalidRequests = (invalidBoundaryHours + randomInvalidHours).map { request(hour = it) }
 
-        val validResponses = validRequests.map {
-            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
-        }
+        val (validResponses, invalidResponses) = handleRequests(validRequests, invalidRequests)
 
-        val invalidResponses = invalidRequest.map {
-            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
-        }
-
-        assertThat(validResponses.map { it.status }, allElements(equalTo(SEE_OTHER)))
-        assertThat(validResponses.map { it.header("Location")!! }, allElements(startsWith("$dashboard?highlighted=")))
-        assertThat(invalidResponses.map { it.status }, allElements(equalTo(BAD_REQUEST)))
+        assertExpectedResponses(validResponses, invalidResponses)
     }
 
     @Test
@@ -103,19 +80,11 @@ internal class UploadTest {
         val invalidBoundaryMinutes = listOf(-1, 60)
         val randomInvalidHours = (1..10).map { (Math.random() * 100).toInt() }.filter { ! validMinutes.contains(it) }
         val validRequests = validMinutes.map { request(minutes = it)}
-        val invalidRequest = (invalidBoundaryMinutes + randomInvalidHours).map { request(minutes = it) }
+        val invalidRequests = (invalidBoundaryMinutes + randomInvalidHours).map { request(minutes = it) }
 
-        val validResponses = validRequests.map {
-            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
-        }
+        val (validResponses, invalidResponses) = handleRequests(validRequests, invalidRequests)
 
-        val invalidResponses = invalidRequest.map {
-            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
-        }
-
-        assertThat(validResponses.map { it.status }, allElements(equalTo(SEE_OTHER)))
-        assertThat(validResponses.map { it.header("Location")!! }, allElements(startsWith("$dashboard?highlighted=")))
-        assertThat(invalidResponses.map { it.status }, allElements(equalTo(BAD_REQUEST)))
+        assertExpectedResponses(validResponses, invalidResponses)
     }
 
     @Test
@@ -124,19 +93,11 @@ internal class UploadTest {
         val invalidBoundarySecond = listOf(-1, 60)
         val randomInvalidHours = (1..10).map { (Math.random() * 100).toInt() }.filter { ! validSecond.contains(it) }
         val validRequests = validSecond.map { request(seconds = it)}
-        val invalidRequest = (invalidBoundarySecond + randomInvalidHours).map { request(seconds = it) }
+        val invalidRequests = (invalidBoundarySecond + randomInvalidHours).map { request(seconds = it) }
 
-        val validResponses = validRequests.map {
-            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
-        }
+        val (validResponses, invalidResponses) = handleRequests(validRequests, invalidRequests)
 
-        val invalidResponses = invalidRequest.map {
-            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
-        }
-
-        assertThat(validResponses.map { it.status }, allElements(equalTo(SEE_OTHER)))
-        assertThat(validResponses.map { it.header("Location")!! }, allElements(startsWith("$dashboard?highlighted=")))
-        assertThat(invalidResponses.map { it.status }, allElements(equalTo(BAD_REQUEST)))
+        assertExpectedResponses(validResponses, invalidResponses)
     }
 
     private fun request(month: Int = 1, day: Int = 1, hour: Int = 0, minutes: Int = 0, seconds: Int = 0): Request =
@@ -155,4 +116,25 @@ internal class UploadTest {
             .form("recorded_second", "$seconds")
             .form("filename", "")
             .form("hash", "")
+
+    private fun handleRequests(validRequests: List<Request>, invalidRequests: List<Request>): Pair<List<Response>, List<Response>> {
+        val validResponses = validRequests.map {
+            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
+        }
+
+        val invalidResponses = invalidRequests.map {
+            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
+        }
+
+        return Pair(validResponses, invalidResponses)
+    }
+
+    private fun assertExpectedResponses(
+        validResponses: List<Response>,
+        invalidResponses: List<Response>
+    ) {
+        assertThat(validResponses.map { it.status }, allElements(equalTo(SEE_OTHER)))
+        assertThat(validResponses.map { it.header("Location")!! }, allElements(startsWith("$dashboard?highlighted=")))
+        assertThat(invalidResponses.map { it.status }, allElements(equalTo(BAD_REQUEST)))
+    }
 }
