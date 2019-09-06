@@ -26,10 +26,10 @@
             <input readonly class="form-control full-width" id="bitrate" name="bitrate" value="{{trackMetadata.bitRate}}" data-test="bitrate" />
 
             <label for="recorded">Recorded year</label><span class="form-required">*</span>
-            <input class="form-control full-width" id="recordedYear" name="recordedYear" data-test="recordedYear" {{#if trackMetadata.recordedYear}}value="{{trackMetadata.recordedYear}}"{{/if}} required/>
+            <input class="form-control full-width" id="recorded_year" name="recorded_year" data-test="recorded_year" {{#if trackMetadata.recordedYear}}value="{{trackMetadata.recordedYear}}"{{/if}} required/>
 
             <label for="recorded">Recorded month</label>
-            <select class="form-control full-width" id="recordedMonth" name="recordedMonth" data-test="recordedMonth">
+            <select class="form-control full-width" id="recorded_month" name="recorded_month" data-test="recorded_month">
                 <option></option>
                 {{#each months}}
                 <option value="{{this.number}}"{{#eq trackMetadata.recordedMonth this.number}} selected{{/eq}}>{{this.name}}</option>
@@ -37,7 +37,7 @@
             </select>
 
             <label for="recorded">Recorded day</label>
-            <select class="form-control full-width" id="recordedDay" name="recordedDay" data-test="recordedDay">
+            <select class="form-control full-width" id="recorded_day" name="recorded_day" data-test="recorded_day">
                 <option></option>
                 {{#each days}}
                     <option value="{{this}}"{{#eq trackMetadata.recordedDay this}} selected{{/eq}}>{{this}}</option>
@@ -45,7 +45,7 @@
             </select>
 
             <label for="recorded">Recorded hour</label>
-            <select class="form-control full-width" id="recordedHour" name="recordedHour" data-test="recordedHour">
+            <select class="form-control full-width" id="recorded_hour" name="recorded_hour" data-test="recorded_hour">
                 <option></option>
                 {{#each hours}}
                     <option value="{{this}}"{{#eq trackMetadata.recordedHour this}} selected{{/eq}}>{{this}}</option>
@@ -53,10 +53,10 @@
             </select>
 
             <label for="recorded">Recorded minute</label>
-            <select class="form-control full-width" id="recordedMinute" name="recordedMinute" data-test="recordedMinute">
+            <select class="form-control full-width" id="recorded_minute" name="recorded_minute" data-test="recorded_minute">
                 <option></option>
                 {{#each minutes}}
-                    <option value="{{this}}"{{#eq trackMetadata.recordedMinute this}} selected{{/eq}}>{{this}}</option>
+                    <option value="{{this}}"{{#eq trackMetadata.recorded_minute this}} selected{{/eq}}>{{this}}</option>
                 {{/each}}
             </select>
 
