@@ -16,5 +16,5 @@ object UploadForm {
 }
 
 data class UploadPage(val loggedInUser: User, val unsupportedFileType: String?) : ViewModel {
-    override fun template() = "upload_track_metadata"
+    override fun template() = "upload_track"
 }

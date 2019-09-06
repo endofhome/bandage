@@ -3,7 +3,7 @@
 <div class="container-fluid d-flex h-100">
     <div class="justify-content-center align-self-center mx-auto" id="main-container">
         <h4 class="container-fluid" data-test="heading">Preview metadata</h4>
-        <form class="form-group" action="upload" method="POST">
+        <form class="form-group" action="upload" method="POST" data-test="preview-metadata-form">
             <label for="artist">Artist</label><span class="form-required">*</span>
             <input readonly class="form-control full-width" id="artist" name="artist" value="{{trackMetadata.artist}}" data-test="artist" required/>
 
@@ -61,7 +61,7 @@
             </select>
 
             <label for="recorded">Recorded second</label>
-            <select class="form-control full-width" id="recordedSecond" name="recordedSecond" data-test="recordedSecond">
+            <select class="form-control full-width" id="recorded_second" name="recorded_second" data-test="recorded_second">
                 <option></option>
                 {{#each minutes}}
                     <option value="{{this}}"{{#eq trackMetadata.recordedSecond this}} selected{{/eq}}>{{this}}</option>

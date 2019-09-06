@@ -6,6 +6,9 @@ import Bandage.StaticConfig.disallowedFileExtensions
 import PreProcessMetadata
 import RouteMappings.upload
 import User
+import handlers.Upload.dayRange
+import handlers.Upload.hourRange
+import handlers.Upload.timeRange
 import handlers.UploadPreview.ViewModels
 import org.http4k.core.MultipartFormBody
 import org.http4k.core.Response
@@ -22,13 +25,10 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 object UploadPreview {
-    val tempDir = File("/tmp/${Bandage.StaticConfig.appName.toLowerCase()}")
-    private val months = java.time.Month.values().map {
+    val months = java.time.Month.values().map {
         Month(it.value, it.getDisplayName(TextStyle.FULL, Locale.UK))
     }
-    private val days = (1..31).toList()
-    private val hours = (0..23).map { it.toString().padStart(2, '0') }.toList()
-    private val minutes = (0..59).map { it.toString().padStart(2, '0') }.toList()
+    val tempDir = File("/tmp/${Bandage.StaticConfig.appName.toLowerCase()}")
 
     operator fun invoke(authenticatedRequest: AuthenticatedRequest, artistOverride: String = ""): Response {
         val formFile = try {
@@ -84,12 +84,22 @@ object UploadPreview {
             minute?.toString()?.padStart(2, '0'),
             second?.toString()?.padStart(2, '0')
         )
-        val viewModel = PreviewUploadTrackMetadataPage(authenticatedRequest.user, trackMetadata, months, days, hours, minutes, minutes)
+        val viewModel = PreviewUploadTrackMetadataPage(
+            authenticatedRequest.user,
+            trackMetadata,
+            months,
+            dayRange.toList(),
+            hourRange.map { it.toString().padStart(2, '0') }.toList(),
+            timeRange.map { it.toString().padStart(2, '0') }.toList(),
+            timeRange.map { it.toString().padStart(2, '0') }.toList()
+        )
 
         return Response(OK).with(Bandage.StaticConfig.view of viewModel)
-        // TODO need to upload the file somewhere immediately, in case the app crashes/is shut down and replaced
-        // TODO and then when the user uploads, just add the metadata, and possibly move the file
-        // TODO if the user doesn't upload in a certain timeframe, delete the file.
+        /*
+            TODO need to upload the file somewhere immediately, in case the app crashes/is shut down and replaced
+            and then when the user uploads, just add the metadata, and possibly move the file
+            if the user doesn't upload in a certain time frame, delete the file.
+        */
     }
 
     object ViewModels {

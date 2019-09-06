@@ -18,6 +18,7 @@ import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.PASSWORD
 import config.dummyConfiguration
 import exampleAudioTrackMetadata
+import http.HttpConfig
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
@@ -27,6 +28,8 @@ import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
+import org.http4k.server.Jetty
+import org.http4k.server.asServer
 import org.http4k.testing.ApprovalTest
 import org.http4k.testing.Approver
 import org.http4k.testing.assertApproved
@@ -34,14 +37,19 @@ import org.http4k.webdriver.Http4kWebDriver
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable
 import org.junit.jupiter.api.extension.ExtendWith
 import org.openqa.selenium.By
 import org.openqa.selenium.Cookie
+import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebElement
+import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.support.ui.Select
 import result.expectSuccess
 import storage.Collection
 import storage.DummyFileStorage
 import storage.DummyMetadataStorage
+import storage.StubFileStorage
 import storage.StubMetadataStorage
 import java.time.Instant.EPOCH
 import java.time.temporal.ChronoUnit.HOURS
@@ -371,6 +379,45 @@ class BandageTest {
         assertThat(highlightedElements.single().getAttribute("data-test"), equalTo(trackToPlay.getAttribute("data-test")))
     }
 
+    @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
+    @Test
+    fun `a new track can be uploaded`() {
+        val bandage = Bandage(config, StubMetadataStorage(mutableListOf()), StubFileStorage(mutableMapOf())).app
+        bandage.asServer(Jetty(HttpConfig.port)).start()
+
+        val driver = ChromeDriver()
+        val baseUrl = "http://localhost:7000"
+
+        driver.navigate().to(baseUrl)
+        driver.userLogsIn()
+
+        val uploadLink = driver.findElement(By.cssSelector("a[data-test=\"upload-link\"]")) ?: fail("Upload link is unavailable")
+        uploadLink.click()
+
+        assertThat(driver.currentUrl, equalTo("$baseUrl/upload"))
+
+        val uploadTrackForm = driver.findElement(By.cssSelector("form[data-test=\"upload-track-form\"]")) ?: fail("Upload track form is unavailable")
+        val filePicker = uploadTrackForm.findElement(By.cssSelector("input[data-test=\"file-picker\"]")) ?: fail("File picker is unavailable")
+        filePicker.sendKeys(System.getProperty("user.dir") + "/src/test/resources/files/440Hz-5sec.mp3")
+        uploadTrackForm.submit()
+
+        assertThat(driver.currentUrl, equalTo("$baseUrl/upload-preview"))
+
+        val previewForm = driver.findElement(By.cssSelector("form[data-test=\"preview-metadata-form\"]")) ?: fail("Preview metadata form is unavailable")
+        previewForm.submit()
+
+        assertThat(driver.currentUrl, startsWith("$baseUrl/dashboard?highlighted="))
+
+        val dateh4 = driver.findElement(By.cssSelector("h4[data-test=\"[date-1970-01-01]\"]")) ?: fail("h4 is unavailable")
+        assertThat(dateh4.text, equalTo("1970"))
+
+        val track = driver.findElement(By.cssSelector("div[data-track]")) ?: fail("Div for track is unavailable")
+        assertThat(track.text, equalTo("440Hz Sine Wave | 0:05 | mp3 | play"))
+        assertThat(track.findElement(By.cssSelector("a")).getAttribute("class"), equalTo("working-title-link"))
+
+        driver.close()
+    }
+
     private fun Http4kWebDriver.userLogsInAndPlaysATrack(): WebElement {
         this.navigate().to(login)
         this.userLogsIn()
@@ -385,14 +432,13 @@ class BandageTest {
         return trackToPlay
     }
 
-    private fun Http4kWebDriver.userLogsIn(): User {
-        assertThat(this.status, equalTo(OK))
+    private fun WebDriver.userLogsIn(): User {
+        if (this is Http4kWebDriver) { assertThat(this.status, equalTo(OK)) }
         assertThat(this.title, equalTo("Bandage"))
 
-        val usernameField = this.findElement(By.cssSelector("#user")) ?: fail("username field not found")
         val lastUser = UserManagement(config).users.last()
-        val option = usernameField.findElement(By.cssSelector("option:contains(${lastUser.initials})"))
-            ?: fail("option ${lastUser.initials} is not available")
+        val userOptions = this.findElement(By.id("user")) ?: fail("user select element is not available")
+        val option = Select(userOptions).options.find { it.text == lastUser.initials } ?: fail("option ${lastUser.initials} is not available")
         option.click()
 
         val passwordField = this.findElement(By.cssSelector("#password")) ?: fail("password field not found")

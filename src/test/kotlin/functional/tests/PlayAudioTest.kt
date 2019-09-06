@@ -29,7 +29,7 @@ class PlayAudioTest {
 
     private val config = dummyConfiguration()
     private val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata))
-    private val fileStorage = StubFileStorage(mapOf(exampleAudioTrackMetadata.passwordProtectedLink to "some test data"))
+    private val fileStorage = StubFileStorage(mutableMapOf(exampleAudioTrackMetadata.passwordProtectedLink to "some test data"))
 
     @Test
     fun `returns UNAUTHORISED if not logged in`() {
@@ -60,7 +60,7 @@ class PlayAudioTest {
 
     @Test
     fun `returns NOT FOUND when authenticated but file is not present in file storage`() {
-        val emptyFileStorage = StubFileStorage(emptyMap())
+        val emptyFileStorage = StubFileStorage(mutableMapOf())
         val bandage = Bandage(config, metadataStorage, emptyFileStorage).app
         val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
@@ -74,7 +74,7 @@ class PlayAudioTest {
         val take1 = take2.copy(uuid = UUID.nameUUIDFromBytes("take-1".toByteArray()), recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.minusHours(1))
         val take3 = take2.copy(uuid = UUID.nameUUIDFromBytes("take-3".toByteArray()), recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.plusHours(1))
         val metadataStorage = StubMetadataStorage(mutableListOf(take1, take2, take3))
-        val fileStorage = StubFileStorage(mapOf(exampleAudioTrackMetadata.passwordProtectedLink to "some test data"))
+        val fileStorage = StubFileStorage(mutableMapOf(exampleAudioTrackMetadata.passwordProtectedLink to "some test data"))
         val bandage = Bandage(config, metadataStorage, fileStorage).app
         val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))

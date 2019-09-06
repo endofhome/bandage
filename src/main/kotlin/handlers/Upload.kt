@@ -3,6 +3,7 @@ package handlers
 import Logging.logger
 import RouteMappings.dashboard
 import handlers.UploadPreview.ViewModels.PreProcessedAudioTrackMetadata
+import handlers.UploadPreview.months
 import handlers.UploadPreview.tempDir
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -28,6 +29,11 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 object Upload {
+    private val monthRange = IntRange(months.first().number, months.last().number)
+    val dayRange = 1..31
+    val hourRange = 0..23
+    val timeRange = 0..59
+
     operator fun invoke(request: Request, metadataStorage: MetadataStorage, fileStorage: FileStorage, fileStoragePassword: String): Response {
         val preProcessedAudioTrackMetadata: PreProcessedAudioTrackMetadata = try {
             val formAsMap = request.formAsMap()
@@ -47,10 +53,6 @@ object Upload {
             val filename = formAsMap.singleOrLog("filename") ?: return Response(BAD_REQUEST)
             val hash = formAsMap.singleOrLog("hash") ?: return Response(BAD_REQUEST)
 
-            val monthRange = 1..12
-            val dayRange = 1..31
-            val hourRange = 0..23
-            val timeRange = 0..59
             PreProcessedAudioTrackMetadata(
                 artist,
                 null,
@@ -118,7 +120,7 @@ object Upload {
                 )
                 uuid
             }.map { uuid ->
-                Response(SEE_OTHER).header("Location", "$dashboard?highlighted=$uuid}")
+                Response(SEE_OTHER).header("Location", "$dashboard?highlighted=$uuid")
             }
         }.orElse {
             logger.warn(it.message)

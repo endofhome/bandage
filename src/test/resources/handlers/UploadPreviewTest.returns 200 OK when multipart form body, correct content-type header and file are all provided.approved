@@ -12,7 +12,7 @@
         <div class="navbar-contents">
             <span id="navbar-username" data-test="user-short-name">some-full-name</span>
             <span><a href="/logout" id="logout"data-test="logout">Logout</a></span>
-            <div><a href="/upload" id="upload" data-test="upload">Upload track</a></div>
+            <div><a href="/upload" id="upload" data-test="upload-link">Upload track</a></div>
         </div>
     </nav>
 
@@ -20,7 +20,7 @@
 <div class="container-fluid d-flex h-100">
     <div class="justify-content-center align-self-center mx-auto" id="main-container">
         <h4 class="container-fluid" data-test="heading">Preview metadata</h4>
-        <form class="form-group" action="upload" method="POST">
+        <form class="form-group" action="upload" method="POST" data-test="preview-metadata-form">
             <label for="artist">Artist</label><span class="form-required">*</span>
             <input readonly class="form-control full-width" id="artist" name="artist" value="*** REDACTED BANDAGE_ARTIST_OVERRIDE ***" data-test="artist" required/>
 
@@ -324,7 +324,7 @@
             </select>
 
             <label for="recorded">Recorded second</label>
-            <select class="form-control full-width" id="recordedSecond" name="recordedSecond" data-test="recordedSecond">
+            <select class="form-control full-width" id="recorded_second" name="recorded_second" data-test="recorded_second">
                 <option></option>
                 
                     <option value="00">00</option>

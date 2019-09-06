@@ -5,8 +5,8 @@
         <h4 class="container-fluid" data-test="heading">Upload track</h4>
         <br>
         <br>
-        <form class="form-group" action="/upload-preview" method="POST" enctype="multipart/form-data" name="upload-track">
-            <input type="file" name="file" />
+        <form class="form-group" action="/upload-preview" method="POST" enctype="multipart/form-data" name="upload-track-form" data-test="upload-track-form">
+            <input type="file" name="file" data-test="file-picker" required/>
             {{#if unsupportedFileType}}
                 <div id="error-message">{{unsupportedFileType}} files are currently unsupported.</div>
             {{/if}}
