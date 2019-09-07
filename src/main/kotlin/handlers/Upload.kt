@@ -66,11 +66,11 @@ object Upload {
                 hash,
                 filename,
                 recordedYear.toInt(),
-                recordedMonth.ifEmpty { null }?.toInt()?.also { require(it in monthRange) { "$it was not between ${monthRange.first} and ${monthRange.last}" } },
-                recordedDay.ifEmpty { null }?.toInt()?.also { require(it in dayRange) { "$it was not between ${dayRange.first} and ${dayRange.last}" } },
-                recordedHour.ifEmpty { null }?.also { require(it.toInt() in hourRange) { "$it was not between ${hourRange.first} and ${hourRange.last}" } },
-                recordedMinute.ifEmpty { null }?.also { require(it.toInt() in timeRange) { "$it was not between ${timeRange.first} and ${timeRange.last}" } },
-                recordedSecond.ifEmpty { null }?.also { require(it.toInt() in timeRange) { "$it was not between ${timeRange.first} and ${timeRange.last}" } }
+                recordedMonth.ifEmpty { null }?.toInt()?.also { it.requireInRange(monthRange) },
+                recordedDay.ifEmpty { null }?.toInt()?.also { it.requireInRange(dayRange) },
+                recordedHour.ifEmpty { null }?.also { it.toInt().requireInRange(hourRange) },
+                recordedMinute.ifEmpty { null }?.also { it.toInt().requireInRange(timeRange) },
+                recordedSecond.ifEmpty { null }?.also { it.toInt().requireInRange(timeRange) }
             )
         } catch (e: Exception) {
             logger.warn(e.message)
@@ -126,6 +126,10 @@ object Upload {
             logger.warn(it.message)
             Response(INTERNAL_SERVER_ERROR)
         }
+    }
+
+    private fun Int.requireInRange(range: IntRange) {
+        require(this in range) { "${this} was not between ${range.first} and ${range.last}" }
     }
 
     private fun ZonedDateTime.toFoldername(): String = "$year-${monthValue.pad()}-${dayOfMonth.pad()}"
