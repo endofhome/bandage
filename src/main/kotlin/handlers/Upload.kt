@@ -80,7 +80,7 @@ object Upload {
 
         val (recordedTimestamp: ZonedDateTime, recordedTimestampPrecision: ChronoUnit) =
             AssembleTimestamp(
-                preProcessedAudioTrackMetadata.recordedYear!!, // TODO remove "!!"
+                preProcessedAudioTrackMetadata.recordedYear,
                 preProcessedAudioTrackMetadata.recordedMonth,
                 preProcessedAudioTrackMetadata.recordedDay,
                 preProcessedAudioTrackMetadata.recordedHour?.toInt(),

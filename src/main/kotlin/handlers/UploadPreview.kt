@@ -115,7 +115,7 @@ object UploadPreview {
             val durationRaw: String?,
             val hash: String,
             val filename: String,
-            val recordedYear: Int?,
+            val recordedYear: Int,
             val recordedMonth: Int?,
             val recordedDay: Int?,
             val recordedHour: String?,
