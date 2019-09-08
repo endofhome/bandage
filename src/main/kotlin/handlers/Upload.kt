@@ -222,25 +222,23 @@ object DisassembleTimestamp {
         val unitsToTake = validChronoUnits(precisionList.take(1), precisionList.drop(1))
         val initialDisassembledTimestamp = DisassembledTimestamp(timestamp.year, null, null, null, null, null)
 
-        fun recurse(disassembledTimestamp: DisassembledTimestamp, next: ChronoUnit?, remainder: List<ChronoUnit>): DisassembledTimestamp {
-            return if (next == null) {
-                disassembledTimestamp
+        fun disassemble(disassembled: DisassembledTimestamp, remainder: List<ChronoUnit>): DisassembledTimestamp =
+            if (remainder.isEmpty()) {
+                disassembled
             } else {
-                when (next) {
-                    ChronoUnit.YEARS -> recurse(disassembledTimestamp.copy(year = timestamp.year), remainder.firstOrNull(), remainder.drop(1))
-                    ChronoUnit.MONTHS -> recurse(disassembledTimestamp.copy(month = timestamp.monthValue), remainder.firstOrNull(), remainder.drop(1))
-                    ChronoUnit.DAYS -> recurse(disassembledTimestamp.copy(day = timestamp.dayOfMonth), remainder.firstOrNull(), remainder.drop(1))
-                    ChronoUnit.HOURS -> recurse(disassembledTimestamp.copy(hour = timestamp.hour), remainder.firstOrNull(), remainder.drop(1))
-                    ChronoUnit.MINUTES -> recurse(disassembledTimestamp.copy(minute = timestamp.minute), remainder.firstOrNull(), remainder.drop(1))
-                    ChronoUnit.SECONDS -> recurse(disassembledTimestamp.copy(second = timestamp.second), remainder.firstOrNull(), remainder.drop(1))
-                    else -> TODO("unsupported operation")
+                when (remainder.first()) {
+                    ChronoUnit.YEARS   -> disassemble(disassembled.copy(year = timestamp.year), remainder.drop(1))
+                    ChronoUnit.MONTHS  -> disassemble(disassembled.copy(month = timestamp.monthValue), remainder.drop(1))
+                    ChronoUnit.DAYS    -> disassemble(disassembled.copy(day = timestamp.dayOfMonth), remainder.drop(1))
+                    ChronoUnit.HOURS   -> disassemble(disassembled.copy(hour = timestamp.hour), remainder.drop(1))
+                    ChronoUnit.MINUTES -> disassemble(disassembled.copy(minute = timestamp.minute), remainder.drop(1))
+                    ChronoUnit.SECONDS -> disassemble(disassembled.copy(second = timestamp.second), remainder.drop(1))
+                    else               -> error("unsupported precision ${remainder.first()}")
                 }
             }
-        }
 
-        return recurse(initialDisassembledTimestamp, unitsToTake.firstOrNull(), unitsToTake.drop(1))
+        return disassemble(initialDisassembledTimestamp, unitsToTake.drop(1))
     }
-
 }
 
 data class DisassembledTimestamp(val year: Int, val month: Int?, val day: Int?, val hour: Int?, val minute: Int?, val second: Int?)
