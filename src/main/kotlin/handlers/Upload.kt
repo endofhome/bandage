@@ -168,22 +168,28 @@ object AssembleTimestamp {
 
         val initialPair = ZonedDateTime.of(recordedYear, 1, 1, 0, 0, 0, 0, UTC) to ChronoUnit.YEARS
 
-        fun recurse(timestampToPrecision: Pair<ZonedDateTime,ChronoUnit>, nextPair: Pair<Int?,ChronoUnit>?, remainder: List<Pair<Int?, ChronoUnit>>): Pair<ZonedDateTime, ChronoUnit> {
-            return if (nextPair?.first == null) {
-                timestampToPrecision
+        fun assemble(
+            assembled: Pair<ZonedDateTime, ChronoUnit>,
+            remainder: List<Pair<Int?, ChronoUnit>>
+        ): Pair<ZonedDateTime, ChronoUnit> {
+            val nextPair = remainder.firstOrNull()
+            val nextTimestamp = nextPair?.first
+            return if (nextTimestamp == null) {
+                assembled
             } else {
-                val amountToAdd = if (nextPair.second == ChronoUnit.MONTHS || nextPair.second == ChronoUnit.DAYS) {
-                    nextPair.first!!.toLong() - 1L
+                val nextPrecision = nextPair.second
+                val amountToAdd = if (nextPrecision == ChronoUnit.MONTHS || nextPrecision == ChronoUnit.DAYS) {
+                    nextTimestamp.toLong() - 1L
                 } else {
-                    nextPair.first!!.toLong()
+                    nextTimestamp.toLong()
                 }
 
-                val newTimestamp = timestampToPrecision.first.plus(amountToAdd, nextPair.second) // TODO remove "!!"
-                recurse(newTimestamp to nextPair.second, remainder.firstOrNull(), remainder.drop(1))
+                val newTimestamp = assembled.first.plus(amountToAdd, nextPrecision)
+                assemble(newTimestamp to nextPrecision, remainder.drop(1))
             }
         }
 
-        return recurse(initialPair, precisionList.firstOrNull(), precisionList.drop(1))
+        return assemble(initialPair, precisionList)
     }
 }
 

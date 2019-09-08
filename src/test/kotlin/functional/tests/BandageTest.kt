@@ -398,7 +398,7 @@ class BandageTest {
 
         val uploadTrackForm = driver.findElement(By.cssSelector("form[data-test=\"upload-track-form\"]")) ?: fail("Upload track form is unavailable")
         val filePicker = uploadTrackForm.findElement(By.cssSelector("input[data-test=\"file-picker\"]")) ?: fail("File picker is unavailable")
-        filePicker.sendKeys(System.getProperty("user.dir") + "/src/test/resources/files/440Hz-5sec.mp3")
+        filePicker.sendKeys(System.getProperty("user.dir") + "/src/test/resources/files/2019-09-07 - 440Hz-5sec.mp3")
         uploadTrackForm.submit()
 
         assertThat(driver.currentUrl, equalTo("$baseUrl/upload-preview"))
@@ -408,8 +408,8 @@ class BandageTest {
 
         assertThat(driver.currentUrl, startsWith("$baseUrl/dashboard?highlighted="))
 
-        val dateh4 = driver.findElement(By.cssSelector("h4[data-test=\"[date-1970-01-01]\"]")) ?: fail("h4 is unavailable")
-        assertThat(dateh4.text, equalTo("1970"))
+        val dateh4 = driver.findElement(By.cssSelector("h4[data-test=\"[date-2019-09-07]\"]")) ?: fail("h4 is unavailable")
+        assertThat(dateh4.text, equalTo("7 September 2019"))
 
         val track = driver.findElement(By.cssSelector("div[data-track]")) ?: fail("Div for track is unavailable")
         assertThat(track.text, equalTo("440Hz Sine Wave | 0:05 | mp3 | play"))
