@@ -215,8 +215,7 @@ object DisassembleTimestamp {
             return if (next == null || stop) {
                 units
             } else {
-                // TODO remove "!!"
-                validChronoUnits(units + next!!, remainder.firstOrNull(), remainder.drop(1), next == precision)
+                validChronoUnits(units + next, remainder.firstOrNull(), remainder.drop(1), next == precision)
             }
         }
 
