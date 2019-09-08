@@ -66,11 +66,11 @@ object Upload {
                 hash,
                 filename,
                 recordedYear.toInt(),
-                recordedMonth.ifEmpty { null }?.toInt()?.also { it.requireInRange(monthRange) },
-                recordedDay.ifEmpty { null }?.toInt()?.also { it.requireInRange(dayRange) },
-                recordedHour.ifEmpty { null }?.also { it.toInt().requireInRange(hourRange) },
-                recordedMinute.ifEmpty { null }?.also { it.toInt().requireInRange(timeRange) },
-                recordedSecond.ifEmpty { null }?.also { it.toInt().requireInRange(timeRange) }
+                recordedMonth.ifEmpty { null }?.toInt()?.also { it.mustBeIn(monthRange) },
+                recordedDay.ifEmpty { null }?.toInt()?.also { it.mustBeIn(dayRange) },
+                recordedHour.ifEmpty { null }?.also { it.toInt().mustBeIn(hourRange) },
+                recordedMinute.ifEmpty { null }?.also { it.toInt().mustBeIn(timeRange) },
+                recordedSecond.ifEmpty { null }?.also { it.toInt().mustBeIn(timeRange) }
             )
         } catch (e: Exception) {
             logger.warn(e.message)
@@ -128,7 +128,7 @@ object Upload {
         }
     }
 
-    private fun Int.requireInRange(range: IntRange) {
+    private fun Int.mustBeIn(range: IntRange) {
         require(this in range) { "${this} was not between ${range.first} and ${range.last}" }
     }
 
