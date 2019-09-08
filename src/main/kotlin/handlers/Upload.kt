@@ -214,7 +214,7 @@ object DisassembleTimestamp {
             }
 
         val unitsToTake = validChronoUnits(precisionList.take(1), precisionList.drop(1))
-        val initialDisassembledTimestamp = DisassembledTimestamp(timestamp.year, null, null, null, null, null)
+        val initialDisassembledTimestamp = DisassembledTimestamp(timestamp.year)
 
         fun disassemble(disassembled: DisassembledTimestamp, remainder: List<ChronoUnit>): DisassembledTimestamp =
             if (remainder.isEmpty()) {
@@ -235,4 +235,11 @@ object DisassembleTimestamp {
     }
 }
 
-data class DisassembledTimestamp(val year: Int, val month: Int?, val day: Int?, val hour: Int?, val minute: Int?, val second: Int?)
+data class DisassembledTimestamp(
+    val year: Int,
+    val month: Int? = null,
+    val day: Int? = null,
+    val hour: Int? = null,
+    val minute: Int? = null,
+    val second: Int? = null
+)
