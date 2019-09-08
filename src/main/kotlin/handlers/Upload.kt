@@ -211,15 +211,15 @@ object DisassembleTimestamp {
         // TODO handle with Result?
         require(precision in precisionList) { "Precision $precision is not in supported list: $precisionList" }
 
-        fun validChronoUnits(units: List<ChronoUnit>, next: ChronoUnit?, remainder: List<ChronoUnit>, stop: Boolean = false): List<ChronoUnit> {
-            return if (next == null || stop) {
+        fun validChronoUnits(units: List<ChronoUnit>, remainder: List<ChronoUnit>, stop: Boolean = false): List<ChronoUnit> =
+            if (remainder.isEmpty() || stop) {
                 units
             } else {
-                validChronoUnits(units + next, remainder.firstOrNull(), remainder.drop(1), next == precision)
+                val next = remainder.first()
+                validChronoUnits(units + next, remainder.drop(1), next == precision)
             }
-        }
 
-        val unitsToTake = validChronoUnits(listOf(ChronoUnit.YEARS), precisionList.first(), precisionList.drop(1))
+        val unitsToTake = validChronoUnits(precisionList.take(1), precisionList.drop(1))
         val initialDisassembledTimestamp = DisassembledTimestamp(timestamp.year, null, null, null, null, null)
 
         fun recurse(disassembledTimestamp: DisassembledTimestamp, next: ChronoUnit?, remainder: List<ChronoUnit>): DisassembledTimestamp {
