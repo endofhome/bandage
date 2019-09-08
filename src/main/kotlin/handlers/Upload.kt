@@ -168,10 +168,7 @@ object AssembleTimestamp {
 
         val initialPair = ZonedDateTime.of(recordedYear, 1, 1, 0, 0, 0, 0, UTC) to ChronoUnit.YEARS
 
-        fun assemble(
-            assembled: Pair<ZonedDateTime, ChronoUnit>,
-            remainder: List<Pair<Int?, ChronoUnit>>
-        ): Pair<ZonedDateTime, ChronoUnit> {
+        fun assemble(assembled: Pair<ZonedDateTime, ChronoUnit>, remainder: List<Pair<Int?, ChronoUnit>>): Pair<ZonedDateTime, ChronoUnit> {
             val nextPair = remainder.firstOrNull()
             val nextTimestamp = nextPair?.first
             return if (nextTimestamp == null) {
@@ -194,10 +191,7 @@ object AssembleTimestamp {
 }
 
 object DisassembleTimestamp {
-    operator fun invoke(
-        timestamp: ZonedDateTime,
-        precision: ChronoUnit
-    ): DisassembledTimestamp {
+    operator fun invoke(timestamp: ZonedDateTime, precision: ChronoUnit): DisassembledTimestamp {
 
         val precisionList = listOf(
             ChronoUnit.YEARS,
