@@ -245,8 +245,3 @@ object DisassembleTimestamp {
 }
 
 data class DisassembledTimestamp(val year: Int, val month: Int?, val day: Int?, val hour: Int?, val minute: Int?, val second: Int?)
-
-fun main() {
-    val blah = DisassembleTimestamp(ZonedDateTime.of(12, 11, 10, 9, 8, 7, 0, UTC), ChronoUnit.YEARS)
-    println("blah = ${blah}")
-}
