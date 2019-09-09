@@ -30,7 +30,7 @@ object PreProcessMetadata {
 
         return PreProcessedAudioTrackMetadata(
             artist = artistOverride.takeIf { it != "" } ?: ffprobeInfo.format.tags?.artist,
-            workingTitle = ffprobeInfo.format.tags?.title ?: leftoverChars,
+             workingTitle = ffprobeInfo.format.tags?.title ?: leftoverChars.substringBeforeLast('.').trim(),
             format = ffprobeInfo.format.format_name,
             bitRate = ffprobeInfo.streams.firstOrNull { it.bit_rate != null }?.bit_rate?.toBitRate(),
             duration = ffprobeInfo.format.duration?.toDuration(),

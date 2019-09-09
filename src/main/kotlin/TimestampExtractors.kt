@@ -19,7 +19,7 @@ object TimestampExtractor1 : TimestampExtractor {
             return Triple(
                 ZonedDateTime.of(year, month, day, 0, 0, 0, 0, ZoneOffset.UTC),
                 ChronoUnit.DAYS,
-                from.nameWithoutExtension.remainingCharacters()
+                from.name.remainingCharacters()
             )
         }
 }
@@ -34,7 +34,7 @@ object TimestampExtractor2 : TimestampExtractor {
             Triple(
                 ZonedDateTime.of(year, month, day, hour, minute, values[5], 0, ZoneOffset.UTC),
                 ChronoUnit.SECONDS,
-                from.nameWithoutExtension.remainingCharacters()
+                from.name.remainingCharacters()
             )
         }
 }
@@ -57,7 +57,7 @@ object TimestampExtractor3 : TimestampExtractor {
             Triple(
                 ZonedDateTime.of(year, month, day, hour, minute, pairs[5].toInt(), 0, ZoneOffset.UTC),
                 ChronoUnit.SECONDS,
-                from.nameWithoutExtension.remainingCharacters()
+                from.name.remainingCharacters()
             )
         }
 }
@@ -71,7 +71,7 @@ object TimestampExtractor4 : TimestampExtractor {
             Triple(
                 ZonedDateTime.of(year, month, day, 0, 0, 0, 0, ZoneOffset.UTC),
                 ChronoUnit.DAYS,
-                from.nameWithoutExtension.remainingCharacters()
+                from.name.remainingCharacters()
             )
         }
 }
@@ -100,14 +100,14 @@ object TimestampExtractor5 : TimestampExtractor {
                 Triple(
                     ZonedDateTime.of(year, month, day, 0, 0, 0, 0, ZoneOffset.UTC),
                     ChronoUnit.DAYS,
-                    from.nameWithoutExtension.remainingCharacters()
+                    from.name.remainingCharacters()
                 )
             } catch (e: Exception) {
                 val (day, month, year) = splitWithDayFirst(emptyList(), it.value).map { it.toInt() }
                 Triple(
                     ZonedDateTime.of(year, month, day, 0, 0, 0, 0, ZoneOffset.UTC),
                     ChronoUnit.DAYS,
-                    from.nameWithoutExtension.remainingCharacters()
+                    from.name.remainingCharacters()
                 )
             }
         }
