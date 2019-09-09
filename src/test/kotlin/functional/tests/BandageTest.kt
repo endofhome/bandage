@@ -24,7 +24,7 @@ import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
 import org.http4k.core.Response
-import org.http4k.core.Status
+import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
@@ -168,12 +168,22 @@ class BandageTest {
 
     @Test
     fun `static 500 page is served on 500 response`(approver: Approver) {
-        val internalServerError: HttpHandler = { Response(Status.INTERNAL_SERVER_ERROR) }
+        val internalServerError: HttpHandler = { Response(INTERNAL_SERVER_ERROR) }
         val handlerWithFilters = internalServerError.with(Bandage.StaticConfig.filters)
         val request = Request(GET, "/will-blow-up")
         val response = handlerWithFilters(request)
 
         approver.assertApproved(response, INTERNAL_SERVER_ERROR)
+    }
+
+    @Test
+    fun `static 400 page is served on 400 response`(approver: Approver) {
+        val internalServerError: HttpHandler = { Response(BAD_REQUEST) }
+        val handlerWithFilters = internalServerError.with(Bandage.StaticConfig.filters)
+        val request = Request(GET, "/bad-request")
+        val response = handlerWithFilters(request)
+
+        approver.assertApproved(response, BAD_REQUEST)
     }
 
     @Test
