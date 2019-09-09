@@ -39,7 +39,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable
 import org.junit.jupiter.api.extension.ExtendWith
 import org.openqa.selenium.By
 import org.openqa.selenium.Cookie
@@ -382,7 +381,6 @@ class BandageTest {
     }
 
     @Nested
-    @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
     @DisplayName("Uploading tracks")
     inner class UploadingTracks {
         @Test
