@@ -56,7 +56,7 @@
             <select class="form-control full-width" id="recorded_minute" name="recorded_minute" data-test="recorded_minute">
                 <option></option>
                 {{#each minutes}}
-                    <option value="{{this}}"{{#eq trackMetadata.recorded_minute this}} selected{{/eq}}>{{this}}</option>
+                    <option value="{{this}}"{{#eq trackMetadata.recordedMinute this}} selected{{/eq}}>{{this}}</option>
                 {{/each}}
             </select>
 

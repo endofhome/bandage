@@ -28,14 +28,18 @@ import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
+import org.http4k.server.Http4kServer
 import org.http4k.server.Jetty
 import org.http4k.server.asServer
 import org.http4k.testing.ApprovalTest
 import org.http4k.testing.Approver
 import org.http4k.testing.assertApproved
 import org.http4k.webdriver.Http4kWebDriver
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable
 import org.junit.jupiter.api.extension.ExtendWith
@@ -379,44 +383,106 @@ class BandageTest {
         assertThat(highlightedElements.single().getAttribute("data-test"), equalTo(trackToPlay.getAttribute("data-test")))
     }
 
+    @Nested
     @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
-    @Test
-    fun `a new track can be uploaded`() {
-        val bandage = Bandage(config, StubMetadataStorage(mutableListOf()), StubFileStorage(mutableMapOf())).app
-        bandage.asServer(Jetty(HttpConfig.port)).start()
+    @DisplayName("Uploading tracks")
+    inner class UploadingTracks {
+        private val bandage = Bandage(config, StubMetadataStorage(mutableListOf()), StubFileStorage(mutableMapOf())).app
+        private val driver = ChromeDriver()
+        private val baseUrl = "http://localhost:7000"
+        private lateinit var server: Http4kServer
+        private lateinit var uploadTrackForm: WebElement
+        private lateinit var filePicker: WebElement
 
-        val driver = ChromeDriver()
-        val baseUrl = "http://localhost:7000"
+        @BeforeEach
+        fun setup() {
+            server = bandage.asServer(Jetty(HttpConfig.port))
+            server.start()
+            driver.navigate().to(baseUrl)
+            driver.userLogsIn()
 
-        driver.navigate().to(baseUrl)
-        driver.userLogsIn()
+            val uploadLink = driver.findElement(By.cssSelector("a[data-test=\"upload-link\"]")) ?: fail("Upload link is unavailable")
+            uploadLink.click()
 
-        val uploadLink = driver.findElement(By.cssSelector("a[data-test=\"upload-link\"]")) ?: fail("Upload link is unavailable")
-        uploadLink.click()
+            assertThat(driver.currentUrl, equalTo("$baseUrl/upload"))
+            uploadTrackForm = driver.findElement(By.cssSelector("form[data-test=\"upload-track-form\"]")) ?: fail("Upload track form is unavailable")
+            filePicker = uploadTrackForm.findElement(By.cssSelector("input[data-test=\"file-picker\"]")) ?: fail("File picker is unavailable")
+        }
 
-        assertThat(driver.currentUrl, equalTo("$baseUrl/upload"))
+        @AfterEach
+        fun tearDown() {
+            driver.close()
+            server.stop()
+        }
 
-        val uploadTrackForm = driver.findElement(By.cssSelector("form[data-test=\"upload-track-form\"]")) ?: fail("Upload track form is unavailable")
-        val filePicker = uploadTrackForm.findElement(By.cssSelector("input[data-test=\"file-picker\"]")) ?: fail("File picker is unavailable")
-        filePicker.sendKeys(System.getProperty("user.dir") + "/src/test/resources/files/2019-09-07 - 440Hz-5sec.mp3")
-        uploadTrackForm.submit()
+        @Test
+        fun `a track with no date or time in the filename can be uploaded`() {
+            filePicker.sendKeys(System.getProperty("user.dir") + "/src/test/resources/files/440Hz-5sec.mp3")
+            uploadTrackForm.submit()
 
-        assertThat(driver.currentUrl, equalTo("$baseUrl/upload-preview"))
+            assertThat(driver.currentUrl, equalTo("$baseUrl/upload-preview"))
 
-        val previewForm = driver.findElement(By.cssSelector("form[data-test=\"preview-metadata-form\"]")) ?: fail("Preview metadata form is unavailable")
-        previewForm.submit()
+            val previewForm = driver.findElement(By.cssSelector("form[data-test=\"preview-metadata-form\"]")) ?: fail("Preview metadata form is unavailable")
+            previewForm.submit()
 
-        assertThat(driver.currentUrl, startsWith("$baseUrl/dashboard?highlighted="))
+            assertThat(driver.currentUrl, startsWith("$baseUrl/dashboard?highlighted="))
 
-        val dateh4 = driver.findElement(By.cssSelector("h4[data-test=\"[date-2019-09-07]\"]")) ?: fail("h4 is unavailable")
-        assertThat(dateh4.text, equalTo("7 September 2019"))
+            val dateh4 = driver.findElement(By.cssSelector("h4[data-test=\"[date-1970-01-01]\"]")) ?: fail("h4 is unavailable")
+            assertThat(dateh4.text, equalTo("1970"))
 
-        val track = driver.findElement(By.cssSelector("div[data-track]")) ?: fail("Div for track is unavailable")
-        assertThat(track.text, equalTo("440Hz Sine Wave | 0:05 | mp3 | play"))
-        assertThat(track.findElement(By.cssSelector("a")).getAttribute("class"), equalTo("working-title-link"))
+            val track = driver.findElement(By.cssSelector("div[data-track]")) ?: fail("Div for track is unavailable")
+            assertThat(track.text, equalTo("440Hz Sine Wave | 0:05 | mp3 | play"))
+            assertThat(track.findElement(By.cssSelector("a")).getAttribute("class"), equalTo("working-title-link"))
+        }
 
-        driver.close()
+        @Test
+        fun `a track with only a date in the filename can be uploaded`() {
+            filePicker.sendKeys(System.getProperty("user.dir") + "/src/test/resources/files/2019-09-07 - 440Hz-5sec.mp3")
+            uploadTrackForm.submit()
+
+            assertThat(driver.currentUrl, equalTo("$baseUrl/upload-preview"))
+
+            val previewForm = driver.findElement(By.cssSelector("form[data-test=\"preview-metadata-form\"]")) ?: fail("Preview metadata form is unavailable")
+            previewForm.submit()
+
+            assertThat(driver.currentUrl, startsWith("$baseUrl/dashboard?highlighted="))
+
+            val dateh4 = driver.findElement(By.cssSelector("h4[data-test=\"[date-2019-09-07]\"]")) ?: fail("h4 is unavailable")
+            assertThat(dateh4.text, equalTo("7 September 2019"))
+
+            val track = driver.findElement(By.cssSelector("div[data-track]")) ?: fail("Div for track is unavailable")
+            assertThat(track.text, equalTo("440Hz Sine Wave | 0:05 | mp3 | play"))
+            assertThat(track.findElement(By.cssSelector("a")).getAttribute("class"), equalTo("working-title-link"))
+        }
+
+        @Test
+        fun `a track with a date and time in the filename can be uploaded`() {
+            filePicker.sendKeys(System.getProperty("user.dir") + "/src/test/resources/files/2019-09-07_19-32-13 - 440Hz-5sec.mp3")
+            uploadTrackForm.submit()
+
+            assertThat(driver.currentUrl, equalTo("$baseUrl/upload-preview"))
+
+            val previewForm = driver.findElement(By.cssSelector("form[data-test=\"preview-metadata-form\"]")) ?: fail("Preview metadata form is unavailable")
+            previewForm.submit()
+
+            assertThat(driver.currentUrl, startsWith("$baseUrl/dashboard?highlighted="))
+            val uuidForTrack = driver.currentUrl.substringAfter("$baseUrl/dashboard?highlighted=")
+
+            val dateh4 = driver.findElement(By.cssSelector("h4[data-test=\"[date-2019-09-07]\"]")) ?: fail("h4 is unavailable")
+            assertThat(dateh4.text, equalTo("7 September 2019"))
+
+            val track = driver.findElement(By.cssSelector("div[data-track]")) ?: fail("Div for track is unavailable")
+            assertThat(track.text, equalTo("440Hz Sine Wave | 0:05 | mp3 | play"))
+            assertThat(track.findElement(By.cssSelector("a")).getAttribute("class"), equalTo("working-title-link"))
+
+            track.findElement(By.cssSelector("a")).click()
+            assertThat(driver.currentUrl, equalTo("$baseUrl/tracks/$uuidForTrack"))
+
+            val recordedTime = driver.findElement(By.cssSelector("input[data-test=\"recordedOn\"]"))
+            assertThat(recordedTime.getAttribute("value"), equalTo("07/09/2019   19:32"))
+        }
     }
+
 
     private fun Http4kWebDriver.userLogsInAndPlaysATrack(): WebElement {
         this.navigate().to(login)

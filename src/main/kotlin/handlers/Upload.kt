@@ -141,7 +141,7 @@ object Upload {
         return if (extracted != null) {
             extracted
         } else {
-            logger.warn("Failure to extract '$field' field from form during file upload")
+            logger.warn("Failed to extract '$field' field from form during file upload")
             null
         }
     }
@@ -227,7 +227,7 @@ object DisassembleTimestamp {
                     ChronoUnit.HOURS   -> disassemble(disassembled.copy(hour = timestamp.hour), remainder.drop(1))
                     ChronoUnit.MINUTES -> disassemble(disassembled.copy(minute = timestamp.minute), remainder.drop(1))
                     ChronoUnit.SECONDS -> disassemble(disassembled.copy(second = timestamp.second), remainder.drop(1))
-                    else               -> error("unsupported precision ${remainder.first()}")
+                    else               -> error("unsupported precision: ${remainder.first()}")
                 }
             }
 
