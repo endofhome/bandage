@@ -19,6 +19,7 @@ import config.BandageConfigItem.PASSWORD
 import config.dummyConfiguration
 import exampleAudioTrackMetadata
 import http.HttpConfig
+import io.github.bonigarcia.wdm.WebDriverManager
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
@@ -55,6 +56,7 @@ import storage.StubMetadataStorage
 import java.time.Instant.EPOCH
 import java.time.temporal.ChronoUnit.HOURS
 import java.util.UUID
+
 
 @ExtendWith(ApprovalTest::class)
 class BandageTest {
@@ -383,6 +385,12 @@ class BandageTest {
     @Nested
     @DisplayName("Uploading tracks")
     inner class UploadingTracks {
+
+        @BeforeEach
+        fun setup() {
+            WebDriverManager.chromedriver().setup()
+        }
+
         @Test
         fun `a track with no date or time in the filename can be uploaded`() {
             assertFileUploadedCorrectly(
