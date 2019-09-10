@@ -96,7 +96,7 @@ class BandageTest {
         val loggedInUser = driver.userLogsIn()
 
         val loginCookie = driver.manage().getCookieNamed(LOGIN.cookieName) ?: fail("login cookie not set")
-        val username = driver.findElement(By.cssSelector("span[data-test=\"user-short-name\"]"))
+        val username = driver.findElement(By.cssSelector("div[data-test=\"user-short-name\"]"))
 
         assertThat(loginCookie, equalTo(validCookieFor(loggedInUser)))
         assertThat(driver.currentUrl, equalTo(dashboard))

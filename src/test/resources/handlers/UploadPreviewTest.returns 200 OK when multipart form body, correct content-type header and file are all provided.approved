@@ -10,9 +10,9 @@
 
     <nav class="navbar fixed-top navbar-expand-lg bg-transparent">
         <div class="navbar-contents">
-            <span id="navbar-username" data-test="user-short-name">some-full-name</span>
-            <span><a href="/logout" id="logout"data-test="logout">Logout</a></span>
+            <div id="navbar-username" data-test="user-short-name">some-full-name</div>
             <div><a href="/upload" id="upload" data-test="upload-link">Upload track</a></div>
+            <div><a href="/logout" id="logout"data-test="logout">Logout</a></div>
         </div>
     </nav>
 
