@@ -25,7 +25,8 @@ object TrackMetadata {
     operator fun invoke(authenticatedRequest: AuthenticatedRequest, metadataStorage: MetadataStorage): Response {
         val user = authenticatedRequest.user
         val trackMetadata = authenticatedRequest.request.path("id")?.let { id ->
-            val foundTrack = metadataStorage.findTrack(UUID.fromString(id))
+            val uuid = try { UUID.fromString(id) } catch (e: Exception) { return loggedResponse(Status.BAD_REQUEST, e.message, user) }
+            val foundTrack = metadataStorage.findTrack(uuid)
             when (foundTrack) {
                 is Success -> foundTrack.value?.viewModel() ?: return loggedResponse(NOT_FOUND, "Track $id was not found in metadata storage", user)
                 is Failure -> return loggedResponse(NOT_FOUND, foundTrack.reason.message, user)
