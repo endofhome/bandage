@@ -65,12 +65,18 @@ import java.nio.file.Paths
 
 fun main(args: Array<String>) {
     port = if (args.isNotEmpty()) args[0].toInt() else defaultPort
+
     Bandage.init(BandageConfig, PostgresMetadataStorageFactory, DropboxFileStorageFactory).app.asServer(Jetty(port)).start()
 
     environment.config.let { logger.info("Bandage has started on ${it.baseUrl}") }
 }
 
 class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, fileStorage: FileStorage) {
+
+    init {
+        WriteStaticErrorFiles()
+    }
+
     companion object {
         fun init(requiredConfig: RequiredConfig, metadataStorageFactory: MetadataStorageFactory, fileStorageFactory: FileStorageFactory): Bandage =
             ValidateConfig(requiredConfig, configurationFilesDir).withDynamicDatabaseUrlFrom(System.getenv("DATABASE_URL")).run {
@@ -83,11 +89,11 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
         const val defaultPort = 7000
         private val registerHelpers = fun (handlebars: Handlebars): Handlebars = handlebars.apply { handlebars.registerHelper("eq", ConditionalHelpers.eq) }
 
-        private val renderer = HandlebarsTemplates(registerHelpers).HotReload("src/main/resources")
+        val renderer = HandlebarsTemplates(registerHelpers).HotReload("src/main/resources")
         val view = Body.viewModel(renderer, ContentType.TEXT_HTML).toLens()
         val filters = ServerFilters.GZip()
                         .then(EnforceHttpsOnHeroku())
-                        .then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
+                        .then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public/static-errors")))
                         .then(CatchAll())
         val configurationFilesDir: Path = Paths.get("configuration")
         val disallowedFileExtensions = listOf("txt", "csv", "zip")

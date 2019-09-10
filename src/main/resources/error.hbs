@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bandage</title>
+    <link href="{{baseUrl}}/public/vendor/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="{{baseUrl}}/public/style.css" rel="stylesheet" type="text/css">
+    <link href="{{baseUrl}}/public/favicon-96x96.png" rel="icon" type="image/png" sizes="96x96">
+</head>
+<body>
+<div class="container-fluid d-flex h-100">
+    <div class="justify-content-center align-self-center mx-auto" id="http-error-container">
+        <img src="{{baseUrl}}/public/favicon-96x96.png">
+        <br>
+        <br>
+        <h1>{{statusCode}}</h1>
+        <h3>{{statusDescription}}</h3>
+        <br>
+        <br>
+        {{message}}
+    </div>
+</div>
+</body>
+</html>

@@ -3,6 +3,7 @@
 build
 out
 node_modules
+public/static-errors
 
 planning
 todo.txt
