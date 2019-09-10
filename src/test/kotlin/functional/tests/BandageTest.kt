@@ -50,6 +50,7 @@ import org.openqa.selenium.Cookie
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebElement
 import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.support.ui.Select
 import result.expectSuccess
 import storage.Collection
@@ -491,7 +492,7 @@ class BandageTest {
             recordedOnMetadata: String
         ) {
             val bandage = Bandage(config, StubMetadataStorage(mutableListOf()), StubFileStorage(mutableMapOf())).app
-            val driver = ChromeDriver()
+            val driver = ChromeDriver(ChromeOptions().setHeadless(true))
             val baseUrl = "http://localhost:7000"
 
             val server = bandage.asServer(Jetty(HttpConfig.port))
