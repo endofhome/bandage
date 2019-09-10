@@ -14,7 +14,7 @@ import storage.DummyMetadataStorage
 
 internal class TrackMetadataTest {
     @Test
-    fun `malformed uuid in path parameter returns 400 BAD REQUEST`() {
+    fun `malformed uuid in path parameter returns 404 NOT FOUND`() {
         val authenticatedRequest = AuthenticatedRequest(
             RoutedRequest(
                 Request(Method.GET, "/tracks/some_id"),
@@ -23,6 +23,6 @@ internal class TrackMetadataTest {
             exampleUser
         )
 
-        assertThat(TrackMetadata(authenticatedRequest, DummyMetadataStorage()).status, equalTo(Status.BAD_REQUEST))
+        assertThat(TrackMetadata(authenticatedRequest, DummyMetadataStorage()).status, equalTo(Status.NOT_FOUND))
     }
 }
