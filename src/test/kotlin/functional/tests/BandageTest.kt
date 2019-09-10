@@ -8,6 +8,7 @@ import RouteMappings.index
 import RouteMappings.login
 import User
 import UserManagement
+import WriteStaticErrorFiles
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
@@ -38,6 +39,7 @@ import org.http4k.testing.Approver
 import org.http4k.testing.assertApproved
 import org.http4k.webdriver.Http4kWebDriver
 import org.junit.jupiter.api.Assertions.fail
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -62,10 +64,16 @@ import java.util.UUID
 
 @ExtendWith(ApprovalTest::class)
 class BandageTest {
-
     private val config = dummyConfiguration()
     private val bandage = Bandage(config, DummyMetadataStorage(), DummyFileStorage()).app
     private val driver = Http4kWebDriver(bandage)
+
+    companion object {
+        @BeforeAll
+        fun setup() {
+            WriteStaticErrorFiles()
+        }
+    }
 
     @BeforeEach
     fun resetCookies() {
@@ -160,32 +168,36 @@ class BandageTest {
         assertThat(driver.manage().cookies, equalTo(setOf(validCookieFor(loggedInUser))))
     }
 
-    @Test
-    fun `static 404 page is served on 404 response`(approver: Approver) {
-        val request = Request(GET, "not-found")
-        val response = bandage(request)
+    @Nested
+    @DisplayName("Static error pages")
+    inner class StaticErrorPages {
+        @Test
+        fun `static 404 page is served on 404 response`(approver: Approver) {
+            val request = Request(GET, "not-found")
+            val response = bandage(request)
 
-        approver.assertApproved(response, NOT_FOUND)
-    }
+            approver.assertApproved(response, NOT_FOUND)
+        }
 
-    @Test
-    fun `static 500 page is served on 500 response`(approver: Approver) {
-        val internalServerError: HttpHandler = { Response(INTERNAL_SERVER_ERROR) }
-        val handlerWithFilters = internalServerError.with(Bandage.StaticConfig.filters)
-        val request = Request(GET, "/will-blow-up")
-        val response = handlerWithFilters(request)
+        @Test
+        fun `static 500 page is served on 500 response`(approver: Approver) {
+            val internalServerError: HttpHandler = { Response(INTERNAL_SERVER_ERROR) }
+            val handlerWithFilters = internalServerError.with(Bandage.StaticConfig.filters)
+            val request = Request(GET, "/will-blow-up")
+            val response = handlerWithFilters(request)
 
-        approver.assertApproved(response, INTERNAL_SERVER_ERROR)
-    }
+            approver.assertApproved(response, INTERNAL_SERVER_ERROR)
+        }
 
-    @Test
-    fun `static 400 page is served on 400 response`(approver: Approver) {
-        val badRequest: HttpHandler = { Response(BAD_REQUEST) }
-        val handlerWithFilters = badRequest.with(Bandage.StaticConfig.filters)
-        val request = Request(GET, "/bad-request")
-        val response = handlerWithFilters(request)
+        @Test
+        fun `static 400 page is served on 400 response`(approver: Approver) {
+            val badRequest: HttpHandler = { Response(BAD_REQUEST) }
+            val handlerWithFilters = badRequest.with(Bandage.StaticConfig.filters)
+            val request = Request(GET, "/bad-request")
+            val response = handlerWithFilters(request)
 
-        approver.assertApproved(response, BAD_REQUEST)
+            approver.assertApproved(response, BAD_REQUEST)
+        }
     }
 
     @Nested
