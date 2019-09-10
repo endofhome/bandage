@@ -29,6 +29,8 @@ import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
+import org.http4k.routing.bind
+import org.http4k.routing.routes
 import org.http4k.server.Jetty
 import org.http4k.server.asServer
 import org.http4k.testing.ApprovalTest
@@ -178,12 +180,51 @@ class BandageTest {
 
     @Test
     fun `static 400 page is served on 400 response`(approver: Approver) {
-        val internalServerError: HttpHandler = { Response(BAD_REQUEST) }
-        val handlerWithFilters = internalServerError.with(Bandage.StaticConfig.filters)
+        val badRequest: HttpHandler = { Response(BAD_REQUEST) }
+        val handlerWithFilters = badRequest.with(Bandage.StaticConfig.filters)
         val request = Request(GET, "/bad-request")
         val response = handlerWithFilters(request)
 
         approver.assertApproved(response, BAD_REQUEST)
+    }
+
+    @Nested
+    @DisplayName("GZIP responses")
+    inner class GzipResponses {
+        private val ok: HttpHandler = { Response(OK).body("OK body") }
+        private val notFound: HttpHandler = { Response(NOT_FOUND) }
+        private val handlerWithFilters =
+            routes(
+                "ok"        bind GET to ok,
+                "not-found" bind GET to notFound
+            ).with(Bandage.StaticConfig.filters)
+
+        @Test
+        fun `response is compressed when gzipped response is requested`(approver: Approver) {
+            val request = Request(GET, "ok").header("accept-encoding", "gzip")
+            val response = handlerWithFilters(request)
+
+            assertThat(response.header("Content-Encoding"), equalTo("gzip"))
+            approver.assertApproved(response, OK)
+        }
+
+        @Test
+        fun `response is not compressed when gzipped response is not requested`(approver: Approver) {
+            val request = Request(GET, "ok")
+            val response = handlerWithFilters(request)
+
+            assertThat(response.header("Content-Encoding"), absent())
+            approver.assertApproved(response, OK)
+        }
+
+        @Test
+        fun `fallback pages are properly gzipped if requested`(approver: Approver) {
+            val request = Request(GET, "not-found").header("accept-encoding", "gzip")
+            val response = handlerWithFilters(request)
+
+            assertThat(response.header("Content-Encoding"), equalTo("gzip"))
+            approver.assertApproved(response, NOT_FOUND)
+        }
     }
 
     @Test

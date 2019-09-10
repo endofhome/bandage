@@ -85,10 +85,10 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
 
         private val renderer = HandlebarsTemplates(registerHelpers).HotReload("src/main/resources")
         val view = Body.viewModel(renderer, ContentType.TEXT_HTML).toLens()
-        val filters = EnforceHttpsOnHeroku()
-                .then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
-                .then(ServerFilters.GZip())
-                .then(CatchAll())
+        val filters = ServerFilters.GZip()
+                        .then(EnforceHttpsOnHeroku())
+                        .then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public")))
+                        .then(CatchAll())
         val configurationFilesDir: Path = Paths.get("configuration")
         val disallowedFileExtensions = listOf("txt", "csv", "zip")
     }
