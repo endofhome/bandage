@@ -18,7 +18,6 @@ import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.core.cookie.Cookie
 import org.http4k.core.cookie.cookie
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import storage.DummyFileStorage
 import storage.DummyMetadataStorage
@@ -69,7 +68,6 @@ class PlayAudioTest {
         assertThat(response.status, equalTo(NOT_FOUND))
     }
 
-    @Disabled("Whilst testing spike")
     @Test
     fun `can access audio stream if logged in`() {
         val take2 = exampleAudioTrackMetadata
