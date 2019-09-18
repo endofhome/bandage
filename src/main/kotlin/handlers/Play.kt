@@ -76,18 +76,17 @@ object Play {
     }
 
     private fun InputStream.newMp3Headers(metadata: AudioTrackMetadata): InputStream {
+        println("streaming with new mp3 headers")
         val tempDir = File("/tmp/bandage")
         if (! tempDir.exists()) tempDir.mkdir()
-        val fifoPath = "${tempDir.absolutePath}/${metadata.hash}"
-        val mkFifo = listOf("mkfifo", fifoPath)
-        ProcessBuilder().command(mkFifo).start()
-        val fifoFile = File(fifoPath)
+        val tempFilePath = "${tempDir.absolutePath}/${metadata.hash}"
+        val tempFile = File(tempFilePath)
 
-        writeStreamToFile(fifoFile, metadata)
+        writeStreamToFile(tempFile, metadata)
 
         val ffmpegNewMetadata = listOf(
             ffmpegForCurrentOs(),
-            "-i", fifoFile.absolutePath,
+            "-i", tempFile.absolutePath,
             "-metadata", "artist=${metadata.artist}",
             "-metadata", "title=${metadata.preferredTitle()}",
             "-acodec", "copy",
@@ -99,13 +98,15 @@ object Play {
         return process.inputStream
     }
 
-    private fun InputStream.writeStreamToFile(fifoFile: File, metadata: AudioTrackMetadata) {
-        if (! fifoFile.exists()) {
+    private fun InputStream.writeStreamToFile(tempFile: File, metadata: AudioTrackMetadata) {
+        println("writing stream to file")
+        if (! tempFile.exists()) {
+            println("temp file does not exist - writing to it on a background thread")
             val backgroundThread: Thread = thread(start = true, name = "write-${metadata.hash}") {
                 this.use { stream ->
                     Files.copy(
                         stream,
-                        fifoFile.toPath(),
+                        tempFile.toPath(),
                         StandardCopyOption.REPLACE_EXISTING
                     )
                 }
