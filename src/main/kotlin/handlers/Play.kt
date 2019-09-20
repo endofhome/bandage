@@ -68,8 +68,8 @@ object Play {
             // TODO stream should be closed.
             // TODO also - the downloader that provides the inputstream should also be closed.
             Response(OK).body(
-                if (request.header("DISABLE_EXPERIMENTAL_FEATURES") == "true") {
-                    println("using original stream as DISABLE_EXPERIMENTAL_FEATURES is true")
+                if (request.header("BANDAGE_DISABLE_EXPERIMENTAL_FEATURES") == "true") {
+                    println("using original stream as BANDAGE_DISABLE_EXPERIMENTAL_FEATURES is true")
                     audioStream
                 } else {
                     audioStream.newMp3Headers(metadata)
