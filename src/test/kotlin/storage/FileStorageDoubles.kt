@@ -25,18 +25,17 @@ open class DummyFileStorage : FileStorage {
         error("not implemented")
 }
 
-typealias FileStringData = String
-class StubFileStorage(private val files: MutableMap<Uri, FileStringData>) : DummyFileStorage() {
+class StubFileStorage(private val files: MutableMap<Uri, ByteArray>) : DummyFileStorage() {
     override fun listFiles(): Result<Error, List<storage.File>> =
-        files.entries.map { File(name = it.value, path = it.key.toString()) }.asSuccess()
+        files.entries.map { File(name = it.key.path, path = it.key.toString()) }.asSuccess()
 
     override fun stream(uri: Uri): Result<Error, InputStream> {
-        val fileStringData = files[uri] ?: return Result.Failure(Error("File not found at path $uri"))
-        return fileStringData.toByteArray().inputStream().asSuccess()
+        val fileContents = files[uri] ?: return Result.Failure(Error("File not found at path $uri"))
+        return fileContents.inputStream().asSuccess()
     }
 
     override fun uploadFile(file: File, destinationPath: String): Result<Error, File> {
-        files[Uri.of(destinationPath)] = file.toString()
+        files[Uri.of(destinationPath)] = file.readBytes()
         return file.asSuccess()
     }
 
@@ -44,7 +43,7 @@ class StubFileStorage(private val files: MutableMap<Uri, FileStringData>) : Dumm
         Uri.of("some-public-link").asSuccess()
 }
 
-class StubFileStorageFactory(private val files: MutableMap<Uri, FileStringData>): DummyFileStorageFactory() {
+class StubFileStorageFactory(private val files: MutableMap<Uri, ByteArray>): DummyFileStorageFactory() {
     override fun invoke(config: Configuration): FileStorage = StubFileStorage(files)
 }
 

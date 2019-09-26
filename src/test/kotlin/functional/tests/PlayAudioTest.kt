@@ -3,6 +3,7 @@ package functional.tests
 import Authentication.Companion.Cookies.LOGIN
 import Bandage
 import RouteMappings.play
+import Tagger
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import config.BandageConfigItem.API_KEY
@@ -18,19 +19,20 @@ import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.core.cookie.Cookie
 import org.http4k.core.cookie.cookie
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import storage.DummyFileStorage
 import storage.DummyMetadataStorage
 import storage.StubFileStorage
 import storage.StubMetadataStorage
+import java.io.File
 import java.util.UUID
+import PreProcessMetadata.hashFile as hashOf
 
 class PlayAudioTest {
 
     private val config = dummyConfiguration()
     private val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata))
-    private val fileStorage = StubFileStorage(mutableMapOf(exampleAudioTrackMetadata.passwordProtectedLink to "some test data"))
+    private val fileStorage = StubFileStorage(mutableMapOf(exampleAudioTrackMetadata.passwordProtectedLink to "some test data".toByteArray()))
 
     @Test
     fun `returns UNAUTHORISED if not logged in`() {
@@ -69,14 +71,16 @@ class PlayAudioTest {
         assertThat(response.status, equalTo(NOT_FOUND))
     }
 
-    @Disabled("Whilst testing spike")
     @Test
     fun `can access audio stream if logged in`() {
         val take2 = exampleAudioTrackMetadata
         val take1 = take2.copy(uuid = UUID.nameUUIDFromBytes("take-1".toByteArray()), recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.minusHours(1))
         val take3 = take2.copy(uuid = UUID.nameUUIDFromBytes("take-3".toByteArray()), recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.plusHours(1))
         val metadataStorage = StubMetadataStorage(mutableListOf(take1, take2, take3))
-        val fileStorage = StubFileStorage(mutableMapOf(exampleAudioTrackMetadata.passwordProtectedLink to "some test data"))
+        val fileContents = File("src/test/resources/files/440Hz-5sec.mp3").readBytes()
+        val fileStorage = StubFileStorage(
+            mutableMapOf(exampleAudioTrackMetadata.passwordProtectedLink to fileContents)
+        )
         val bandage = Bandage(config, metadataStorage, fileStorage).app
         val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
@@ -84,14 +88,18 @@ class PlayAudioTest {
             "Accept-Ranges" to "bytes",
             "Content-Length" to take2.fileSize.toString(),
             "Content-Range" to "bytes 0-${take2.fileSize - 1}/${take2.fileSize}",
-            "content-disposition" to "attachment; filename=1970-01-01 some title (take 2).${take2.format}"
+            "Content-Disposition" to "attachment; filename=1970-01-01 some title (take 2).${take2.format}"
         )
 
         assertThat(response.status, equalTo(OK))
         assertThat(response.headers, equalTo(expectedHeaders))
-        val streamedData = String(response.body.stream.readAllBytes())
-        assertThat(streamedData, equalTo("some test data"))
+        val streamedData = response.body.stream.readAllBytes()
+        val expectedData = with(Tagger) { fileContents.inputStream().addId3v2Tags(take2).readBytes() }
+        assertThat(hashOf(streamedData), equalTo(hashOf(expectedData)))
     }
+
+    // TODO test range requests
+    // TODO should return partial content not OK
 
     @Test
     fun `redirects if logged in and ID query parameter is provided`() {
