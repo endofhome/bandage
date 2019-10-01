@@ -62,13 +62,14 @@ object Play {
             // TODO stream should be closed.
             // TODO also - the downloader that provides the inputstream should also be closed.
             Response(OK).body(
-                if (request.header("BANDAGE_DISABLE_EXPERIMENTAL_FEATURES") == "true") {
-                    println("using original stream as BANDAGE_DISABLE_EXPERIMENTAL_FEATURES is true")
-                    audioStream
-                } else {
+                if (request.header("BANDAGE_ENABLE_EXPERIMENTAL_FEATURES") == "true") {
+                    println("using experimental stream as BANDAGE_ENABLE_EXPERIMENTAL_FEATURES is true")
                     with(Tagger) {
                         audioStream.addId3v2Tags(metadata)
                     }
+                } else {
+                    println("using original stream")
+                    audioStream
                 }
             ).headers(headers)
         }.orElse {

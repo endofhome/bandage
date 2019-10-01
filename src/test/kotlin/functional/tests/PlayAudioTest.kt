@@ -3,7 +3,6 @@ package functional.tests
 import Authentication.Companion.Cookies.LOGIN
 import Bandage
 import RouteMappings.play
-import Tagger
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import config.BandageConfigItem.API_KEY
@@ -86,15 +85,15 @@ class PlayAudioTest {
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
         val expectedHeaders: Headers = listOf(
             "Accept-Ranges" to "bytes",
-            "Content-Length" to take2.fileSize.toString(),
-            "Content-Range" to "bytes 0-${take2.fileSize - 1}/${take2.fileSize}",
+            "Content-Length" to take2.fileSize.toString(), // TODO this can't be provided via the metadata any more! Due to new headers.
+            "Content-Range" to "bytes 0-${take2.fileSize - 1}/${take2.fileSize}", // TODO this can't be provided via the metadata any more! Due to new headers.
             "Content-Disposition" to "attachment; filename=1970-01-01 some title (take 2).${take2.format}"
         )
 
         assertThat(response.status, equalTo(OK))
         assertThat(response.headers, equalTo(expectedHeaders))
         val streamedData = response.body.stream.readAllBytes()
-        val expectedData = with(Tagger) { fileContents.inputStream().addId3v2Tags(take2).readBytes() }
+        val expectedData = fileContents.inputStream().readBytes()
         assertThat(hashOf(streamedData), equalTo(hashOf(expectedData)))
     }
 
