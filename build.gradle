@@ -30,6 +30,7 @@ dependencies {
     implementation group: "org.http4k", name: "http4k-multipart", version: http4kVersion
     implementation group: "com.dropbox.core", name: "dropbox-core-sdk", version: "3.0.11"
     implementation group: "org.postgresql", name: "postgresql", version: "42.2.6"
+    implementation group: "com.zaxxer", name: "HikariCP", version: "3.4.1"
     implementation group: "org.flywaydb", name: "flyway-core", version: "5.2.4"
     implementation group: "com.fasterxml.jackson.core", name: "jackson-core", version: "$jacksonVersion"
     implementation group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "$jacksonVersion"

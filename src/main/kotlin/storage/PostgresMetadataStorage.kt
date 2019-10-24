@@ -3,6 +3,8 @@ package storage
 import Logging.logger
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import config.BandageConfigItem.METADATA_DB_HOST
 import config.BandageConfigItem.METADATA_DB_NAME
 import config.BandageConfigItem.METADATA_DB_PASSWORD
@@ -10,35 +12,38 @@ import config.BandageConfigItem.METADATA_DB_PORT
 import config.BandageConfigItem.METADATA_DB_SSL_MODE
 import config.BandageConfigItem.METADATA_DB_USER
 import config.Configuration
-import org.postgresql.ds.PGSimpleDataSource
 import result.Error
 import result.Result
 import result.Result.Failure
+import result.Result.Success
 import result.asSuccess
 import result.flatMap
 import result.map
 import result.orElse
 import storage.Collection.ExistingCollection
+import java.sql.Connection
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boolean? = null) : MetadataStorage {
-    private val datasource = PGSimpleDataSource().apply {
-        serverName = config.get(METADATA_DB_HOST)
-        portNumber = config.get(METADATA_DB_PORT).toInt()
-        databaseName = config.get(METADATA_DB_NAME)
-        user = config.get(METADATA_DB_USER)
+    private val datasource = HikariDataSource(HikariConfig().apply {
+        dataSourceClassName = "org.postgresql.ds.PGSimpleDataSource"
+        dataSourceProperties.setProperty("serverName", config.get(METADATA_DB_HOST))
+        dataSourceProperties.setProperty("portNumber", config.get(METADATA_DB_PORT))
+        dataSourceProperties.setProperty("databaseName", config.get(METADATA_DB_NAME))
+        dataSourceProperties.setProperty("sslMode", sslRequireModeOverride?.let { if (it) "require" else ""  } ?: config.get(METADATA_DB_SSL_MODE))
+        username = config.get(METADATA_DB_USER)
         password = config.get(METADATA_DB_PASSWORD)
-        sslMode = sslRequireModeOverride?.let { if (it) "require" else ""  } ?: config.get(METADATA_DB_SSL_MODE)
-    }
-    private val connection = datasource.connection
+    })
 
     override fun tracks(): Result<Error, List<AudioTrackMetadata>> =
         try {
             // TODO - try to do this nicely in one query with a JOIN - multiple queries is really not nice
 
-            val initialMetadata = connection.prepareStatement("SELECT * FROM public.tracks").use { statement ->
+            val initialMetadata = datasource.connection.use { connection ->
+                val statement = connection.prepareStatement("SELECT * FROM public.tracks")
                 statement.executeQuery().use { resultSet ->
                     generateSequence {
                         if (resultSet.next()) resultSet.toAudioFileMetadata() else null
@@ -50,7 +55,8 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
                     it
                 } else {
                     val onlyFirstCollectionSupported = it.collections.first()
-                    connection.prepareStatement("SELECT name FROM collections WHERE id = '${onlyFirstCollectionSupported.uuid}'").use { statement ->
+                    datasource.connection.use { connection ->
+                        val statement = connection.prepareStatement("SELECT name FROM collections WHERE id = '${onlyFirstCollectionSupported.uuid}'")
                         statement.executeQuery().use { resultSet ->
                             resultSet.next()
                             it.copy(collections = listOf(it.collections.first().copy(title = resultSet.getString("name"))))
@@ -68,7 +74,8 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
         // TODO - try to do this nicely in one query with a JOIN - multiple queries is really not nice
 
         try {
-            val searchResult = connection.prepareStatement("SELECT * FROM public.tracks WHERE id = '$uuid'").use { statement ->
+            val searchResult = datasource.connection.use { connection ->
+                val statement = connection.prepareStatement("SELECT * FROM public.tracks WHERE id = '$uuid'")
                 statement.executeQuery().use { resultSet ->
                     if (resultSet.next()) resultSet.toAudioFileMetadata() else null
                 }
@@ -79,7 +86,8 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
                     it
                 } else {
                     val onlyFirstCollectionSupported = it.collections.first()
-                    connection.prepareStatement("SELECT name FROM collections WHERE id = '${onlyFirstCollectionSupported.uuid}'").use { statement ->
+                    datasource.connection.use { connection ->
+                        val statement = connection.prepareStatement("SELECT name FROM collections WHERE id = '${onlyFirstCollectionSupported.uuid}'")
                         statement.executeQuery().use { resultSet ->
                             resultSet.next()
                             it.copy(collections = listOf(it.collections.first().copy(title = resultSet.getString("name"))))
@@ -93,26 +101,34 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
         }
 
     override fun addTracks(newMetadata: List<AudioTrackMetadata>) {
-        val preparedStatement = connection.prepareStatement("""
+        datasource.connection.use { connection ->
+            val preparedStatement = connection.prepareStatement("""
                 INSERT INTO tracks VALUES ${newMetadata.joinToString(",") { "(?::uuid, ?::jsonb)" }};
             """.trimIndent())
 
-        val uuidIndexes = 1..newMetadata.size * 2 step 2
+            val uuidIndexes = 1..newMetadata.size * 2 step 2
 
-        newMetadata.zip(uuidIndexes).forEach { (audioFileMetadata, uuidIndex) ->
-            preparedStatement.setString(uuidIndex, audioFileMetadata.uuid.toString())
-            preparedStatement.setString(uuidIndex + 1, with(JsonSerialisation) { audioFileMetadata.toJsonString() })
+            newMetadata.zip(uuidIndexes).forEach { (audioFileMetadata, uuidIndex) ->
+                preparedStatement.setString(uuidIndex, audioFileMetadata.uuid.toString())
+                preparedStatement.setString(uuidIndex + 1, with(JsonSerialisation) { audioFileMetadata.toJsonString() })
+            }
+
+            preparedStatement.use { statement ->
+                statement.executeUpdate()
+            }
         }
 
-        preparedStatement.use { statement ->
-            statement.executeUpdate()
-        }
     }
 
     override fun updateTrack(updatedMetadata: AudioTrackMetadata): Result<Error, AudioTrackMetadata> =
+        datasource.connection.use { connection ->
+            updateTrack(updatedMetadata, connection)
+        }
+
+    fun updateTrack(updatedMetadata: AudioTrackMetadata, connection: Connection): Result<Error, AudioTrackMetadata> =
         findTrack(updatedMetadata.uuid).flatMap { track ->
             if (track != null) {
-                val preparedStatement = connection.prepareStatement("""
+                val preparedStatement: PreparedStatement = connection.prepareStatement("""
                     UPDATE tracks SET metadata = ?::jsonb WHERE id = '${updatedMetadata.uuid}';
                 """.trimIndent())
 
@@ -129,7 +145,8 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
 
     override fun findCollection(uuid: UUID): Result<Error, ExistingCollection?> =
         try {
-            connection.prepareStatement("SELECT * FROM public.collections WHERE id = '$uuid'").use { statement ->
+            datasource.connection.use { connection ->
+                val statement = connection.prepareStatement("SELECT * FROM public.collections WHERE id = '$uuid'")
                 statement.executeQuery().use { resultSet ->
                     if (resultSet.next()) resultSet.toCollection() else null
                 }.asSuccess()
@@ -141,16 +158,16 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
     // TODO this is a bit weird, as it adds the firstElement to the collection, but not the collection to the first element
     override fun addCollection(newCollection: Collection.NewCollection, firstElement: AudioTrackMetadata): ExistingCollection {
         val upgradedCollection = ExistingCollection(UUID.randomUUID(), newCollection.title, setOf(firstElement.uuid))
-        val preparedStatement = connection.prepareStatement("""
+        datasource.connection.use { connection ->
+            val statement = connection.prepareStatement("""
             INSERT INTO collections VALUES (?::uuid, ?, ?::uuid[]);
         """.trimIndent()
         )
 
-        preparedStatement.setString(1, upgradedCollection.uuid.toString())
-        preparedStatement.setString(2, upgradedCollection.title)
-        preparedStatement.setArray(3, connection.createArrayOf("UUID", upgradedCollection.tracks.toTypedArray()))
+            statement.setString(1, upgradedCollection.uuid.toString())
+            statement.setString(2, upgradedCollection.title)
+            statement.setArray(3, connection.createArrayOf("UUID", upgradedCollection.tracks.toTypedArray()))
 
-        preparedStatement.use { statement ->
             statement.executeUpdate()
         }
 
@@ -158,6 +175,11 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
     }
 
     override fun updateCollection(updatedCollection: ExistingCollection): Result<Error, ExistingCollection> =
+        datasource.connection.use { connection ->
+            updateCollection(updatedCollection, connection)
+        }
+
+    private fun updateCollection(updatedCollection: ExistingCollection, connection: Connection): Result<Error, ExistingCollection> =
         findCollection(updatedCollection.uuid).flatMap { collection ->
             if (collection != null) {
                 val preparedStatement = connection.prepareStatement("""
@@ -175,34 +197,39 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
             }
         }
 
-    override fun addExistingTrackToCollection(existingTrack: AudioTrackMetadata, collection: Collection) =
-        when (collection) {
-            is ExistingCollection -> findCollection(collection.uuid).map { foundCollection ->
-                if (foundCollection != null) {
-                    val updatedCollection = foundCollection.copy(tracks = foundCollection.tracks + existingTrack.uuid)
-                    val updatedTrackMetadata = existingTrack.copy(collections = existingTrack.collections + foundCollection)
-                    connection.autoCommit = false
-                    val trackResult = updateTrack(updatedTrackMetadata)
-                    val collectionResult = updateCollection(updatedCollection)
-                    if (trackResult is Result.Success && collectionResult is Result.Success) {
-                        connection.commit()
-                        connection.autoCommit = true
+    override fun addExistingTrackToCollection(existingTrack: AudioTrackMetadata, collection: Collection) {
+        datasource.connection.also { it.autoCommit = false }.use { connection ->
+            return when (collection) {
+                is ExistingCollection -> findCollection(collection.uuid).map { foundCollection ->
+                    if (foundCollection != null) {
+                        val updatedCollection = foundCollection.copy(tracks = foundCollection.tracks + existingTrack.uuid)
+                        val updatedTrackMetadata = existingTrack.copy(collections = existingTrack.collections + foundCollection)
+                        val trackResult = updateTrack(updatedTrackMetadata, connection)
+                        val collectionResult = updateCollection(updatedCollection, connection)
+                        if (trackResult is Success && collectionResult is Success) {
+                            connection.commit()
+                            connection.autoCommit = true
+                        } else {
+                            connection.autoCommit = true
+                            throw IllegalStateException("There was an error when adding track to collection. Track result was $trackResult, Collection result was $collectionResult")
+                        }
                     } else {
-                        connection.autoCommit = true
-                        throw IllegalStateException("There was an error when adding track to collection. Track result was $trackResult, Collection result was $collectionResult")
+                        throw IllegalStateException("Collection ${collection.uuid} was not found in DB when trying to add a track to it.")
                     }
-                } else {
-                    throw IllegalStateException("Collection ${collection.uuid} was not found in DB when trying to add a track to it.")
+                }.orElse { Unit }
+                is Collection.NewCollection -> {
+                    connection.autoCommit = false
+                    val existingCollection = addCollection(collection, existingTrack)
+                    updateTrack(
+                        existingTrack.copy(collections = existingTrack.collections + existingCollection),
+                        datasource.connection
+                    )
+                    connection.commit()
+                    connection.autoCommit = true
                 }
-            }.orElse { Unit }
-            is Collection.NewCollection -> {
-                connection.autoCommit = false
-                val existingCollection = addCollection(collection, existingTrack)
-                updateTrack(existingTrack.copy(collections = existingTrack.collections + existingCollection))
-                connection.commit()
-                connection.autoCommit = true
             }
         }
+    }
 
     object JsonSerialisation {
         private val timestampFormatter = DateTimeFormatter.ISO_DATE_TIME
