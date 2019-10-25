@@ -74,21 +74,20 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
         // TODO - try to do this nicely in one query with a JOIN - multiple queries is really not nice
 
         try {
-            val searchResult = datasource.connection.use { connection ->
+            datasource.connection.use { connection ->
                 val statement = connection.prepareStatement("SELECT * FROM public.tracks WHERE id = '$uuid'")
-                statement.executeQuery().use { resultSet ->
+                val searchResult = statement.executeQuery().use { resultSet ->
                     if (resultSet.next()) resultSet.toAudioFileMetadata() else null
                 }
-            }
 
-            searchResult?.let {
-                if (it.collections.isEmpty()) {
-                    it
-                } else {
-                    val onlyFirstCollectionSupported = it.collections.first()
-                    datasource.connection.use { connection ->
-                        val statement = connection.prepareStatement("SELECT name FROM collections WHERE id = '${onlyFirstCollectionSupported.uuid}'")
-                        statement.executeQuery().use { resultSet ->
+                searchResult?.let {
+                    if (it.collections.isEmpty()) {
+                        it
+                    } else {
+                        val onlyFirstCollectionSupported = it.collections.first()
+                        val collectionsStatement =
+                            connection.prepareStatement("SELECT name FROM collections WHERE id = '${onlyFirstCollectionSupported.uuid}'")
+                        collectionsStatement.executeQuery().use { resultSet ->
                             resultSet.next()
                             it.copy(collections = listOf(it.collections.first().copy(title = resultSet.getString("name"))))
                         }
@@ -97,7 +96,6 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
             }.asSuccess()
         } catch (e: Exception) {
             Failure(Error("Error finding track $uuid in metadata storage"))
-
         }
 
     override fun addTracks(newMetadata: List<AudioTrackMetadata>) {
