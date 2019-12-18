@@ -40,6 +40,7 @@ data class AudioTrackMetadata(
     val collections: List<ExistingCollection> = emptyList()
 ) : HasPreferredTitle, HasPresentationFormat {
     val playUrl: Uri = "${environment.config.baseUrl}$play/$uuid".toUri()
+    val downloadUrl: Uri = "${environment.config.baseUrl}$play/$uuid".toUri()
 }
 
 interface HasPreferredTitle {

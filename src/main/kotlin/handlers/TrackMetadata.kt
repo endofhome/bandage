@@ -13,7 +13,10 @@ import org.http4k.routing.path
 import org.http4k.template.ViewModel
 import result.Result.Failure
 import result.Result.Success
+import result.map
+import result.orElse
 import storage.AudioTrackMetadata
+import storage.AudioTrackMetadataEnhancer
 import storage.HasPreferredTitle
 import storage.HasPresentationFormat.Companion.presentationFormat
 import storage.MetadataStorage
@@ -26,27 +29,32 @@ object TrackMetadata {
         val user = authenticatedRequest.user
         val trackMetadata = authenticatedRequest.request.path("id")?.let { id ->
             val uuid = try { UUID.fromString(id) } catch (e: Exception) { return loggedResponse(NOT_FOUND, e.message, user) }
-            val foundTrack = metadataStorage.findTrack(uuid)
-            when (foundTrack) {
-                is Success -> foundTrack.value?.viewModel() ?: return loggedResponse(NOT_FOUND, "Track $id was not found in metadata storage", user)
-                is Failure -> return loggedResponse(NOT_FOUND, foundTrack.reason.message, user)
+            val maybeFoundTrack = metadataStorage.findTrack(uuid)
+            when (maybeFoundTrack) {
+                is Success -> maybeFoundTrack.value ?: return loggedResponse(NOT_FOUND, "Track $id was not found in metadata storage", user)
+                is Failure -> return loggedResponse(NOT_FOUND, maybeFoundTrack.reason.message, user)
             }
-
         } ?: return loggedResponse(NOT_FOUND, "Missing 'id' path parameter in request for track metadata", user)
+        val trackMetadataViewModel = trackMetadata.viewModel()
 
-        val (title, titleType) = trackMetadata.preferredTitle()
+        val (title, titleType) = trackMetadataViewModel.preferredTitle()
         val playerMetadata = Dashboard.ViewModels.AudioTrackMetadata(
-            trackMetadata.uuid,
+            trackMetadataViewModel.uuid,
             title,
             titleType,
-            trackMetadata.format,
-            trackMetadata.bitRate,
-            trackMetadata.duration,
-            trackMetadata.playUrl,
-            trackMetadata.playUrl
+            trackMetadataViewModel.format,
+            trackMetadataViewModel.bitRate,
+            trackMetadataViewModel.duration,
+            trackMetadataViewModel.playUrl,
+            trackMetadataViewModel.downloadUrl,
+            with(AudioTrackMetadataEnhancer) {
+                trackMetadata.enhanceWithTakeNumber(metadataStorage)
+                    .map { it.takeNumber?.toString() }
+                    .orElse { null }
+            }
         )
 
-        return Response(Status.OK).with(Bandage.StaticConfig.view of TrackMetadataPage(authenticatedRequest.user, trackMetadata, playerMetadata))
+        return Response(Status.OK).with(Bandage.StaticConfig.view of TrackMetadataPage(authenticatedRequest.user, trackMetadataViewModel, playerMetadata))
     }
 
     data class TrackMetadataPage(val loggedInUser: User, val trackMetadata: ViewModels.AudioTrackMetadata, val playerMetadata: Dashboard.ViewModels.AudioTrackMetadata) : ViewModel {
@@ -67,6 +75,7 @@ object TrackMetadata {
             bitRate?.presentationFormat(),
             duration?.presentationFormat(),
             playUrl.toString(),
+            downloadUrl.toString(),
             recordedTimestamp.format(DateTimeFormatter.ofPattern(recordedPattern)),
             uploadedTimestamp.format(DateTimeFormatter.ofPattern(uploadedPattern)),
             collections.map { it.title }
@@ -84,6 +93,7 @@ object TrackMetadata {
             val bitRate: String?,
             val duration: String?,
             val playUrl: String,
+            val downloadUrl: String,
             val recordedTimestamp: String,
             val uploadedTimestamp: String,
             val collections: List<String>

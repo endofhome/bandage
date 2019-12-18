@@ -281,20 +281,20 @@ class BandageTest {
         assertThat(folderh4.text, equalTo("1 January 1970"))
 
         val track = driver.findElement(By.cssSelector("div[data-test=\"[track-${exampleAudioTrackMetadata.uuid}]\"]")) ?: fail("Div for ${exampleAudioTrackMetadata.uuid} is unavailable")
-        assertThat(track.text, equalTo("${exampleAudioTrackMetadata.title} (take 2) | 0:21 | ${exampleAudioTrackMetadata.format} | play"))
+        assertThat(track.text, equalTo("${exampleAudioTrackMetadata.title} (take 2) | 0:21 | ${exampleAudioTrackMetadata.format} | ► | ↓"))
         assertThat(track.findElement(By.cssSelector("a")).getAttribute("class"), equalTo("title-link"))
 
         val trackWithNullDuration = driver.findElement(By.cssSelector("div[data-test=\"[track-${metadataWithNullValues.uuid}]\"]")) ?: fail("Div for ${metadataWithNullValues.uuid} is unavailable")
-        assertThat(trackWithNullDuration.text, equalTo("${metadataWithNullValues.title} | ${metadataWithNullValues.format} | play"))
+        assertThat(trackWithNullDuration.text, equalTo("${metadataWithNullValues.title} | ${metadataWithNullValues.format} | ► | ↓"))
 
         val trackWithSameTitle = driver.findElement(By.cssSelector("div[data-test=\"[track-${metadataWithSameTitle.uuid}]\"]")) ?: fail("Div for ${metadataWithSameTitle.uuid} is unavailable")
-        assertThat(trackWithSameTitle.text, equalTo("${metadataWithSameTitle.title} (take 1) | 0:21 | ${metadataWithSameTitle.format} | play"))
+        assertThat(trackWithSameTitle.text, equalTo("${metadataWithSameTitle.title} (take 1) | 0:21 | ${metadataWithSameTitle.format} | ► | ↓"))
 
         val trackCompletelyUntitled = driver.findElement(By.cssSelector("div[data-test=\"[track-${metadataCompletelyUntitled.uuid}]\"]")) ?: fail("Div for ${metadataCompletelyUntitled.uuid} is unavailable")
-        assertThat(trackCompletelyUntitled.text, equalTo("${metadataCompletelyUntitled.title} | 0:21 | ${metadataCompletelyUntitled.format} | play"))
+        assertThat(trackCompletelyUntitled.text, equalTo("${metadataCompletelyUntitled.title} | 0:21 | ${metadataCompletelyUntitled.format} | ► | ↓"))
 
         val trackUntitledWithWorkingTitle = driver.findElement(By.cssSelector("div[data-test=\"[track-${metadataUntitledWithWorkingTitle.uuid}]\"]")) ?: fail("Div for ${metadataUntitledWithWorkingTitle.uuid} is unavailable")
-        assertThat(trackUntitledWithWorkingTitle.text, equalTo("${metadataUntitledWithWorkingTitle.workingTitles.first()} | 0:21 | ${metadataUntitledWithWorkingTitle.format} | play"))
+        assertThat(trackUntitledWithWorkingTitle.text, equalTo("${metadataUntitledWithWorkingTitle.workingTitles.first()} | 0:21 | ${metadataUntitledWithWorkingTitle.format} | ► | ↓"))
         assertThat(trackUntitledWithWorkingTitle.findElement(By.cssSelector("a")).getAttribute("class"), equalTo("working-title-link"))
     }
 
@@ -523,7 +523,7 @@ class BandageTest {
             assertThat(dateh4.text, equalTo(dateh4Text))
 
             val track = driver.findElement(By.cssSelector("div[data-track]")) ?: fail("Div for track is unavailable")
-            assertThat(track.text, equalTo("440Hz Sine Wave | 0:05 | mp3 | play"))
+            assertThat(track.text, equalTo("440Hz Sine Wave | 0:05 | mp3 | ► | ↓"))
             assertThat(track.findElement(By.cssSelector("a")).getAttribute("class"), equalTo("working-title-link"))
 
             track.findElement(By.cssSelector("a")).click()

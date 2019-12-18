@@ -78,6 +78,10 @@ object Dashboard {
     private fun AudioTrackMetadataEnhancer.EnhancedAudioTrackMetadata.viewModel(): ViewModels.AudioTrackMetadata =
         this.base.let {
             val (title, titleType) = it.preferredTitle()
+            val dateTimePattern = DateTimeFormatter.ofPattern(
+                DateTimePatterns.filenamePatternFor(it.recordedTimestampPrecision)
+            )
+            val dateTime = it.recordedTimestamp.format(dateTimePattern)
 
             ViewModels.AudioTrackMetadata(
                 "${it.uuid}",
@@ -87,6 +91,10 @@ object Dashboard {
                 it.bitRate?.presentationFormat(),
                 it.duration?.presentationFormat(),
                 "${it.playUrl}",
+                listOf(
+                    dateTime,
+                    "$title${this.takeNumber?.let { " (take $it)" }.orEmpty()}"
+                ).joinToString(" "),
                 this.takeNumber?.let { take -> "$take" }.orEmpty()
             )
         }
@@ -106,6 +114,7 @@ object Dashboard {
             val bitRate: String?,
             val duration: String?,
             val playUrl: String,
+            val downloadUrl: String,
             val takeNumber: String?
         )
     }

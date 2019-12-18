@@ -6,7 +6,7 @@
             <h4 data-test="[date-{{date}}]">{{presentationDate}}</h4>
             {{#each tracks}}
                 <div id={{uuid}} {{#eq uuid highlighted.uuid}}class="highlighted"{{/eq}} data-test="[track-{{uuid}}]" data-track>
-                    <a href="/tracks/{{uuid}}" class="{{#eq titleType.key "title"}}title-link{{else}}working-title-link{{/eq}}" data-test="[metadata-link]">{{title}}{{#if takeNumber}} (take {{takeNumber}}) {{/if}}</a> | {{#if duration}}{{duration}} | {{/if}}{{format}} | <a href="?id={{uuid}}#{{uuid}}" data-test="[play-audio-link]">play</a>
+                    <a href="/tracks/{{uuid}}" class="{{#eq titleType.key "title"}}title-link{{else}}working-title-link{{/eq}}" data-test="[metadata-link]">{{title}}{{#if takeNumber}} (take {{takeNumber}}) {{/if}}</a> | {{#if duration}}{{duration}} | {{/if}}{{format}} | <a href="?id={{uuid}}#{{uuid}}" data-test="[play-audio-link]">►</a> | <a href="/play/{{uuid}}" download="1981-01-30 - {{title}}.{{format}}" data-test="[download-link]">↓</a>
                     <br>
                 </div>
             {{/each}}
