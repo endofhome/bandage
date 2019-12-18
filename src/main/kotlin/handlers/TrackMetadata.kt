@@ -27,15 +27,15 @@ import java.util.UUID
 object TrackMetadata {
     operator fun invoke(authenticatedRequest: AuthenticatedRequest, metadataStorage: MetadataStorage): Response {
         val user = authenticatedRequest.user
-        val trackMetadata = authenticatedRequest.request.path("id")?.let { id ->
+        val trackMetadata = (authenticatedRequest.request.path("id")?.let { id ->
             val uuid = try { UUID.fromString(id) } catch (e: Exception) { return loggedResponse(NOT_FOUND, e.message, user) }
             val maybeFoundTrack = metadataStorage.findTrack(uuid)
             when (maybeFoundTrack) {
                 is Success -> maybeFoundTrack.value ?: return loggedResponse(NOT_FOUND, "Track $id was not found in metadata storage", user)
                 is Failure -> return loggedResponse(NOT_FOUND, maybeFoundTrack.reason.message, user)
             }
-        } ?: return loggedResponse(NOT_FOUND, "Missing 'id' path parameter in request for track metadata", user)
-        val trackMetadataViewModel = trackMetadata.viewModel()
+        } ?: return loggedResponse(NOT_FOUND, "Missing 'id' path parameter in request for track metadata", user))
+        val trackMetadataViewModel = trackMetadata.viewModel(metadataStorage)
 
         val (title, titleType) = trackMetadataViewModel.preferredTitle()
         val playerMetadata = Dashboard.ViewModels.AudioTrackMetadata(
@@ -47,10 +47,11 @@ object TrackMetadata {
             trackMetadataViewModel.duration,
             trackMetadataViewModel.playUrl,
             trackMetadataViewModel.downloadUrl,
+            trackMetadataViewModel.filename,
             with(AudioTrackMetadataEnhancer) {
                 trackMetadata.enhanceWithTakeNumber(metadataStorage)
-                    .map { it.takeNumber?.toString() }
-                    .orElse { null }
+                    .map { it.takeNumber?.toString().orEmpty() }
+                    .orElse { "" }
             }
         )
 
@@ -61,9 +62,14 @@ object TrackMetadata {
         override fun template() = "track_metadata"
     }
 
-    private fun AudioTrackMetadata.viewModel(): ViewModels.AudioTrackMetadata {
-        val recordedPattern = DateTimePatterns.shortPatternFor(this.recordedTimestampPrecision)
+    private fun AudioTrackMetadata.viewModel(metadataStorage: MetadataStorage): ViewModels.AudioTrackMetadata {
+        val audioTrackMetadata = this
+        val recordedPattern = DateTimePatterns.shortPatternFor(audioTrackMetadata.recordedTimestampPrecision)
         val uploadedPattern = DateTimePatterns.shortPatternFor(ChronoUnit.SECONDS)
+        val dateTimePattern = DateTimeFormatter.ofPattern(
+            DateTimePatterns.filenamePatternFor(audioTrackMetadata.recordedTimestampPrecision)
+        )
+        val dateTime = this.recordedTimestamp.format(dateTimePattern)
 
         return ViewModels.AudioTrackMetadata(
             uuid.toString(),
@@ -78,7 +84,13 @@ object TrackMetadata {
             downloadUrl.toString(),
             recordedTimestamp.format(DateTimeFormatter.ofPattern(recordedPattern)),
             uploadedTimestamp.format(DateTimeFormatter.ofPattern(uploadedPattern)),
-            collections.map { it.title }
+            collections.map { it.title },
+            with(AudioTrackMetadataEnhancer) {
+                listOf(
+                    dateTime,
+                    "$title${audioTrackMetadata.enhanceWithTakeNumber(metadataStorage).map { it.takeNumber }.let { " (take $it)" }}"
+                ).joinToString(" ")
+            }
         )
     }
 
@@ -96,7 +108,8 @@ object TrackMetadata {
             val downloadUrl: String,
             val recordedTimestamp: String,
             val uploadedTimestamp: String,
-            val collections: List<String>
+            val collections: List<String>,
+            val filename: String
         ) : HasPreferredTitle {
             override val workingTitles: List<String> = listOf(workingTitle)
         }

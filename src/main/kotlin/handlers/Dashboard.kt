@@ -91,6 +91,7 @@ object Dashboard {
                 it.bitRate?.presentationFormat(),
                 it.duration?.presentationFormat(),
                 "${it.playUrl}",
+                "${it.playUrl}",
                 listOf(
                     dateTime,
                     "$title${this.takeNumber?.let { " (take $it)" }.orEmpty()}"
@@ -115,7 +116,8 @@ object Dashboard {
             val duration: String?,
             val playUrl: String,
             val downloadUrl: String,
-            val takeNumber: String?
+            val filename: String,
+            val takeNumber: String
         )
     }
 }
