@@ -54,12 +54,12 @@ object Play {
                 // TODO set this value dynamically depending on the codec used
                 "Content-Type" to "audio/mpeg",
                 "X-Content-Type-Options" to "nosniff",
-                "Content-Disposition" to "attachment; filename=${
+                "Content-Disposition" to "attachment; filename=\"${
                 listOf(
                     dateTime,
                     "$title${enhancedMetadata.takeNumber?.let { " (take $it)" }.orEmpty()}"
                 ).joinToString(" ")
-                }.${metadata.format}"
+                }.${metadata.format}\""
             )
 
             // TODO stream should be closed.
