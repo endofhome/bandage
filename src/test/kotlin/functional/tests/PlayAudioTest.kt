@@ -87,7 +87,7 @@ class PlayAudioTest {
             "Accept-Ranges" to "bytes",
             "Content-Length" to take2.fileSize.toString(), // TODO this can't be provided via the metadata any more! Due to new headers.
             "Content-Range" to "bytes 0-${take2.fileSize - 1}/${take2.fileSize}", // TODO this can't be provided via the metadata any more! Due to new headers.
-            "Content-Type" to "application/octet-stream",
+            "Content-Type" to "audio/mpeg",
             "Content-Disposition" to "attachment; filename=1970-01-01 some title (take 2).${take2.format}"
         )
 
