@@ -4,7 +4,7 @@
             {{title}} | {{duration}} | {{format}} ({{bitRate}})
         </div>
         <div id="audio-player">
-            <audio controls controlsList="nodownload" {{#if autoPlayAudio}}autoplay{{/if}} preload="metadata" data-test="[play_file-{{uuid}}]">
+            <audio controls {{#if autoPlayAudio}}autoplay{{/if}} preload="metadata" data-test="[play_file-{{uuid}}]">
                 <source src="{{playUrl}}" type="audio/{{format}}">
             </audio>
         </div>
