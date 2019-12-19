@@ -53,6 +53,7 @@ object Play {
                 "Content-Range" to "bytes 0-${metadata.fileSize - 1}/${metadata.fileSize}",
                 // TODO set this value dynamically depending on the codec used
                 "Content-Type" to "audio/mpeg",
+                "X-Content-Type-Options" to "nosniff",
                 "Content-Disposition" to "attachment; filename=${
                 listOf(
                     dateTime,
