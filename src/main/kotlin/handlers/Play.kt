@@ -32,7 +32,11 @@ object Play {
     ): Response {
         request.query("id")?.let { return Response(SEE_OTHER).header("Location", "$play/$it") }
 
-        val uuid = request.path("id") ?: return Response(BAD_REQUEST)
+        val uuid = request.path("id")?.let {
+            // TODO spike for manual testing browser behaviour
+            it.replace(".mp3", "")
+        } ?: return Response(BAD_REQUEST)
+
         val metadata =
             metadataStorage.findTrack(UUID.fromString(uuid)).map { it }.orElse { null } ?: return Response(NOT_FOUND)
         val enhancedMetadata =
