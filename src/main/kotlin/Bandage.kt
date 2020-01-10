@@ -91,8 +91,7 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
 
         val renderer = HandlebarsTemplates(registerHelpers).HotReload("src/main/resources")
         val view = Body.viewModel(renderer, ContentType.TEXT_HTML).toLens()
-        val filters = ServerFilters.GZip()
-                        .then(EnforceHttpsOnHeroku())
+        val filters = EnforceHttpsOnHeroku()
                         .then(ReplaceResponseContentsWithStaticFile(ResourceLoader.Directory("public/static-errors")))
                         .then(CatchAll())
         val configurationFilesDir: Path = Paths.get("configuration")
@@ -103,18 +102,21 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
     private val authentication = Authentication(providedConfig, userManagement)
     private fun redirectTo(location: String) = Response(SEE_OTHER).header("Location", location)
 
-    private val legacyRoutes: RoutingHttpHandler = with(authentication) { routes(
+    private val legacyRoutes: RoutingHttpHandler = with(authentication) {
+        routes(
             play         bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(UNAUTHORIZED))}
         )
     }
 
-    private val apiRoutes: RoutingHttpHandler = with(authentication) { routes(
+    private val apiRoutes: RoutingHttpHandler = with(authentication) {
+        routes(
             login         bind POST  to { request -> authenticateUserApi(request) },
             tracks        bind GET   to { request -> ifAuthenticated(request, then = { Tracks(metadataStorage) }, otherwise = Response(UNAUTHORIZED)) },
             metadata      bind POST  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  EditTrackMetadata(authenticatedRequest, metadataStorage) }) }
-    ) }
+        )
+    }
 
-    private val routes = with(authentication) {
+    private val gzippedRoutes = with(authentication) {
         routes(
             index         bind GET  to { redirectTo(dashboard) },
             login         bind GET  to { request -> ifAuthenticated(request, then = { redirectTo(index) }, otherwise = Login(request, userManagement)) },
@@ -125,15 +127,22 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
             upload        bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest -> UploadForm(authenticatedRequest) }) },
             upload        bind POST to { request -> ifAuthenticated(request, then = { Upload(request, metadataStorage, fileStorage, providedConfig.get(DROPBOX_LINK_PASSWORD)) }) },
             uploadPreview bind POST to { request -> ifAuthenticated(request, then = { authenticatedRequest -> UploadPreview(authenticatedRequest) }) },
-            playWithPath  bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(UNAUTHORIZED)) },
 
             api           bind apiRoutes,
 
-            "/public"     bind static(ResourceLoader.Directory("public")),
+            "/public"     bind static(ResourceLoader.Directory("public"))
+        ).withFilter(ServerFilters.GZip())
+    }
 
+    private val nonGzippedRoutes = with(authentication) {
+        routes(
+            playWithPath  bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(UNAUTHORIZED)) },
             legacyRoutes
         )
     }
 
-    val app = routes.withFilter(filters)
+    val app = routes(
+        gzippedRoutes,
+        nonGzippedRoutes
+    ).withFilter(filters)
 }

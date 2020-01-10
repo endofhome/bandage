@@ -30,6 +30,7 @@ import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.with
+import org.http4k.filter.ServerFilters
 import org.http4k.routing.bind
 import org.http4k.routing.routes
 import org.http4k.server.Jetty
@@ -204,17 +205,28 @@ class BandageTest {
     @Nested
     @DisplayName("GZIP responses")
     inner class GzipResponses {
-        private val ok: HttpHandler = { Response(OK).body("OK body") }
-        private val notFound: HttpHandler = { Response(NOT_FOUND) }
+        private val ok = "ok"
+        private val notFound = "not-found"
+        private val notGzipped = "not-gzipped"
+        private val okHandler: HttpHandler = { Response(OK).body("OK body") }
+        private val notFoundHandler: HttpHandler = { Response(NOT_FOUND) }
+        private val notGzippedHandler: HttpHandler = { Response(OK).body("OK not gzipped") }
+        private val gzippedRoutes = routes(
+            ok bind GET to okHandler,
+            notFound bind GET to notFoundHandler
+        ).withFilter(ServerFilters.GZip())
+        private val nonGzippedRoutes = routes(
+            notGzipped bind GET to notGzippedHandler
+        )
         private val handlerWithFilters =
             routes(
-                "ok"        bind GET to ok,
-                "not-found" bind GET to notFound
-            ).with(Bandage.StaticConfig.filters)
+                gzippedRoutes,
+                nonGzippedRoutes
+            ).withFilter(Bandage.StaticConfig.filters)
 
         @Test
         fun `response is compressed when gzipped response is requested`(approver: Approver) {
-            val request = Request(GET, "ok").header("accept-encoding", "gzip")
+            val request = Request(GET, ok).header("accept-encoding", "gzip")
             val response = handlerWithFilters(request)
 
             assertThat(response.header("Content-Encoding"), equalTo("gzip"))
@@ -223,7 +235,7 @@ class BandageTest {
 
         @Test
         fun `response is not compressed when gzipped response is not requested`(approver: Approver) {
-            val request = Request(GET, "ok")
+            val request = Request(GET, ok)
             val response = handlerWithFilters(request)
 
             assertThat(response.header("Content-Encoding"), absent())
@@ -231,12 +243,21 @@ class BandageTest {
         }
 
         @Test
-        fun `fallback pages are properly gzipped if requested`(approver: Approver) {
-            val request = Request(GET, "not-found").header("accept-encoding", "gzip")
+        fun `fallback pages are not gzipped, even if accept-encoding header is present`(approver: Approver) {
+            val request = Request(GET, notFound).header("accept-encoding", "gzip")
             val response = handlerWithFilters(request)
 
             assertThat(response.header("Content-Encoding"), equalTo("gzip"))
             approver.assertApproved(response, NOT_FOUND)
+        }
+
+        @Test
+        fun `response is not compressed when non-gzipped resource is requested, even if accept-encoding header is present`(approver: Approver) {
+            val request = Request(GET, notGzipped).header("accept-encoding", "gzip")
+            val response = handlerWithFilters(request)
+
+            assertThat(response.header("Content-Encoding"), absent())
+            approver.assertApproved(response, OK)
         }
     }
 
