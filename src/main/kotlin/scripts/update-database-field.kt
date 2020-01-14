@@ -22,7 +22,7 @@ import storage.PostgresMetadataStorage
 import storage.toBitRate
 
 // requires ffprobe (https://www.ffmpeg.org/)
-fun updateBitrate(metadataStorage: MetadataStorage, fileStorage: FileStorage) {
+private fun updateBitrate(metadataStorage: MetadataStorage, fileStorage: FileStorage) {
     val ok = listOf(128000, 96000, 192000, 256000, 320000).map { it.toString() }
 
     return metadataStorage.tracks().map { all ->

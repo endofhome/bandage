@@ -28,7 +28,7 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 // requires ffprobe (https://www.ffmpeg.org/)
-fun seedDatabase(metadataStorage: MetadataStorage) {
+private fun seedDatabase(metadataStorage: MetadataStorage) {
     val config = ValidateConfig(BandageConfig, Bandage.StaticConfig.configurationFilesDir)
     val dropboxClient = HttpDropboxClient(
         "$appName - seed-database-from-file-storage",
