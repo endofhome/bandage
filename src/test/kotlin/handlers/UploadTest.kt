@@ -115,6 +115,7 @@ internal class UploadTest {
             .form("recorded_minute", "$minutes")
             .form("recorded_second", "$seconds")
             .form("filename", "")
+            .form("normalised_file_size", "1")
             .form("hash", "")
 
     private fun handleRequests(validRequests: List<Request>, invalidRequests: List<Request>): Pair<List<Response>, List<Response>> {

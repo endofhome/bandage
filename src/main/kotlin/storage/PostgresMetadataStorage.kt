@@ -247,6 +247,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
                     ${bitRate?.let { bitRate -> """"bitrate": "${bitRate.value}",""" }.orEmpty()}
                     ${duration?.let { duration -> """"duration": "${duration.value}",""" }.orEmpty()}
                     "size": "$fileSize",
+                    "normalisedSize": "$normalisedFileSize",
                     "recordedDate": "$recordedDate",
                     "recordedTimestamp": "${timestampFormatter.format(recordedTimestamp)}",
                     "recordedTimestampPrecision": "${recordedTimestampPrecision.name}",
@@ -277,6 +278,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
                 postgresMetadata.bitrate?.toBitRate(),
                 postgresMetadata.duration?.toDuration(),
                 postgresMetadata.size,
+                postgresMetadata.normalisedSize,
                 postgresMetadata.recordedDate,
                 postgresMetadata.recordedTimestamp.toZonedDateTime(),
                 postgresMetadata.recordedTimestampPrecision.toChronoUnit(),
@@ -321,6 +323,7 @@ private data class PostgresAudioMetadata(
     val bitrate: String?,
     val duration: String?,
     val size: Int,
+    val normalisedSize: Long?,
     val recordedDate: String,
     val recordedTimestamp: String,
     val recordedTimestampPrecision: String,

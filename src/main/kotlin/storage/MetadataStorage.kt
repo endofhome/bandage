@@ -30,6 +30,7 @@ data class AudioTrackMetadata(
     val bitRate: BitRate?,
     val duration: Duration?,
     val fileSize: Int,
+    val normalisedFileSize: Long? = null,
     val recordedDate: String,
     val recordedTimestamp: ZonedDateTime,
     val recordedTimestampPrecision: ChronoUnit,
@@ -127,14 +128,15 @@ class DropboxCsvMetadataStorage(dropboxClient: SimpleDropboxClient) : MetadataSt
                     this[5].toBitRate(),
                     this[6].toDuration(),
                     this[7].toInt(),
-                    this[8],
-                    this[9].toZonedDateTime(),
-                    this[10].toChronoUnit(),
-                    this[11].toZonedDateTime(),
-                    this[12].toUri(),
-                    this[13],
+                    this[8].toLong(),
+                    this[9],
+                    this[10].toZonedDateTime(),
+                    this[11].toChronoUnit(),
+                    this[12].toZonedDateTime(),
+                    this[13].toUri(),
                     this[14],
-                    this[15].split('\t').map { ExistingCollection(UUID.fromString(it), "dummy - should get this from another file", emptySet()) }
+                    this[15],
+                    this[16].split('\t').map { ExistingCollection(UUID.fromString(it), "dummy - should get this from another file", emptySet()) }
                 )
             }
         }.asSuccess()
@@ -178,14 +180,15 @@ object LocalCsvMetadataStorage : MetadataStorage {
                         this[5].toBitRate(),
                         this[6].toDuration(),
                         this[7].toInt(),
-                        this[8],
-                        this[9].toZonedDateTime(),
-                        this[10].toChronoUnit(),
-                        this[11].toZonedDateTime(),
-                        this[12].toUri(),
-                        this[13],
+                        this[8].toLong(),
+                        this[9],
+                        this[10].toZonedDateTime(),
+                        this[11].toChronoUnit(),
+                        this[12].toZonedDateTime(),
+                        this[13].toUri(),
                         this[14],
-                        this[15].split('\t').map { ExistingCollection(UUID.fromString(it), "dummy - should get this from another file", emptySet()) }
+                        this[15],
+                        this[16].split('\t').map { ExistingCollection(UUID.fromString(it), "dummy - should get this from another file", emptySet()) }
                     )
                 }
             }.asSuccess()

@@ -451,6 +451,7 @@
             </select>
 
             <input readonly class="form-control full-width" id="filename" type="hidden" name="filename" value="440Hz-5sec.mp3" data-test="filename"/>
+            <input readonly class="form-control full-width" id="normalised_file_size" type="hidden" name="normalised_file_size" value="30633" data-test="normalised_file_size"/>
             <input readonly class="form-control full-width" id="hash" type="hidden" name="hash" value="d16670c5d6d17eeacba658150e0f853b2ba29e14783efb1e4f9692984db564ce" data-test="hash"/>
             <br>
             <button class="form-control full-width btn btn-dark" formenctype="application/x-www-form-urlencoded" formmethod="post" name="upload-track" data-test="upload-track">Upload</button>

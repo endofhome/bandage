@@ -51,6 +51,7 @@ object Upload {
             val recordedMinute = formAsMap.singleOrLog("recorded_minute") ?: return Response(BAD_REQUEST)
             val recordedSecond = formAsMap.singleOrLog("recorded_second") ?: return Response(BAD_REQUEST)
             val filename = formAsMap.singleOrLog("filename") ?: return Response(BAD_REQUEST)
+            val normalisedFileSize = formAsMap.singleOrLog("normalised_file_size") ?: return Response(BAD_REQUEST)
             val hash = formAsMap.singleOrLog("hash") ?: return Response(BAD_REQUEST)
 
             PreProcessedAudioTrackMetadata(
@@ -65,6 +66,7 @@ object Upload {
                 duration.ifEmpty { null },
                 hash,
                 filename,
+                normalisedFileSize.toLong(),
                 recordedYear.toInt(),
                 recordedMonth.ifEmpty { null }?.toInt()?.also { it.mustBeIn(monthRange) },
                 recordedDay.ifEmpty { null }?.toInt()?.also { it.mustBeIn(dayRange) },
@@ -107,6 +109,7 @@ object Upload {
                             preProcessedAudioTrackMetadata.bitRateRaw?.toBitRate(),
                             preProcessedAudioTrackMetadata.durationRaw?.toDuration(),
                             tempFile.length().toInt(),
+                            preProcessedAudioTrackMetadata.normalisedFileSize,
                             "",
                             recordedTimestamp,
                             recordedTimestampPrecision,

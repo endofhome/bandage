@@ -20,6 +20,7 @@ internal class PreProcessMetadataTest {
         bitRate = BitRate("48000"),
         duration = Duration("5.089000"),
         fileSize = 31046,
+        normalisedFileSize = 30633,
         recordedTimestamp = null,
         recordedTimestampPrecision = null,
         hash = "d16670c5d6d17eeacba658150e0f853b2ba29e14783efb1e4f9692984db564ce"

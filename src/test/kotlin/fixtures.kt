@@ -17,6 +17,7 @@ val exampleAudioTrackMetadata = AudioTrackMetadata(
     BitRate("320000"),
     Duration("21"),
     12345,
+    1234,
     Instant.EPOCH.atZone(UTC).plusHours(12).toString(),
     Instant.EPOCH.atZone(UTC).plusHours(12),
     ChronoUnit.MINUTES,
