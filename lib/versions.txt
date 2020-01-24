@@ -1,0 +1,7 @@
+ffmpeg
+darwin: 4.2
+linux: 4.2
+
+ffprobe
+darwin:
+linux: 4.0.2
