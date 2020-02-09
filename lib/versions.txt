@@ -1,7 +1,7 @@
 ffmpeg
-darwin: 4.2
+darwin: as filename
 linux: 4.2
 
 ffprobe
-darwin:
+darwin: as filename
 linux: 4.0.2
