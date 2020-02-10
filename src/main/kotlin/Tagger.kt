@@ -8,6 +8,7 @@ import java.time.Instant
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
+import kotlin.random.Random
 
 object Tagger {
     sealed class Mode {
@@ -26,7 +27,7 @@ object Tagger {
         val tempDir = File("/tmp/bandage")
         if (! tempDir.exists()) tempDir.mkdir()
         val startTime = Instant.now().toEpochMilli()
-        val inputFifoPath = "${tempDir.absolutePath}/$tempFileId-$startTime-input.mp3" // TODO should be user/file/timestamp-input.mp3
+        val inputFifoPath = "${tempDir.absolutePath}/$tempFileId-$startTime-${Random.nextInt()}-input.mp3"
         val mkFifoInput = listOf("mkfifo", inputFifoPath)
         ProcessBuilder().command(mkFifoInput).start().waitFor()
         val inputFifoFile = File(inputFifoPath)
