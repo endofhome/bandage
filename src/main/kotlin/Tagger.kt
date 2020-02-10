@@ -31,11 +31,6 @@ object Tagger {
         ProcessBuilder().command(mkFifoInput).start().waitFor()
         val inputFifoFile = File(inputFifoPath)
 
-        val outputFifoPath = "${tempDir.absolutePath}/$tempFileId-$startTime-output.mp3" // TODO should be user/file/timestamp-ouput.mp3
-        val mkFifoOutput = listOf("mkfifo", outputFifoPath)
-        ProcessBuilder().command(mkFifoOutput).start().waitFor()
-        val outputFifoFile = File(outputFifoPath)
-
         writeStreamToFile(inputFifoFile)
 
         // TODO temp while migrating DB
@@ -52,7 +47,7 @@ object Tagger {
             is Normalise  -> mode.file.extension
         }
 
-        val ffmpegCommand = ffmpegCommand(audioFormat, newTags, inputFifoFile, outputFifoFile)
+        val ffmpegCommand = ffmpegCommand(audioFormat, newTags, inputFifoFile)
 
         println(ffmpegCommand.joinToString(" "))
 
@@ -60,17 +55,16 @@ object Tagger {
         val tempLogFile = File("/tmp/ffmpeg-output-$startTime.txt")
         tempLogFile.createNewFile()
 
-        ProcessBuilder()
+        val process = ProcessBuilder()
             // TODO temp
             .redirectError(tempLogFile)
             .command(ffmpegCommand)
             .start()
 
         val newTagBytes = additionalBytesFor(newTags)
-        val newFileInputstream = outputFifoFile.inputStream()
         val newFileSize = when (mode) {
             is AddId3Tags -> mode.metadata.normalisedFileSize?.plus(newTagBytes) ?: mode.metadata.fileSize.toLong()
-            is Normalise  -> newFileInputstream.readAllBytes().size.toLong()
+            is Normalise  -> process.inputStream.readAllBytes().size.toLong()
         }
 
         // TODO temp logging
@@ -90,7 +84,7 @@ object Tagger {
         // This is probably better as two separate functions
         // 1) adding id3 tags returns the inputstream and size.
         // 2) normalising just returns the size.
-        return StreamWithLength(newFileInputstream, newFileSize)
+        return StreamWithLength(process.inputStream, newFileSize)
     }
 
     fun additionalBytesFor(newTags: Map<String, String>): Long =
@@ -106,8 +100,7 @@ object Tagger {
     private fun ffmpegCommand(
         format: String,
         newTags: Map<String, String>,
-        inputFile: File,
-        outputFifoFile: File
+        inputFile: File
     ): List<String> {
 
         val commandOpening = listOf(
@@ -127,11 +120,7 @@ object Tagger {
             "-map_metadata", "0:s:0",
             "-codec", "copy",
             "-f", format,
-
-            // TODO don't output to stdout. stream it to a FIFO
-            // TODO actually I think stdout is fine, and possibly faster
-            outputFifoFile.absolutePath
-//            "-",
+            "-"
         )
 
         return commandOpening + commandMetadataTags + commandClosing
