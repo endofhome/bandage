@@ -89,14 +89,10 @@ object Tagger {
     }
 
     fun additionalBytesFor(newTags: Map<String, String>): Long =
-        // TODO if newTags.isEmpty() don't even both trying
-        try {
-            newTags
+        if (newTags.isEmpty()) 0L
+        else newTags
                 .map { tag -> 12L + tag.value.length }
                 .reduce { acc, i -> acc + i }
-        } catch (e: Exception) {
-            0L
-        }
 
     private fun ffmpegCommand(
         format: String,
