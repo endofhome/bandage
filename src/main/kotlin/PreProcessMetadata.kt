@@ -1,3 +1,4 @@
+import Tagger.Mode.Normalise
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -12,7 +13,6 @@ import java.io.InputStreamReader
 import java.security.MessageDigest
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
-import java.util.concurrent.TimeUnit
 
 object PreProcessMetadata {
     private val timestampExtractors = listOf(
@@ -24,6 +24,7 @@ object PreProcessMetadata {
     )
 
     operator fun invoke(file: File, artistOverride: String? = ""): PreProcessedAudioTrackMetadata {
+        // TODO should probably use file.absolutePath
         val reader = metadataReader(file.path)
         val fileInfoJsonString = reader.readLines().joinToString("")
         val ffprobeInfo: FfprobeInfo = jacksonObjectMapper().readValue(fileInfoJsonString)
@@ -31,7 +32,7 @@ object PreProcessMetadata {
 
         return PreProcessedAudioTrackMetadata(
             artist = artistOverride.takeIf { it != "" } ?: ffprobeInfo.format.tags?.artist,
-             workingTitle = ffprobeInfo.format.tags?.title ?: leftoverChars.substringBeforeLast('.').trim(),
+            workingTitle = ffprobeInfo.format.tags?.title ?: leftoverChars.substringBeforeLast('.').trim(),
             format = ffprobeInfo.format.format_name,
             bitRate = ffprobeInfo.streams.firstOrNull { it.bit_rate != null }?.bit_rate?.toBitRate(),
             duration = ffprobeInfo.format.duration?.toDuration(),
@@ -43,50 +44,22 @@ object PreProcessMetadata {
         )
     }
 
+    private fun ffprobeForCurrentOs(): String =
+        if (System.getProperty("os.name").toLowerCase().startsWith("mac")) {
+            "lib/ffprobe_darwin_4.2.2"
+        } else {
+            "lib/ffprobe_linux_x64"
+        }
+
     fun metadataReader(filePath: String): BufferedReader {
-        val ffprobeMetadata = "lib/${ffprobeForCurrentOs()} -v quiet -print_format json -show_format -show_streams".split(" ").plus(filePath)
+        val ffprobeMetadata = "${ffprobeForCurrentOs()} -v quiet -print_format json -show_format -show_streams".split(" ").plus(filePath)
         val process = ProcessBuilder().command(ffprobeMetadata).start()
         return BufferedReader(InputStreamReader(process.inputStream))
     }
 
-    private fun normalisedFileSize(file: File): Long {
-        val tempFile = File(file.absolutePath.replace(file.name, "${file.nameWithoutExtension}-temp.${file.extension}"))
-
-        val ffmpegNormaliseFile = listOf(
-            "lib/${ffmpegForCurrentOs()}",
-            "-i", file.absolutePath,
-            "-map", "0",
-            "-map_metadata", "0:s:0",
-            "-c", "copy",
-            tempFile.absolutePath
-        )
-
-        val process = ProcessBuilder()
-            .command(ffmpegNormaliseFile)
-            .start()
-
-        process.waitFor(10, TimeUnit.SECONDS)
-
-        if (process.exitValue() != 0) throw RuntimeException("ffmpeg metadata stripping failed for ${file.absolutePath}\n\nAdd .inheritIO() to ProcessBuilder to debug")
-        if (!tempFile.exists()) throw RuntimeException("${tempFile.absolutePath} does not exist yet")
-
-        return tempFile.length().also {
-            tempFile.delete()
-        }
-    }
-
-    private fun ffprobeForCurrentOs(): String =
-        if (System.getProperty("os.name").toLowerCase().startsWith("mac")) {
-            "ffprobe_darwin"
-        } else {
-            "ffprobe_linux_x64"
-        }
-
-    private fun ffmpegForCurrentOs(): String =
-        if (System.getProperty("os.name").toLowerCase().startsWith("mac")) {
-            "ffmpeg_darwin"
-        } else {
-            "ffmpeg_linux_x64"
+    private fun normalisedFileSize(file: File): Long =
+        with(Tagger) {
+            file.inputStream().manipulate(Normalise(file)).size
         }
 
     private fun File.extractTimestamp(): Triple<ZonedDateTime?, ChronoUnit?, String> =

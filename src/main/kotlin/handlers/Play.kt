@@ -3,7 +3,9 @@ package handlers
 import DateTimePatterns
 import Logging.logger
 import RouteMappings.play
+import StreamWithLength
 import Tagger
+import Tagger.Mode.AddId3Tags
 import org.http4k.core.Headers
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -31,10 +33,12 @@ object Play {
         fileStorage: FileStorage
     ): Response {
         request.query("id")?.let { return Response(SEE_OTHER).header("Location", "$play/$it") }
-
         val uuid = request.path("id") ?: return Response(BAD_REQUEST)
-        val metadata =
-            metadataStorage.findTrack(UUID.fromString(uuid)).map { it }.orElse { null } ?: return Response(NOT_FOUND)
+
+        val metadata = metadataStorage.findTrack(UUID.fromString(uuid))
+            .map { it }
+            .orElse { null }
+            ?: return Response(NOT_FOUND)
         val enhancedMetadata =
             when (val enhanced = with(AudioTrackMetadataEnhancer) { metadata.enhanceWithTakeNumber(metadataStorage) }) {
                 is Success -> enhanced.value
@@ -47,10 +51,22 @@ object Play {
             )
             val dateTime = metadata.recordedTimestamp.format(dateTimePattern)
             val (title: String) = enhancedMetadata.base.preferredTitle()
+
+            // TODO the downloader that provides the inputstream should be closed.
+            val (inputstream, streamLength) = if (request.header("BANDAGE_ENABLE_EXPERIMENTAL_FEATURES") == "true") {
+                println("using experimental stream as BANDAGE_ENABLE_EXPERIMENTAL_FEATURES is true")
+                with(Tagger) {
+                    audioStream.manipulate(AddId3Tags(metadata))
+                }
+            } else {
+                println("using original stream")
+                StreamWithLength(audioStream, enhancedMetadata.base.fileSize.toLong())
+            }
+
             val headers: Headers = listOf(
                 "Accept-Ranges" to "bytes",
-                "Content-Length" to metadata.fileSize.toString(),
-                "Content-Range" to "bytes 0-${metadata.fileSize - 1}/${metadata.fileSize}",
+                "Content-Length" to streamLength.toString(),
+                "Content-Range" to "bytes 0-${streamLength - 1}/$streamLength",
                 // TODO set this value dynamically depending on the codec used
                 "Content-Type" to "audio/mpeg",
                 "X-Content-Type-Options" to "nosniff",
@@ -62,19 +78,7 @@ object Play {
                 }.${metadata.format}\""
             )
 
-            // TODO stream should be closed.
-            // TODO also - the downloader that provides the inputstream should also be closed.
-            Response(OK).body(
-                if (request.header("BANDAGE_ENABLE_EXPERIMENTAL_FEATURES") == "true") {
-                    println("using experimental stream as BANDAGE_ENABLE_EXPERIMENTAL_FEATURES is true")
-                    with(Tagger) {
-                        audioStream.addId3v2Tags(metadata)
-                    }
-                } else {
-                    println("using original stream")
-                    audioStream
-                }
-            ).headers(headers)
+            Response(OK).body(inputstream, streamLength).headers(headers)
         }.orElse {
             logger.warn(it.message)
             Response(NOT_FOUND)

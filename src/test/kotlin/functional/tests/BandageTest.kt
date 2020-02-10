@@ -54,6 +54,7 @@ import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.support.ui.Select
 import result.expectSuccess
+import result.map
 import storage.Collection
 import storage.DummyFileStorage
 import storage.DummyMetadataStorage
@@ -506,13 +507,56 @@ class BandageTest {
             )
         }
 
+        @Test
+        fun `a track with many id3 tags is normalised correctly`() {
+            assertFileUploadedCorrectly(
+                filePath = "/src/test/resources/files/many-tags.mp3",
+                dateh4DataTestAttr = "date-1970-01-01",
+                dateh4Text = "1970",
+                recordedOnMetadata = "1970",
+                expectedTitle = "Top 5 number",
+                expectedFileSize = 41126L,
+                expectedNormalisedFileSize = 40796L
+            )
+        }
+
+        @Test
+        fun `a track with no id3 tags is normalised correctly`() {
+            assertFileUploadedCorrectly(
+                filePath = "/src/test/resources/files/no-tags.mp3",
+                dateh4DataTestAttr = "date-1970-01-01",
+                dateh4Text = "1970",
+                recordedOnMetadata = "1970",
+                expectedTitle = "no-tags",
+                expectedFileSize = 40978L,
+                expectedNormalisedFileSize = 40796L
+            )
+        }
+
+        @Test
+        fun `non-mp3 files are not normalised`() {
+            assertFileUploadedCorrectly(
+                filePath = "/src/test/resources/files/not-an-mp3.wav",
+                dateh4DataTestAttr = "date-1970-01-01",
+                dateh4Text = "1970",
+                recordedOnMetadata = "1970",
+                expectedTitle = "not-an-mp3",
+                expectedFileSize = 40978L,
+                expectedNormalisedFileSize = null
+            )
+        }
+
         private fun assertFileUploadedCorrectly(
             filePath: String,
             dateh4DataTestAttr: String,
             dateh4Text: String,
-            recordedOnMetadata: String
+            recordedOnMetadata: String,
+            expectedTitle: String = "440Hz Sine Wave",
+            expectedFileSize: Long? = null,
+            expectedNormalisedFileSize: Long? = null
         ) {
-            val bandage = Bandage(config, StubMetadataStorage(mutableListOf()), StubFileStorage(mutableMapOf())).app
+            val metadataStorage = StubMetadataStorage(mutableListOf())
+            val bandage = Bandage(config, metadataStorage, StubFileStorage(mutableMapOf())).app
             val driver = ChromeDriver(ChromeOptions().setHeadless(true))
             val baseUrl = "http://localhost:7000"
 
@@ -544,7 +588,7 @@ class BandageTest {
             assertThat(dateh4.text, equalTo(dateh4Text))
 
             val track = driver.findElement(By.cssSelector("div[data-track]")) ?: fail("Div for track is unavailable")
-            assertThat(track.text, equalTo("440Hz Sine Wave | 0:05 | mp3 | ► | ↓"))
+            assertThat(track.text, equalTo("$expectedTitle | 0:05 | mp3 | ► | ↓"))
             assertThat(track.findElement(By.cssSelector("a")).getAttribute("class"), equalTo("working-title-link"))
 
             track.findElement(By.cssSelector("a")).click()
@@ -552,6 +596,14 @@ class BandageTest {
 
             val recordedTime = driver.findElement(By.cssSelector("input[data-test=\"recordedOn\"]"))
             assertThat(recordedTime.getAttribute("value"), equalTo(recordedOnMetadata))
+
+            if (expectedFileSize != null && expectedNormalisedFileSize != null) {
+                metadataStorage.findTrack(UUID.fromString(uuidForTrack)).map { foundTrack ->
+                    assertThat(foundTrack?.fileSize?.toLong(), equalTo(expectedFileSize))
+                    assertThat(foundTrack?.normalisedFileSize, equalTo(expectedNormalisedFileSize))
+                }
+
+            }
 
             server.stop()
             driver.close()
