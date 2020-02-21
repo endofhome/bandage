@@ -64,7 +64,7 @@ object Tagger {
 
         val newTagBytes = additionalBytesFor(newTags)
         val newFileSize = when (mode) {
-            is AddId3Tags -> mode.metadata.normalisedFileSize?.plus(newTagBytes) ?: mode.metadata.fileSize.toLong()
+            is AddId3Tags -> checkNotNull(mode.metadata.normalisedFileSize?.plus(newTagBytes))
             is Normalise  -> process.inputStream.readAllBytes().size.toLong()
         }
 
