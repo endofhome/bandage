@@ -8,6 +8,7 @@ import Tagger.additionalBytesFor
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import config.BandageConfigItem.API_KEY
+import config.BandageConfigItem.DISABLE_ID3_TAGGING_ON_THE_FLY
 import config.dummyConfiguration
 import exampleAudioTrackMetadata
 import org.http4k.core.Headers
@@ -75,38 +76,6 @@ class PlayAudioTest {
 
     @Test
     fun `can access audio stream if logged in`() {
-        val take2 = exampleAudioTrackMetadata
-        val take1 = take2.copy(uuid = UUID.nameUUIDFromBytes("take-1".toByteArray()), recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.minusHours(1))
-        val take3 = take2.copy(uuid = UUID.nameUUIDFromBytes("take-3".toByteArray()), recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.plusHours(1))
-        val metadataStorage = StubMetadataStorage(mutableListOf(take1, take2, take3))
-        val fileContents = File("src/test/resources/files/440Hz-5sec.mp3").readBytes()
-        val fileStorage = StubFileStorage(
-            mutableMapOf(exampleAudioTrackMetadata.passwordProtectedLink to fileContents)
-        )
-        val bandage = Bandage(config, metadataStorage, fileStorage).app
-        val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
-            .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
-        val expectedHeaders: Headers = listOf(
-            "Accept-Ranges" to "bytes",
-            "Content-Length" to take2.fileSize.toString(),
-            "Content-Range" to "bytes 0-${take2.fileSize - 1}/${take2.fileSize}",
-            "Content-Type" to "audio/mpeg",
-            "X-Content-Type-Options" to "nosniff",
-            "Content-Disposition" to "attachment; filename=\"1970-01-01 some title (take 2).${take2.format}\""
-        )
-
-        assertThat(response.status, equalTo(OK))
-        assertThat(response.headers, equalTo(expectedHeaders))
-        val streamedData = response.body.stream.readAllBytes()
-        val expectedData = fileContents.inputStream().readBytes()
-        assertThat(hashOf(streamedData), equalTo(hashOf(expectedData)))
-    }
-
-    // TODO test range requests
-    // TODO should return partial content not OK
-
-    @Test
-    fun `can access audio stream if logged in - using experimental features`() {
         val file = File("src/test/resources/files/440Hz-5sec.mp3")
         val preProcessedMetadata = PreProcessMetadata(file)
         val take2 = exampleAudioTrackMetadata.copy(
@@ -127,8 +96,7 @@ class PlayAudioTest {
         )
         val bandage = Bandage(config, metadataStorage, fileStorage).app
         val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
-            .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login"))
-            .header("BANDAGE_ENABLE_EXPERIMENTAL_FEATURES", "true"))
+            .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
         val expectedFileSize = take2.normalisedFileSize?.plus(additionalBytesFor(
             mapOf(
                 "artist" to take2.artist,
@@ -149,6 +117,40 @@ class PlayAudioTest {
 
         val streamedData = response.body.stream.readAllBytes()
         assertThat(streamedData.size.toLong(), equalTo(expectedFileSize))
+    }
+
+    // TODO test range requests
+    // TODO should return partial content not OK
+
+    @Test
+    fun `can access audio stream if id3 tagging is disabled in config`() {
+        val take2 = exampleAudioTrackMetadata
+        val take1 = take2.copy(uuid = UUID.nameUUIDFromBytes("take-1".toByteArray()), recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.minusHours(1))
+        val take3 = take2.copy(uuid = UUID.nameUUIDFromBytes("take-3".toByteArray()), recordedTimestamp = exampleAudioTrackMetadata.recordedTimestamp.plusHours(1))
+        val metadataStorage = StubMetadataStorage(mutableListOf(take1, take2, take3))
+        val fileContents = File("src/test/resources/files/440Hz-5sec.mp3").readBytes()
+        val fileStorage = StubFileStorage(
+            mutableMapOf(exampleAudioTrackMetadata.passwordProtectedLink to fileContents)
+        )
+        val configWithDisabledId3Tagging = config.withOverride(DISABLE_ID3_TAGGING_ON_THE_FLY, "true")
+
+        val bandage = Bandage(configWithDisabledId3Tagging, metadataStorage, fileStorage).app
+        val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
+            .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_${1}", path = "login")))
+        val expectedHeaders: Headers = listOf(
+            "Accept-Ranges" to "bytes",
+            "Content-Length" to take2.fileSize.toString(),
+            "Content-Range" to "bytes 0-${take2.fileSize - 1}/${take2.fileSize}",
+            "Content-Type" to "audio/mpeg",
+            "X-Content-Type-Options" to "nosniff",
+            "Content-Disposition" to "attachment; filename=\"1970-01-01 some title (take 2).${take2.format}\""
+        )
+
+        assertThat(response.status, equalTo(OK))
+        assertThat(response.headers, equalTo(expectedHeaders))
+        val streamedData = response.body.stream.readAllBytes()
+        val expectedData = fileContents.inputStream().readBytes()
+        assertThat(hashOf(streamedData), equalTo(hashOf(expectedData)))
     }
 
     @Test

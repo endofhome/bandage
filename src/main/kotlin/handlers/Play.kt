@@ -30,7 +30,8 @@ object Play {
     operator fun invoke(
         request: Request,
         metadataStorage: MetadataStorage,
-        fileStorage: FileStorage
+        fileStorage: FileStorage,
+        disableId3Tagging: Boolean
     ): Response {
         request.query("id")?.let { return Response(SEE_OTHER).header("Location", "$play/$it") }
         val uuid = request.path("id") ?: return Response(BAD_REQUEST)
@@ -53,14 +54,19 @@ object Play {
             val (title: String) = enhancedMetadata.base.preferredTitle()
 
             // TODO the downloader that provides the inputstream should be closed.
-            val (inputstream, streamLength) = if (request.header("BANDAGE_ENABLE_EXPERIMENTAL_FEATURES") == "true") {
-                println("using experimental stream as BANDAGE_ENABLE_EXPERIMENTAL_FEATURES is true")
+            val (inputstream, streamLength) = if (disableId3Tagging || metadata.normalisedFileSize == null) {
+                print("using original stream as ")
+                if (metadata.normalisedFileSize == null) {
+                    println("normalised file size for ${metadata.uuid} is null")
+                } else {
+                    println("id3 on-the-fly override is enabled")
+                }
+                StreamWithLength(audioStream, enhancedMetadata.base.fileSize.toLong())
+            } else {
+                println("adding id3 tags on-the-fly")
                 with(Tagger) {
                     audioStream.manipulate(AddId3Tags(metadata))
                 }
-            } else {
-                println("using original stream")
-                StreamWithLength(audioStream, enhancedMetadata.base.fileSize.toLong())
             }
 
             val headers: Headers = listOf(

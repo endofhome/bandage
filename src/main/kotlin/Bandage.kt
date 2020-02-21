@@ -17,6 +17,7 @@ import api.Tracks
 import com.github.jknack.handlebars.Handlebars
 import com.github.jknack.handlebars.helper.ConditionalHelpers
 import config.BandageConfig
+import config.BandageConfigItem
 import config.BandageConfigItem.DROPBOX_LINK_PASSWORD
 import config.Configuration
 import config.RequiredConfig
@@ -104,7 +105,7 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
 
     private val legacyRoutes: RoutingHttpHandler = with(authentication) {
         routes(
-            play         bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(UNAUTHORIZED))}
+            play         bind GET  to { request -> ifAuthenticated(request, then = { Play(request,metadataStorage,fileStorage,providedConfig.get(BandageConfigItem.DISABLE_ID3_TAGGING_ON_THE_FLY).toBoolean()) }, otherwise = Response(UNAUTHORIZED))}
         )
     }
 
@@ -136,7 +137,7 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
 
     private val nonGzippedRoutes = with(authentication) {
         routes(
-            playWithPath  bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage) }, otherwise = Response(UNAUTHORIZED)) },
+            playWithPath  bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage, providedConfig.get(BandageConfigItem.DISABLE_ID3_TAGGING_ON_THE_FLY).toBoolean()) }, otherwise = Response(UNAUTHORIZED)) },
             legacyRoutes
         )
     }

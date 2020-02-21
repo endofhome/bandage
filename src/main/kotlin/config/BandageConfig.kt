@@ -2,6 +2,7 @@ package config
 
 import Bandage.StaticConfig.appName
 import config.BandageConfigItem.API_KEY
+import config.BandageConfigItem.DISABLE_ID3_TAGGING_ON_THE_FLY
 import config.BandageConfigItem.DROPBOX_ACCESS_TOKEN
 import config.BandageConfigItem.DROPBOX_LINK_PASSWORD
 import config.BandageConfigItem.METADATA_DB_HOST
@@ -30,6 +31,7 @@ sealed class BandageConfigItem(override val name: String) : RequiredConfigItem {
     object METADATA_DB_SSL_MODE : BandageConfigItem("${appName}_METADATA_DB_SSL_MODE")
     object DROPBOX_ACCESS_TOKEN : BandageConfigItem("${appName}_DROPBOX_ACCESS_TOKEN")
     object DROPBOX_LINK_PASSWORD : BandageConfigItem("${appName}_DROPBOX_LINK_PASSWORD")
+    object DISABLE_ID3_TAGGING_ON_THE_FLY : BandageConfigItem("${appName}_DISABLE_ID3_TAGGING_ON_THE_FLY")
     object SENTRY_DSN : BandageConfigItem("${appName}_SENTRY_DSN")
 }
 
@@ -48,6 +50,7 @@ object BandageConfig : RequiredConfig() {
         METADATA_DB_SSL_MODE,
         DROPBOX_ACCESS_TOKEN,
         DROPBOX_LINK_PASSWORD,
+        DISABLE_ID3_TAGGING_ON_THE_FLY,
         SENTRY_DSN
     )
 }
