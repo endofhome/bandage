@@ -7,6 +7,7 @@ import java.io.InputStream
 import java.time.Instant
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 import kotlin.random.Random
 
@@ -65,7 +66,7 @@ object Tagger {
         val newTagBytes = additionalBytesFor(newTags)
         val newFileSize = when (mode) {
             is AddId3Tags -> checkNotNull(mode.metadata.normalisedFileSize?.plus(newTagBytes))
-            is Normalise  -> process.inputStream.readAllBytes().size.toLong()
+            is Normalise  -> process.inputStream.readSize()
         }
 
         // TODO temp logging
@@ -121,6 +122,14 @@ object Tagger {
         )
 
         return commandOpening + commandMetadataTags + commandClosing
+    }
+
+    private fun InputStream.readSize(): Long {
+        val size = AtomicInteger(0)
+        while (this.read() != -1) {
+            size.incrementAndGet()
+        }
+        return size.get().toLong().also { println(it) }
     }
 
     private fun InputStream.writeStreamToFile(fifoFile: File) {
