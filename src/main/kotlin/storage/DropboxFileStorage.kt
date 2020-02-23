@@ -3,18 +3,13 @@ package storage
 import com.dropbox.core.DbxApiException
 import com.dropbox.core.DbxDownloader
 import com.dropbox.core.DbxException
-import com.dropbox.core.DbxHost
 import com.dropbox.core.DbxRequestConfig
-import com.dropbox.core.http.HttpRequestor
 import com.dropbox.core.v2.DbxClientV2
-import com.dropbox.core.v2.DbxRawClientV2
-import com.dropbox.core.v2.common.PathRoot
 import com.dropbox.core.v2.files.DownloadErrorException
 import com.dropbox.core.v2.files.FileMetadata
 import com.dropbox.core.v2.files.FolderMetadata
 import com.dropbox.core.v2.files.Metadata
 import com.dropbox.core.v2.files.WriteMode
-import com.dropbox.core.v2.sharing.DbxUserSharingRequests
 import com.dropbox.core.v2.sharing.RequestedVisibility
 import com.dropbox.core.v2.sharing.SharedLinkMetadata
 import com.dropbox.core.v2.sharing.SharedLinkSettings
@@ -67,13 +62,6 @@ interface SimpleDropboxClient {
 class HttpDropboxClient(identifier: String, accessToken: String) : SimpleDropboxClient {
     private val requestConfig: DbxRequestConfig = DbxRequestConfig.newBuilder(identifier).build()
     private val client: DbxClientV2 = DbxClientV2(requestConfig, accessToken)
-    private val rawClient: DbxRawClientV2 = object : DbxRawClientV2(requestConfig, DbxHost.DEFAULT, null, null) {
-        override fun withPathRoot(pathRoot: PathRoot): DbxRawClientV2 = error("not implemented")
-
-        override fun addAuthHeaders(headers: MutableList<HttpRequestor.Header>) {
-            headers.add(HttpRequestor.Header("Authorization", "Bearer $accessToken"))
-        }
-    }
     override fun listFolders(): Result<Error, List<Folder>> =
         filesRecursive().map { files ->
             val (foldersMetadata, filesMetadata) = files.partition { it is FolderMetadata }
@@ -86,14 +74,14 @@ class HttpDropboxClient(identifier: String, accessToken: String) : SimpleDropbox
 
     override fun createPasswordProtectedLink(remotePathLower: String, password: String, expiryDate: Date?): Result<Error, Uri> =
         revokeExistingSharedLinksFor(remotePathLower).map {
-            DbxUserSharingRequests(rawClient).createSharedLinkWithSettings(
+            client.sharing().createSharedLinkWithSettings(
                 remotePathLower,
-                SharedLinkSettings(RequestedVisibility.PASSWORD, password, expiryDate)
+                SharedLinkSettings(RequestedVisibility.PASSWORD, password, expiryDate, null, null)
             ).url.toUri()
         }
 
     override fun streamFromPasswordProtectedUri(uri: Uri): Result<Error, InputStream> {
-        val passwordProtectedLinkDownloader = DbxUserSharingRequests(rawClient).getSharedLinkFile(uri.toString())
+        val passwordProtectedLinkDownloader = client.sharing().getSharedLinkFile(uri.toString())
 
         return try {
             passwordProtectedLinkDownloader.inputStream.asSuccess()
@@ -154,11 +142,11 @@ class HttpDropboxClient(identifier: String, accessToken: String) : SimpleDropbox
 
     private fun revokeExistingSharedLinksFor(pathLower: String): Result<Error, Unit> {
         val sharedLinksForFile: List<SharedLinkMetadata> =
-            DbxUserSharingRequests(rawClient).listSharedLinksBuilder().withPath(pathLower).start().links.toList()
+            client.sharing().listSharedLinksBuilder().withPath(pathLower).start().links.toList()
 
         val results = sharedLinksForFile.map { link ->
             try {
-                DbxUserSharingRequests(rawClient).revokeSharedLink(link.url).asSuccess()
+                client.sharing().revokeSharedLink(link.url).asSuccess()
             } catch (e: Exception) {
                 Failure(Error("Could not revoke link: ${link.url} for file path: $pathLower"))
             }
