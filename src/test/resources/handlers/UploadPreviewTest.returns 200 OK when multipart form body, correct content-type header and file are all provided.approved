@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Bandage</title>
     <link href="/public/vendor/bootstrap.min.css" rel="stylesheet" type="text/css">
-    <link href="/public/vendor/glyphicons.css" rel="stylesheet" type="text/css">
     <link href="/public/style.css" rel="stylesheet" type="text/css">
     <link href="/public/favicon-96x96.png" rel="icon" type="image/png" sizes="96x96">
 </head>
