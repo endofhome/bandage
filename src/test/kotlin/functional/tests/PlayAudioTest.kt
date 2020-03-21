@@ -168,8 +168,7 @@ class PlayAudioTest {
         )
         val bandage = Bandage(config, metadataStorage, fileStorage).app
         val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
-            .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_1", path = "login"))
-            .header("BANDAGE_ENABLE_EXPERIMENTAL_FEATURES", "true"))
+            .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_1", path = "login")))
 
         val expectedMetadataBeforeStreaming = PreProcessMetadata(
             file = file,
@@ -207,8 +206,7 @@ class PlayAudioTest {
         )
         val bandage = Bandage(config, metadataStorage, fileStorage).app
         val response = bandage(Request(GET, "$play/${notAnMp3.uuid}")
-            .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_1", path = "login"))
-            .header("BANDAGE_ENABLE_EXPERIMENTAL_FEATURES", "true"))
+            .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_1", path = "login")))
 
         val expectedMetadataBeforeStreaming = PreProcessMetadata(file)
 
@@ -246,8 +244,7 @@ class PlayAudioTest {
             )
             val bandage = Bandage(config, metadataStorage, fileStorage).app
             val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
-                .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_1", path = "login"))
-                .header("BANDAGE_ENABLE_EXPERIMENTAL_FEATURES", "true"))
+                .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_1", path = "login")))
 
             val fileContainingResponseBody = File("/tmp/id3_tags_are_added_even_when_there_are_none_or_many.mp3")
             response.body.stream.use { input ->
