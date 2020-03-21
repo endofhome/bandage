@@ -14,7 +14,7 @@ interface FileStorage {
     fun downloadFile(remotePath: String, destinationPath: String): Result<Error, JavaFile>
     fun uploadFile(file: java.io.File, destinationPath: String): Result<Error, JavaFile>
     fun publicLink(path: String, permission: FileStoragePermission): Result<Error, Uri>
-    fun stream(uri: Uri): Result<Error, InputStream>
+    fun stream(remotePath: String, fromByte: Long? = null): Result<Error, InputStream>
 }
 
 sealed class FileStoragePermission {

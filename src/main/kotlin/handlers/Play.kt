@@ -13,6 +13,7 @@ import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
+import org.http4k.core.Status.Companion.PARTIAL_CONTENT
 import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.routing.path
 import result.Result.Failure
@@ -24,6 +25,7 @@ import storage.FileStorage
 import storage.MetadataStorage
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import kotlin.math.max
 
 
 object Play {
@@ -36,8 +38,10 @@ object Play {
         request.query("id")?.let { return Response(SEE_OTHER).header("Location", "$play/$it") }
         val uuid = request.path("id") ?: return Response(BAD_REQUEST)
 
+        val skipBytes = max(0, request.header("Range")?.substringAfter("=")?.substringBefore("-")?.toLong()?.minus(1) ?: 0)
+
         val metadata = metadataStorage.findTrack(UUID.fromString(uuid))
-            .map { it }
+            .map { it?.copy(fileSize = it.fileSize - skipBytes.toInt(), normalisedFileSize = it.normalisedFileSize?.minus(skipBytes)) }
             .orElse { null }
             ?: return Response(NOT_FOUND)
         val enhancedMetadata =
@@ -46,7 +50,7 @@ object Play {
                 is Failure -> return Response(INTERNAL_SERVER_ERROR)
             }
 
-        return fileStorage.stream(metadata.passwordProtectedLink).map { audioStream ->
+        return fileStorage.stream(metadata.path, metadata.fileSize.toLong()).map { audioStream ->
             val dateTimePattern = DateTimeFormatter.ofPattern(
                 DateTimePatterns.filenamePatternFor(metadata.recordedTimestampPrecision)
             )
@@ -72,7 +76,7 @@ object Play {
             val headers: Headers = listOf(
                 "Accept-Ranges" to "bytes",
                 "Content-Length" to streamLength.toString(),
-                "Content-Range" to "bytes 0-${streamLength - 1}/$streamLength",
+                "Content-Range" to "bytes ${if (skipBytes == 0L) skipBytes else skipBytes + 1}-${streamLength + skipBytes - 1}/${streamLength + skipBytes}",
                 // TODO set this value dynamically depending on the codec used
                 "Content-Type" to "audio/mpeg",
                 "X-Content-Type-Options" to "nosniff",
@@ -84,7 +88,8 @@ object Play {
                 }.${metadata.format}\""
             )
 
-            Response(OK).body(inputstream, streamLength).headers(headers)
+            val status = if (skipBytes == 0L) OK else PARTIAL_CONTENT
+            Response(status).body(inputstream, streamLength).headers(headers)
         }.orElse {
             logger.warn(it.message)
             Response(NOT_FOUND)

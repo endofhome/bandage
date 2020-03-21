@@ -13,6 +13,10 @@ import com.dropbox.core.v2.files.WriteMode
 import com.dropbox.core.v2.sharing.RequestedVisibility
 import com.dropbox.core.v2.sharing.SharedLinkMetadata
 import com.dropbox.core.v2.sharing.SharedLinkSettings
+import org.http4k.client.ApacheClient
+import org.http4k.core.BodyMode
+import org.http4k.core.Method
+import org.http4k.core.Request
 import org.http4k.core.Uri
 import result.Error
 import result.Result
@@ -25,6 +29,8 @@ import result.partition
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.Date
 
 class DropboxFileStorage(private val dropboxClient: SimpleDropboxClient) : FileStorage {
@@ -41,8 +47,8 @@ class DropboxFileStorage(private val dropboxClient: SimpleDropboxClient) : FileS
     override fun uploadFile(file: java.io.File, destinationPath: String): Result<Error, java.io.File> =
         dropboxClient.uploadFile(file, destinationPath)
 
-    override fun stream(uri: Uri): Result<Error, InputStream> =
-        dropboxClient.streamFromPasswordProtectedUri(uri)
+    override fun stream(remotePath: String, fromByte: Long?): Result<Error, InputStream> =
+        dropboxClient.streamFromPath(Paths.get(remotePath), fromByte)
 
     override fun publicLink(path: String, permission: FileStoragePermission): Result<Error, Uri> =
         when (permission) {
@@ -55,13 +61,15 @@ interface SimpleDropboxClient {
     fun readTextFile(filename: String): Result<Error, List<String>>
     fun uploadFile(file: java.io.File, destinationPath: String): Result<Error, java.io.File>
     fun downloadFile(remotePath: String, destinationPath: String): Result<Error, java.io.File>
-    fun streamFromPasswordProtectedUri(uri: Uri): Result<Error, InputStream>
+    fun streamFromPasswordProtectedUri(uri: Uri, skipBytes: Long? = null): Result<Error, InputStream>
+    fun streamFromPath(path: Path, fromByte: Long? = null): Result<Error, InputStream>
     fun createPasswordProtectedLink(remotePathLower: String, password: String, expiryDate: Date? = null): Result<Error, Uri>
 }
 
-class HttpDropboxClient(identifier: String, accessToken: String) : SimpleDropboxClient {
+class HttpDropboxClient(identifier: String, private val accessToken: String) : SimpleDropboxClient {
     private val requestConfig: DbxRequestConfig = DbxRequestConfig.newBuilder(identifier).build()
     private val client: DbxClientV2 = DbxClientV2(requestConfig, accessToken)
+
     override fun listFolders(): Result<Error, List<Folder>> =
         filesRecursive().map { files ->
             val (foldersMetadata, filesMetadata) = files.partition { it is FolderMetadata }
@@ -71,7 +79,6 @@ class HttpDropboxClient(identifier: String, accessToken: String) : SimpleDropbox
                 }.map { fileMetadata -> File(fileMetadata.name, fileMetadata.pathLower) })
             }.asSuccess()
         }.orElse { Failure(it) }
-
     override fun createPasswordProtectedLink(remotePathLower: String, password: String, expiryDate: Date?): Result<Error, Uri> =
         revokeExistingSharedLinksFor(remotePathLower).map {
             client.sharing().createSharedLinkWithSettings(
@@ -80,13 +87,33 @@ class HttpDropboxClient(identifier: String, accessToken: String) : SimpleDropbox
             ).url.toUri()
         }
 
-    override fun streamFromPasswordProtectedUri(uri: Uri): Result<Error, InputStream> {
+    override fun streamFromPasswordProtectedUri(uri: Uri, skipBytes: Long?): Result<Error, InputStream> {
         val passwordProtectedLinkDownloader = client.sharing().getSharedLinkFile(uri.toString())
 
         return try {
             passwordProtectedLinkDownloader.inputStream.asSuccess()
         } catch (e: Exception) {
             Failure(Error("Downloader for $uri has already been closed"))
+        }
+    }
+
+    override fun streamFromPath(path: Path, fromByte: Long?): Result<Error, InputStream> {
+        val baseHeaders = listOf(
+            "Authorization" to "Bearer $accessToken",
+            "Dropbox-API-Arg" to "{\"path\": \"$path\"}"
+        )
+        val rangeHeaders = if (fromByte != null) listOf("Range" to "bytes=-$fromByte") else emptyList()
+        val headers = baseHeaders + rangeHeaders
+
+        val request = Request(Method.GET, "https://content.dropboxapi.com/2/files/download")
+            .headers(headers)
+
+        val response = ApacheClient(responseBodyMode = BodyMode.Stream)(request)
+
+        return if (response.status.code in 200..299) {
+            response.body.stream.asSuccess()
+        } else {
+            Failure(Error("Could not stream file $path"))
         }
     }
 

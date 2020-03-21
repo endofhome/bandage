@@ -17,6 +17,7 @@ import org.http4k.core.Request
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
+import org.http4k.core.Status.Companion.PARTIAL_CONTENT
 import org.http4k.core.Status.Companion.SEE_OTHER
 import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.core.cookie.Cookie
@@ -35,7 +36,11 @@ class PlayAudioTest {
 
     private val config = dummyConfiguration()
     private val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata))
-    private val fileStorage = StubFileStorage(mutableMapOf(exampleAudioTrackMetadata.passwordProtectedLink to "some test data".toByteArray()))
+    private val fileStorage = StubFileStorage(
+            mutableMapOf(
+                exampleAudioTrackMetadata.path to "some test data".toByteArray()
+            )
+        )
 
     @Test
     fun `returns UNAUTHORISED if not logged in`() {
@@ -92,7 +97,7 @@ class PlayAudioTest {
         )
         val metadataStorage = StubMetadataStorage(mutableListOf(take1, take2, take3))
         val fileStorage = StubFileStorage(
-            mutableMapOf(exampleAudioTrackMetadata.passwordProtectedLink to file.readBytes())
+            mutableMapOf(exampleAudioTrackMetadata.path to file.readBytes())
         )
         val bandage = Bandage(config, metadataStorage, fileStorage).app
         val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
@@ -130,7 +135,7 @@ class PlayAudioTest {
         val metadataStorage = StubMetadataStorage(mutableListOf(take1, take2, take3))
         val fileContents = File("src/test/resources/files/440Hz-5sec.mp3").readBytes()
         val fileStorage = StubFileStorage(
-            mutableMapOf(exampleAudioTrackMetadata.passwordProtectedLink to fileContents)
+            mutableMapOf(exampleAudioTrackMetadata.path to fileContents)
         )
         val configWithDisabledId3Tagging = config.withOverride(DISABLE_ID3_TAGGING_ON_THE_FLY, "true")
 
@@ -159,7 +164,7 @@ class PlayAudioTest {
         val file = File("src/test/resources/files/440Hz-5sec.mp3")
         val fileContents = file.readBytes()
         val fileStorage = StubFileStorage(
-            mutableMapOf(exampleAudioTrackMetadata.passwordProtectedLink to fileContents)
+            mutableMapOf(exampleAudioTrackMetadata.path to fileContents)
         )
         val bandage = Bandage(config, metadataStorage, fileStorage).app
         val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
@@ -198,7 +203,7 @@ class PlayAudioTest {
         val file = File("src/test/resources/files/not-an-mp3.wav")
         val fileContents = file.readBytes()
         val fileStorage = StubFileStorage(
-            mutableMapOf(notAnMp3.passwordProtectedLink to fileContents)
+            mutableMapOf(notAnMp3.path to fileContents)
         )
         val bandage = Bandage(config, metadataStorage, fileStorage).app
         val response = bandage(Request(GET, "$play/${notAnMp3.uuid}")
@@ -237,7 +242,7 @@ class PlayAudioTest {
 
             val metadataStorage = StubMetadataStorage(mutableListOf(track))
             val fileStorage = StubFileStorage(
-                mutableMapOf(exampleAudioTrackMetadata.passwordProtectedLink to file.readBytes())
+                mutableMapOf(exampleAudioTrackMetadata.path to file.readBytes())
             )
             val bandage = Bandage(config, metadataStorage, fileStorage).app
             val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
@@ -273,6 +278,26 @@ class PlayAudioTest {
 
             fileContainingResponseBody.delete()
         }
+    }
+
+    @Test
+    fun `partial content is served if requested`() {
+        val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata))
+        val file = File("src/test/resources/files/440Hz-5sec.mp3")
+        val fileContents = file.readBytes()
+        val fileStorage = StubFileStorage(
+            mutableMapOf(exampleAudioTrackMetadata.path to fileContents)
+        )
+        val expectedNewTagBytes = 45
+        val expectedNewFileSize = exampleAudioTrackMetadata.normalisedFileSize!! + expectedNewTagBytes
+
+        val bandage = Bandage(config, metadataStorage, fileStorage).app
+        val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
+            .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_1", path = "login"))
+            .header("Range", "bytes=$expectedNewFileSize-"))
+
+        assertThat(response.status, equalTo(PARTIAL_CONTENT))
+        assertThat(response.header("Content-Length"), equalTo("1"))
     }
 
     @Test
