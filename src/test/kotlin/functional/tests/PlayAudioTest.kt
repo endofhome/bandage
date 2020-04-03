@@ -291,10 +291,11 @@ class PlayAudioTest {
         val bandage = Bandage(config, metadataStorage, fileStorage).app
         val response = bandage(Request(GET, "$play/${exampleAudioTrackMetadata.uuid}")
             .cookie(Cookie(LOGIN.cookieName, "${config.get(API_KEY)}_1", path = "login"))
-            .header("Range", "bytes=$expectedNewFileSize-"))
+            .header("Range", "bytes=${expectedNewFileSize -1}-"))
 
         assertThat(response.status, equalTo(PARTIAL_CONTENT))
         assertThat(response.header("Content-Length"), equalTo("1"))
+        assertThat(response.header("Content-Range"), equalTo("bytes 1278-1278/1279"))
     }
 
     @Test

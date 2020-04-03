@@ -38,7 +38,7 @@ object Play {
         request.query("id")?.let { return Response(SEE_OTHER).header("Location", "$play/$it") }
         val uuid = request.path("id") ?: return Response(BAD_REQUEST)
 
-        val skipBytes = max(0, request.header("Range")?.substringAfter("=")?.substringBefore("-")?.toLong()?.minus(1) ?: 0)
+        val skipBytes = max(0, request.header("Range")?.substringAfter("=")?.substringBefore("-")?.toLong() ?: 0)
 
         val metadata = metadataStorage.findTrack(UUID.fromString(uuid))
             .map { it?.copy(fileSize = it.fileSize - skipBytes.toInt(), normalisedFileSize = it.normalisedFileSize?.minus(skipBytes)) }
@@ -73,10 +73,11 @@ object Play {
                 }
             }
 
+            val newFileSize = streamLength + skipBytes
             val headers: Headers = listOf(
                 "Accept-Ranges" to "bytes",
                 "Content-Length" to streamLength.toString(),
-                "Content-Range" to "bytes ${if (skipBytes == 0L) skipBytes else skipBytes + 1}-${streamLength + skipBytes - 1}/${streamLength + skipBytes}",
+                "Content-Range" to "bytes $skipBytes-${newFileSize - 1}/$newFileSize",
                 // TODO set this value dynamically depending on the codec used
                 "Content-Type" to "audio/mpeg",
                 "X-Content-Type-Options" to "nosniff",
