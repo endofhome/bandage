@@ -20,12 +20,15 @@ import storage.AudioTrackMetadataEnhancer
 import storage.HasPreferredTitle
 import storage.HasPresentationFormat.Companion.presentationFormat
 import storage.MetadataStorage
+import java.io.File
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 object TrackMetadata {
     operator fun invoke(authenticatedRequest: AuthenticatedRequest, metadataStorage: MetadataStorage): Response {
+        val newPlayerEnabled = authenticatedRequest.request.header("BANDAGE_ENABLE_NEW_PLAYER")?.toBoolean() ?: false
+
         val user = authenticatedRequest.user
         val trackMetadata = (authenticatedRequest.request.path("id")?.let { id ->
             val uuid = try { UUID.fromString(id) } catch (e: Exception) { return loggedResponse(NOT_FOUND, e.message, user) }
@@ -52,7 +55,8 @@ object TrackMetadata {
                 trackMetadata.enhanceWithTakeNumber(metadataStorage)
                     .map { it.takeNumber?.toString().orEmpty() }
                     .orElse { "" }
-            }
+            },
+            if (newPlayerEnabled) { File("public/panarific_2.json").readText() } else null // TODO temporary, for testing
         )
 
         return Response(Status.OK).with(Bandage.StaticConfig.view of TrackMetadataPage(authenticatedRequest.user, trackMetadataViewModel, playerMetadata))

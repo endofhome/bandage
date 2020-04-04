@@ -43,6 +43,23 @@ audio::-webkit-media-controls-panel {
     margin-left: 15px;
 }
 
+#audio-player-metadata #title{
+    font-weight: bold;
+}
+
+#current-time {
+    margin-left: 15px;
+}
+
+#audio-player-controls {
+    margin-left: 15px;
+    margin-right: 15px;
+}
+
+#audio-player-controls #format {
+    margin-left: 15px;
+}
+
 .highlighted {
     background-color: #ffe6ee;
 }

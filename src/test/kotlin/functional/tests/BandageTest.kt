@@ -360,6 +360,8 @@ class BandageTest {
         driver.assertAudioPlayerPresent(autoplayAttributeState = present())
     }
 
+    // TODO add test for new player
+
     @Test
     fun `full audio track metadata can be viewed`() {
         val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata.copy(

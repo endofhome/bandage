@@ -17,12 +17,14 @@ import storage.AudioTrackMetadataEnhancer
 import storage.HasPreferredTitle.TitleType
 import storage.HasPresentationFormat.Companion.presentationFormat
 import storage.MetadataStorage
+import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 object Dashboard {
     operator fun invoke(authenticatedRequest: AuthenticatedRequest, metadataStorage: MetadataStorage): Response {
         val request = authenticatedRequest.request
+        val newPlayerEnabled = request.header("BANDAGE_ENABLE_NEW_PLAYER")?.toBoolean() ?: false
 
         val dateGroupedTracks = metadataStorage.tracks().map { all ->
             with(AudioTrackMetadataEnhancer) {
@@ -39,7 +41,7 @@ object Dashboard {
                          date.formattedDate,
                          tracks.sortedBy { it.base.recordedTimestamp }
                                .reversed()
-                               .map { audioFile -> audioFile.viewModel() }
+                               .map { audioFile -> audioFile.viewModel(newPlayerEnabled) }
                      )
                  }
             }
@@ -75,7 +77,7 @@ object Dashboard {
         override fun template() = "dashboard"
     }
 
-    private fun AudioTrackMetadataEnhancer.EnhancedAudioTrackMetadata.viewModel(): ViewModels.AudioTrackMetadata =
+    private fun AudioTrackMetadataEnhancer.EnhancedAudioTrackMetadata.viewModel(newPlayerEnabled: Boolean): ViewModels.AudioTrackMetadata =
         this.base.let {
             val (title, titleType) = it.preferredTitle()
             val dateTimePattern = DateTimeFormatter.ofPattern(
@@ -96,7 +98,8 @@ object Dashboard {
                     dateTime,
                     "$title${this.takeNumber?.let { " (take $it)" }.orEmpty()}"
                 ).joinToString(" "),
-                this.takeNumber?.let { take -> "$take" }.orEmpty()
+                this.takeNumber?.let { take -> "$take" }.orEmpty(),
+                if (newPlayerEnabled) { File("public/panarific_2.json").readText() } else null // TODO temporary, for testing
             )
         }
 
@@ -117,7 +120,8 @@ object Dashboard {
             val playUrl: String,
             val downloadUrl: String,
             val filename: String,
-            val takeNumber: String
+            val takeNumber: String,
+            val peaks: String? // TODO temporary, for testing new audio player
         )
     }
 }
