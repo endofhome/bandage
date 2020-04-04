@@ -27,7 +27,7 @@ import java.util.UUID
 
 object TrackMetadata {
     operator fun invoke(authenticatedRequest: AuthenticatedRequest, metadataStorage: MetadataStorage): Response {
-        val newPlayerEnabled = authenticatedRequest.request.header("BANDAGE_ENABLE_NEW_PLAYER")?.toBoolean() ?: false
+        val newPlayerEnabled = authenticatedRequest.request.header("BANDAGE_ENABLE_NEW_PLAYER")?.toBoolean() ?: false || authenticatedRequest.request.query("newPlayer")?.toBoolean() ?: false
 
         val user = authenticatedRequest.user
         val trackMetadata = (authenticatedRequest.request.path("id")?.let { id ->

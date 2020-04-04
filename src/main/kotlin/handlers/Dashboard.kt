@@ -24,7 +24,7 @@ import java.time.format.DateTimeFormatter
 object Dashboard {
     operator fun invoke(authenticatedRequest: AuthenticatedRequest, metadataStorage: MetadataStorage): Response {
         val request = authenticatedRequest.request
-        val newPlayerEnabled = request.header("BANDAGE_ENABLE_NEW_PLAYER")?.toBoolean() ?: false
+        val newPlayerEnabled = request.header("BANDAGE_ENABLE_NEW_PLAYER")?.toBoolean() ?: false || request.query("newPlayer")?.toBoolean() ?: false
 
         val dateGroupedTracks = metadataStorage.tracks().map { all ->
             with(AudioTrackMetadataEnhancer) {
