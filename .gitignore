@@ -2,9 +2,12 @@
 .gradle
 build
 out
-node_modules
 public/static-errors
 
 planning
 todo.txt
 doc
+misc
+docker-images
+lighthouse-reports
+src/main/kotlin/scripts/loft
