@@ -62,8 +62,13 @@ import storage.DummyFileStorage
 import storage.DummyMetadataStorage
 import storage.StubFileStorage
 import storage.StubMetadataStorage
+import java.time.Clock
 import java.time.Instant.EPOCH
+import java.time.ZoneOffset.UTC
+import java.time.format.TextStyle
+import java.time.temporal.ChronoUnit
 import java.time.temporal.ChronoUnit.HOURS
+import java.util.Locale.UK
 import java.util.UUID
 
 
@@ -481,6 +486,14 @@ class BandageTest {
     @Nested
     @DisplayName("Uploading tracks")
     inner class UploadingTracks {
+        private val fixedClock = Clock.fixed(EPOCH.plus(366, ChronoUnit.DAYS), UTC)
+        private val now = fixedClock.instant().atZone(UTC)
+        private val year = now.year
+        private val monthNumber = now.monthValue.toString().padStart(2, '0')
+        private val day = now.dayOfMonth.toString()
+        private val nowNumericalAttributeString = "$year-$monthNumber-${day.padStart(2, '0')}"
+        private val nowWordPresentationString = "$day ${now.month.getDisplayName(TextStyle.FULL, UK)} $year"
+        private val nowNumericalPresentationString = "${day.padStart(2, '0')}/$monthNumber/$year"
 
         @BeforeEach
         fun setup() {
@@ -491,9 +504,10 @@ class BandageTest {
         fun `a track with no date or time in the filename can be uploaded`() {
             assertFileUploadedCorrectly(
                 filePath = "/src/test/resources/files/440Hz-5sec.mp3",
-                dateh4DataTestAttr = "date-1970-01-01",
-                dateh4Text = "1970",
-                recordedOnMetadata = "1970"
+                dateh4DataTestAttr = "date-$nowNumericalAttributeString",
+                dateh4Text = nowWordPresentationString,
+                recordedOnMetadata = nowNumericalPresentationString,
+                clock = fixedClock
             )
         }
 
@@ -521,12 +535,13 @@ class BandageTest {
         fun `a track with many id3 tags is normalised correctly`() {
             assertFileUploadedCorrectly(
                 filePath = "/src/test/resources/files/many-tags.mp3",
-                dateh4DataTestAttr = "date-1970-01-01",
-                dateh4Text = "1970",
-                recordedOnMetadata = "1970",
+                dateh4DataTestAttr = "date-$nowNumericalAttributeString",
+                dateh4Text = nowWordPresentationString,
+                recordedOnMetadata = nowNumericalPresentationString,
                 expectedTitle = "Top 5 number",
                 expectedFileSize = 41126L,
-                expectedNormalisedFileSize = 40796L
+                expectedNormalisedFileSize = 40796L,
+                clock = fixedClock
             )
         }
 
@@ -534,12 +549,13 @@ class BandageTest {
         fun `a track with no id3 tags is normalised correctly`() {
             assertFileUploadedCorrectly(
                 filePath = "/src/test/resources/files/no-tags.mp3",
-                dateh4DataTestAttr = "date-1970-01-01",
-                dateh4Text = "1970",
-                recordedOnMetadata = "1970",
+                dateh4DataTestAttr = "date-$nowNumericalAttributeString",
+                dateh4Text = nowWordPresentationString,
+                recordedOnMetadata = nowNumericalPresentationString,
                 expectedTitle = "no-tags",
                 expectedFileSize = 40978L,
-                expectedNormalisedFileSize = 40796L
+                expectedNormalisedFileSize = 40796L,
+                clock = fixedClock
             )
         }
 
@@ -547,12 +563,13 @@ class BandageTest {
         fun `non-mp3 files are not normalised`() {
             assertFileUploadedCorrectly(
                 filePath = "/src/test/resources/files/not-an-mp3.wav",
-                dateh4DataTestAttr = "date-1970-01-01",
-                dateh4Text = "1970",
-                recordedOnMetadata = "1970",
+                dateh4DataTestAttr = "date-$nowNumericalAttributeString",
+                dateh4Text = nowWordPresentationString,
+                recordedOnMetadata = nowNumericalPresentationString,
                 expectedTitle = "not-an-mp3",
                 expectedFileSize = 40978L,
-                expectedNormalisedFileSize = null
+                expectedNormalisedFileSize = null,
+                clock = fixedClock
             )
         }
 
@@ -563,10 +580,11 @@ class BandageTest {
             recordedOnMetadata: String,
             expectedTitle: String = "440Hz Sine Wave",
             expectedFileSize: Long? = null,
-            expectedNormalisedFileSize: Long? = null
+            expectedNormalisedFileSize: Long? = null,
+            clock: Clock = Clock.system(UTC)
         ) {
             val metadataStorage = StubMetadataStorage(mutableListOf())
-            val bandage = Bandage(config, metadataStorage, StubFileStorage(mutableMapOf())).app
+            val bandage = Bandage(config, metadataStorage, StubFileStorage(mutableMapOf()), clock).app
             val driver = ChromeDriver(ChromeOptions().setHeadless(true))
             val baseUrl = "http://localhost:7000"
 

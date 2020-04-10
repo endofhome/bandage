@@ -22,6 +22,9 @@ import org.http4k.testing.assertApproved
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.io.File
+import java.time.Clock
+import java.time.Instant.EPOCH
+import java.time.ZoneOffset.UTC
 
 @ExtendWith(ApprovalTest::class)
 internal class UploadPreviewTest {
@@ -32,7 +35,7 @@ internal class UploadPreviewTest {
 
         val user = User("some-user-id", "some-full-name")
 
-        val response = UploadPreview(AuthenticatedRequest(request, user))
+        val response = UploadPreview(AuthenticatedRequest(request, user), clock = Clock.system(UTC))
 
         assertThat(response.status, equalTo(BAD_REQUEST))
     }
@@ -44,7 +47,7 @@ internal class UploadPreviewTest {
             .body(multipartBody)
         val user = User("some-user-id", "some-full-name")
 
-        val response = UploadPreview(AuthenticatedRequest(request, user))
+        val response = UploadPreview(AuthenticatedRequest(request, user), clock = Clock.system(UTC))
 
         assertThat(response.status, equalTo(BAD_REQUEST))
     }
@@ -58,7 +61,7 @@ internal class UploadPreviewTest {
 
         val user = User("some-user-id", "some-full-name")
 
-        val response = UploadPreview(AuthenticatedRequest(request, user))
+        val response = UploadPreview(AuthenticatedRequest(request, user), clock = Clock.system(UTC))
 
         assertThat(response.status, equalTo(BAD_REQUEST))
     }
@@ -78,7 +81,7 @@ internal class UploadPreviewTest {
         val user = User("some-user-id", "some-full-name")
 
         val responses = disallowedRequests.map { (fileType, request) ->
-            fileType to UploadPreview(AuthenticatedRequest(request, user))
+            fileType to UploadPreview(AuthenticatedRequest(request, user), clock = Clock.system(UTC))
         }
 
         responses.forEach { (fileType, response) ->
@@ -99,7 +102,8 @@ internal class UploadPreviewTest {
 
         val user = User("some-user-id", "some-full-name")
 
-        val response: MemoryResponse = UploadPreview(AuthenticatedRequest(request, user)) as MemoryResponse
+        val fixedClock = Clock.fixed(EPOCH, UTC)
+        val response: MemoryResponse = UploadPreview(AuthenticatedRequest(request, user), clock = fixedClock) as MemoryResponse
         val redactedResponse = if (System.getenv("${Bandage.StaticConfig.appName.toUpperCase()}_ARTIST_OVERRIDE") != null) {
             val overrideEncoded = System.getenv("${Bandage.StaticConfig.appName.toUpperCase()}_ARTIST_OVERRIDE").map {
                 val intValue = it.toInt()

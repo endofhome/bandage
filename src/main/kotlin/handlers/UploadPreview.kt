@@ -21,6 +21,8 @@ import storage.HasPresentationFormat.Companion.presentationFormat
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.time.Clock
+import java.time.ZoneOffset
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -30,7 +32,7 @@ object UploadPreview {
     }
     val tempDir = File("/tmp/${Bandage.StaticConfig.appName.toLowerCase()}")
 
-    operator fun invoke(authenticatedRequest: AuthenticatedRequest, artistOverride: String = ""): Response {
+    operator fun invoke(authenticatedRequest: AuthenticatedRequest, artistOverride: String = "", clock: Clock): Response {
         val formFile = try {
             val body = MultipartFormBody.from(authenticatedRequest.request)
             body.file("file") ?: return Response(BAD_REQUEST)
@@ -62,8 +64,8 @@ object UploadPreview {
         val (year, month, day, hour, minute, second) = if (preProcessedAudioTrackMetadata.recordedTimestamp != null && preProcessedAudioTrackMetadata.recordedTimestampPrecision != null) {
             DisassembleTimestamp(preProcessedAudioTrackMetadata.recordedTimestamp, preProcessedAudioTrackMetadata.recordedTimestampPrecision)
         } else {
-            // TODO kill this
-            DisassembledTimestamp(1970, null, null, null, null, null)
+            val now = clock.instant().atZone(ZoneOffset.UTC)
+            DisassembledTimestamp(now.year, now.monthValue, now.dayOfMonth, null, null, null)
         }
         val trackMetadata = ViewModels.PreProcessedAudioTrackMetadata(
             System.getenv("${Bandage.StaticConfig.appName.toUpperCase()}_ARTIST_OVERRIDE") ?: preProcessedAudioTrackMetadata.artist,

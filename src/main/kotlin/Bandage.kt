@@ -62,6 +62,8 @@ import storage.MetadataStorageFactory
 import storage.PostgresMetadataStorageFactory
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.Clock
+import java.time.ZoneOffset.UTC
 
 
 fun main(args: Array<String>) {
@@ -72,16 +74,21 @@ fun main(args: Array<String>) {
     environment.config.let { logger.info("Bandage has started on ${it.baseUrl}") }
 }
 
-class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, fileStorage: FileStorage) {
+class Bandage(
+    providedConfig: Configuration,
+    metadataStorage: MetadataStorage,
+    fileStorage: FileStorage,
+    clock: Clock = Clock.system(UTC)
+) {
 
     init {
         WriteStaticErrorFiles()
     }
 
     companion object {
-        fun init(requiredConfig: RequiredConfig, metadataStorageFactory: MetadataStorageFactory, fileStorageFactory: FileStorageFactory): Bandage =
+        fun init(requiredConfig: RequiredConfig, metadataStorageFactory: MetadataStorageFactory, fileStorageFactory: FileStorageFactory, clock: Clock = Clock.system(UTC)): Bandage =
             ValidateConfig(requiredConfig, configurationFilesDir).withDynamicDatabaseUrlFrom(System.getenv("DATABASE_URL")).run {
-                Bandage(this, metadataStorageFactory(this), fileStorageFactory(this))
+                Bandage(this, metadataStorageFactory(this), fileStorageFactory(this), clock)
             }
     }
 
@@ -130,7 +137,7 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
             metadata      bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  TrackMetadata(authenticatedRequest, metadataStorage, enableNewPlayer) }) },
             upload        bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest -> UploadForm(authenticatedRequest) }) },
             upload        bind POST to { request -> ifAuthenticated(request, then = { Upload(request, metadataStorage, fileStorage, providedConfig.get(DROPBOX_LINK_PASSWORD)) }) },
-            uploadPreview bind POST to { request -> ifAuthenticated(request, then = { authenticatedRequest -> UploadPreview(authenticatedRequest) }) },
+            uploadPreview bind POST to { request -> ifAuthenticated(request, then = { authenticatedRequest -> UploadPreview(authenticatedRequest, clock = clock) }) },
 
             api           bind apiRoutes,
 
