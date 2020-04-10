@@ -38,7 +38,8 @@ data class AudioTrackMetadata(
     val passwordProtectedLink: Uri,
     val path: String,
     val hash: String,
-    val collections: List<ExistingCollection> = emptyList()
+    val collections: List<ExistingCollection> = emptyList(),
+    val waveform: Waveform? = null
 ) : HasPreferredTitle, HasPresentationFormat {
     val playUrl: Uri = "${environment.config.baseUrl}$play/$uuid".toUri()
     val downloadUrl: Uri = "${environment.config.baseUrl}$play/$uuid".toUri()
@@ -90,6 +91,25 @@ sealed class Collection {
 
 data class BitRate(val value: String)
 data class Duration(val value: String)
+data class Waveform(
+    val bits: Bits,
+    val data: Data,
+    val length: Length,
+    val version: Version,
+    val channels: Channels,
+    val sampleRate: SampleRate,
+    val samplesPerPixel: SamplesPerPixel
+) {
+    companion object {
+        data class Bits(val value: Int)
+        data class Data(val value: List<Double>)
+        data class Length(val value: Long)
+        data class Version(val value: Int)
+        data class Channels(val value: Int)
+        data class SampleRate(val value: Int)
+        data class SamplesPerPixel(val value: Int)
+    }
+}
 
 fun String.toBitRate() = BitRate(this)
 fun String.toDuration() = Duration(this)

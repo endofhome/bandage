@@ -7,7 +7,7 @@
             </audio>
         </div>
         <div id="waveplayer" style="display:none">
-            <div id="waveform" src="{{playUrl}}" peaks="{{peaks}}" type="audio/{{format}}" {{#if autoPlayAudio}}autoplay="true"{{/if}}></div>
+            <div id="waveform" data-test="audio-player-waveform" src="{{playUrl}}" peaks="{{peaks}}" type="audio/{{format}}" {{#if autoPlayAudio}}autoplay="true"{{/if}}></div>
             <div id="audio-player-metadata" data-test="[audio-player-metadata]"><span id="title">{{title}}</span></div>
             <div id="audio-player-controls"><button id="play-pause">❚❚</button> <button id="loop">⟲</button> <button id="clear-selected-regions">✕</button> <span id="zoom-control"><label for="zoom">🔍</label> <input id="zoom" type="range" min="0" max="10" value="0"></span> <span id="current-time"></span> / <span id="total-time">{{duration}}</span> <span id="format">{{format}} ({{bitRate}})</span><span id="right-aligned-controls" class="float-right"><span id="volume-control"><label for="volume">🔈</label> <input id="volume" type="range" min="0" max="100" value="100"></span> <button id="download" onclick="window.location.href = '{{playUrl}}';">↓</button></span></div>
         </div>

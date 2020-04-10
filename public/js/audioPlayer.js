@@ -36,7 +36,7 @@ function showEnhancedAudioPlayer() {
 }
 
 function initialiseWaveSurferAndPlayAudio() {
-    wavesurfer.load(container.src, container.peaks.data);
+    wavesurfer.load(container.src, container.peaks);
     wavesurfer.play();
 }
 

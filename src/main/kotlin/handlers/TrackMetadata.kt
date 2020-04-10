@@ -20,7 +20,6 @@ import storage.AudioTrackMetadataEnhancer
 import storage.HasPreferredTitle
 import storage.HasPresentationFormat.Companion.presentationFormat
 import storage.MetadataStorage
-import java.io.File
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -64,7 +63,7 @@ object TrackMetadata {
                     .map { it.takeNumber?.toString().orEmpty() }
                     .orElse { "" }
             },
-            if (newPlayerEnabled) { File("public/panarific_2.json").readText() } else null // TODO temporary, for testing
+            if (newPlayerEnabled) { trackMetadataViewModel.peaks } else null // TODO temporary, for testing
         )
 
         return Response(Status.OK).with(Bandage.StaticConfig.view of TrackMetadataPage(user, trackMetadataViewModel, playerMetadata))
@@ -102,7 +101,8 @@ object TrackMetadata {
                     dateTime,
                     "$title${audioTrackMetadata.enhanceWithTakeNumber(metadataStorage).map { it.takeNumber }.let { " (take $it)" }}"
                 ).joinToString(" ")
-            }
+            },
+            waveform?.data?.value.toString()
         )
     }
 
@@ -121,7 +121,8 @@ object TrackMetadata {
             val recordedTimestamp: String,
             val uploadedTimestamp: String,
             val collections: List<String>,
-            val filename: String
+            val filename: String,
+            val peaks: String? // TODO temporary, for testing new audio player
         ) : HasPreferredTitle {
             override val workingTitles: List<String> = listOf(workingTitle)
         }

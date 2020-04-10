@@ -17,7 +17,6 @@ import storage.AudioTrackMetadataEnhancer
 import storage.HasPreferredTitle.TitleType
 import storage.HasPresentationFormat.Companion.presentationFormat
 import storage.MetadataStorage
-import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -106,7 +105,7 @@ object Dashboard {
                     "$title${this.takeNumber?.let { " (take $it)" }.orEmpty()}"
                 ).joinToString(" "),
                 this.takeNumber?.let { take -> "$take" }.orEmpty(),
-                if (newPlayerEnabled) { File("public/panarific_2.json").readText() } else null // TODO temporary, for testing
+                if (newPlayerEnabled) { it.waveform?.data?.value?.toString() } else null // TODO temporary, for testing
             )
         }
 

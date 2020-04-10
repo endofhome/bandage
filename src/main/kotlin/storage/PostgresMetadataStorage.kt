@@ -21,6 +21,13 @@ import result.flatMap
 import result.map
 import result.orElse
 import storage.Collection.ExistingCollection
+import storage.Waveform.Companion.Bits
+import storage.Waveform.Companion.Channels
+import storage.Waveform.Companion.Data
+import storage.Waveform.Companion.Length
+import storage.Waveform.Companion.SampleRate
+import storage.Waveform.Companion.SamplesPerPixel
+import storage.Waveform.Companion.Version
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -46,7 +53,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
                 val statement = connection.prepareStatement("SELECT * FROM public.tracks")
                 statement.executeQuery().use { resultSet ->
                     generateSequence {
-                        if (resultSet.next()) resultSet.toAudioFileMetadata() else null
+                        if (resultSet.next()) resultSet.toAudioTrackMetadata() else null
                     }.toList()
                 }
             }
@@ -77,7 +84,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
             datasource.connection.use { connection ->
                 val statement = connection.prepareStatement("SELECT * FROM public.tracks WHERE id = '$uuid'")
                 val searchResult = statement.executeQuery().use { resultSet ->
-                    if (resultSet.next()) resultSet.toAudioFileMetadata() else null
+                    if (resultSet.next()) resultSet.toAudioTrackMetadata() else null
                 }
 
                 searchResult?.let {
@@ -108,7 +115,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
 
             newMetadata.zip(uuidIndexes).forEach { (audioFileMetadata, uuidIndex) ->
                 preparedStatement.setString(uuidIndex, audioFileMetadata.uuid.toString())
-                preparedStatement.setString(uuidIndex + 1, with(JsonSerialisation) { audioFileMetadata.toJsonString() })
+                preparedStatement.setString(uuidIndex + 1, with(JsonSerialisation) { audioFileMetadata.toMetadataJsonString() })
             }
 
             preparedStatement.use { statement ->
@@ -130,7 +137,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
                     UPDATE tracks SET metadata = ?::jsonb WHERE id = '${updatedMetadata.uuid}';
                 """.trimIndent())
 
-                preparedStatement.setString(1, with(JsonSerialisation) { updatedMetadata.toJsonString() })
+                preparedStatement.setString(1, with(JsonSerialisation) { updatedMetadata.toMetadataJsonString() })
 
                 preparedStatement.use { statement ->
                     statement.executeUpdate()
@@ -235,7 +242,7 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
         private fun tooManyWorkingTitles(trackUuid: UUID, numberOfWorkingTitles: Int) =
             IllegalStateException("Working titles are temporarily limited to one, $trackUuid has $numberOfWorkingTitles")
 
-        fun AudioTrackMetadata.toJsonString(): String {
+        fun AudioTrackMetadata.toMetadataJsonString(): String {
             if (workingTitles.size > 1) throw tooManyWorkingTitles(uuid, workingTitles.size)
 
             return """{
@@ -261,11 +268,21 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
                 }""".trimIndent()
         }
 
-        fun String.toAudioTrackMetadataWith(uuid: UUID): AudioTrackMetadata {
-            val postgresMetadata: PostgresAudioMetadata = run {
-                jacksonObjectMapper().readValue(this)
+        fun AudioTrackMetadata.toWaveformJsonString(): String? =
+            waveform?.let {
+                """{
+                    "bits": ${it.bits.value},
+                    "data": ${it.data.value},
+                    "length": ${it.length.value},
+                    "version": ${it.version.value},
+                    "channels": ${it.channels.value},
+                    "sample_rate": ${it.sampleRate.value},
+                    "samples_per_pixel": ${it.samplesPerPixel.value}
+                }""".trimIndent()
             }
 
+
+        fun PostgresTrack.toAudioTrackMetadata(): AudioTrackMetadata {
             postgresMetadata.workingTitles?.let { if (it.size > 1) throw tooManyWorkingTitles(uuid, it.size) }
 
             return AudioTrackMetadata(
@@ -287,49 +304,79 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
                 postgresMetadata.path,
                 postgresMetadata.sha256,
                 // TODO again, not pleasant as the title and tracks are set to empty.
-                postgresMetadata.collections?.map { ExistingCollection(UUID.fromString(it), "", emptySet()) } ?: emptyList()
+                postgresMetadata.collections?.map { ExistingCollection(UUID.fromString(it), "", emptySet()) } ?: emptyList(),
+                postgresWaveform?.toWaveform()
             )
         }
+
+        private fun PostgresWaveform.toWaveform(): Waveform? =
+            Waveform(
+                Bits(bits),
+                Data(data),
+                Length(length),
+                Version(version),
+                Channels(channels),
+                SampleRate(sample_rate),
+                SamplesPerPixel(samples_per_pixel)
+            )
     }
-}
 
-private fun ResultSet.toAudioFileMetadata(): AudioTrackMetadata {
-    val uuid = UUID.fromString(this.getString("id"))
-    val metadataJsonString = this.getString("metadata")
-    return with(PostgresMetadataStorage.JsonSerialisation) {
-        metadataJsonString.toAudioTrackMetadataWith(uuid)
+    private fun ResultSet.toAudioTrackMetadata(): AudioTrackMetadata {
+        val uuid = UUID.fromString(this.getString("id"))
+        val metadataJsonString = this.getString("metadata")
+        val waveformJsonString = this.getString("waveform") ?: null
+        val postgresMetadata = run { jacksonObjectMapper().readValue<PostgresAudioMetadata>(metadataJsonString) }
+        val postgresWaveform =
+            if (waveformJsonString != null) run { jacksonObjectMapper().readValue<PostgresWaveform?>(waveformJsonString) } else null
+
+        return with(JsonSerialisation) {
+            PostgresTrack(uuid, postgresMetadata, postgresWaveform).toAudioTrackMetadata()
+        }
     }
-}
 
-private fun ResultSet.toCollection(): ExistingCollection {
-    val uuid = UUID.fromString(this.getString("id"))
-    val title = this.getString("name")
-    @Suppress("UNCHECKED_CAST")
-    val tracks: Set<UUID> = (this.getArray("tracks").array as Array<UUID>).toSet()
+    private fun ResultSet.toCollection(): ExistingCollection {
+        val uuid = UUID.fromString(this.getString("id"))
+        val title = this.getString("name")
+        @Suppress("UNCHECKED_CAST")
+        val tracks: Set<UUID> = (this.getArray("tracks").array as Array<UUID>).toSet()
 
-    return ExistingCollection(
-        uuid,
-        title,
-        tracks
+        return ExistingCollection(
+            uuid,
+            title,
+            tracks
+        )
+    }
+
+
+    data class PostgresAudioMetadata(
+        val artist: String,
+        val album: String,
+        val title: String,
+        val workingTitles: List<String>?,
+        val format: String,
+        val bitrate: String?,
+        val duration: String?,
+        val size: Int,
+        val normalisedSize: Long?,
+        val recordedDate: String,
+        val recordedTimestamp: String,
+        val recordedTimestampPrecision: String,
+        val uploadedTimestamp: String,
+        val passwordProtectedLink: String,
+        val path: String,
+        val sha256: String,
+        val collections: List<String>?
     )
-}
 
-private data class PostgresAudioMetadata(
-    val artist: String,
-    val album: String,
-    val title: String,
-    val workingTitles: List<String>?,
-    val format: String,
-    val bitrate: String?,
-    val duration: String?,
-    val size: Int,
-    val normalisedSize: Long?,
-    val recordedDate: String,
-    val recordedTimestamp: String,
-    val recordedTimestampPrecision: String,
-    val uploadedTimestamp: String,
-    val passwordProtectedLink: String,
-    val path: String,
-    val sha256: String,
-    val collections: List<String>?
-)
+    data class PostgresWaveform(
+        val bits: Int,
+        val data: List<Double>,
+        val length: Long,
+        val version: Int,
+        val channels: Int,
+        val sample_rate: Int,
+        val samples_per_pixel: Int
+    )
+
+    data class PostgresTrack(val uuid: UUID, val postgresMetadata: PostgresAudioMetadata, val postgresWaveform: PostgresWaveform?)
+}

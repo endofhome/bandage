@@ -15,10 +15,12 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.present
 import com.natpryce.hamkrest.startsWith
+import config.BandageConfigItem
 import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.PASSWORD
 import config.dummyConfiguration
 import exampleAudioTrackMetadata
+import exampleWaveform
 import http.HttpConfig
 import io.github.bonigarcia.wdm.WebDriverManager
 import org.http4k.core.HttpHandler
@@ -352,12 +354,15 @@ class BandageTest {
     @Test
     fun `audio tracks can be played via dashboard`() {
         val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata))
+        val stubbedConfigValues = BandageConfigItem.ENABLE_NEW_PLAYER to "true"
+        val config = dummyConfiguration(stubbedConfigValues)
         val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
         val driver = Http4kWebDriver(bandage)
 
         driver.userLogsInAndPlaysATrack()
 
-        driver.assertAudioPlayerPresent(autoplayAttributeState = present())
+        driver.assertBasicAudioPlayerPresent(autoplayAttributeState = present())
+        driver.assertEnhancedAudioPlayerPresent(autoplayAttributeState = equalTo("true"))
     }
 
     // TODO add test for new player
@@ -447,12 +452,15 @@ class BandageTest {
     @Test
     fun `audio track can be played from metadata view`() {
         val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata))
+        val stubbedConfigValues = BandageConfigItem.ENABLE_NEW_PLAYER to "true"
+        val config = dummyConfiguration(stubbedConfigValues)
         val bandage = Bandage(config, metadataStorage, DummyFileStorage()).app
         val driver = Http4kWebDriver(bandage)
 
         driver.loginAndVisitMetadataPage()
 
-        driver.assertAudioPlayerPresent(autoplayAttributeState = absent())
+        driver.assertBasicAudioPlayerPresent(autoplayAttributeState = absent())
+        driver.assertEnhancedAudioPlayerPresent(autoplayAttributeState = absent())
     }
 
     @Test
@@ -646,7 +654,7 @@ class BandageTest {
         return lastUser
     }
 
-    private fun Http4kWebDriver.assertAudioPlayerPresent(autoplayAttributeState: Matcher<String?>) {
+    private fun Http4kWebDriver.assertBasicAudioPlayerPresent(autoplayAttributeState: Matcher<String?>) {
         val audioPlayer =
             findElement(By.cssSelector("audio[data-test=\"[play_file-${exampleAudioTrackMetadata.uuid}]\"]"))
                 ?: fail("Audio player footer is unavailable")
@@ -657,6 +665,17 @@ class BandageTest {
             equalTo("${exampleAudioTrackMetadata.title} | 0:21 | ${exampleAudioTrackMetadata.format} (320 kbps)")
         )
         assertThat(audioPlayer.getAttribute("autoplay"), autoplayAttributeState)
+    }
+
+    private fun Http4kWebDriver.assertEnhancedAudioPlayerPresent(autoplayAttributeState: Matcher<String?>) {
+        // TODO this would be better tested using a ChromeDriver with JavaScript enabled, in order to test that the default HTML player is removed and this one not visually hidden.
+        val waveform = findElement(By.cssSelector("div[data-test=\"audio-player-waveform\"]")) ?: fail("Audio player waveform is unavailable")
+
+        // TODO probably shouldn't be on the waveform
+        assertThat(waveform.getAttribute("autoplay"), autoplayAttributeState)
+
+        val peaks = waveform.getAttribute("peaks")
+        assertThat(peaks, equalTo(exampleWaveform.data.value.toString()))
     }
 
     private fun validCookieFor(loggedInUser: User) =
