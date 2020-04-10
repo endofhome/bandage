@@ -25,7 +25,7 @@ object Dashboard {
     operator fun invoke(
         authenticatedRequest: AuthenticatedRequest,
         metadataStorage: MetadataStorage,
-        enableNewPlayerForEnvironment: Boolean
+        enableNewPlayerForEnvironment: Boolean = false
     ): Response {
         val request = authenticatedRequest.request
         val newPlayerEnabled =
