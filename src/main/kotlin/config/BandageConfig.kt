@@ -5,6 +5,7 @@ import config.BandageConfigItem.API_KEY
 import config.BandageConfigItem.DISABLE_ID3_TAGGING_ON_THE_FLY
 import config.BandageConfigItem.DROPBOX_ACCESS_TOKEN
 import config.BandageConfigItem.DROPBOX_LINK_PASSWORD
+import config.BandageConfigItem.ENABLE_NEW_PLAYER
 import config.BandageConfigItem.METADATA_DB_HOST
 import config.BandageConfigItem.METADATA_DB_NAME
 import config.BandageConfigItem.METADATA_DB_PASSWORD
@@ -32,6 +33,7 @@ sealed class BandageConfigItem(override val name: String) : RequiredConfigItem {
     object DROPBOX_ACCESS_TOKEN : BandageConfigItem("${appName}_DROPBOX_ACCESS_TOKEN")
     object DROPBOX_LINK_PASSWORD : BandageConfigItem("${appName}_DROPBOX_LINK_PASSWORD")
     object DISABLE_ID3_TAGGING_ON_THE_FLY : BandageConfigItem("${appName}_DISABLE_ID3_TAGGING_ON_THE_FLY")
+    object ENABLE_NEW_PLAYER : BandageConfigItem("${appName}_ENABLE_NEW_PLAYER")
     object SENTRY_DSN : BandageConfigItem("${appName}_SENTRY_DSN")
 }
 
@@ -51,6 +53,7 @@ object BandageConfig : RequiredConfig() {
         DROPBOX_ACCESS_TOKEN,
         DROPBOX_LINK_PASSWORD,
         DISABLE_ID3_TAGGING_ON_THE_FLY,
+        ENABLE_NEW_PLAYER,
         SENTRY_DSN
     )
 }

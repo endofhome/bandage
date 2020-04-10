@@ -26,11 +26,19 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 object TrackMetadata {
-    operator fun invoke(authenticatedRequest: AuthenticatedRequest, metadataStorage: MetadataStorage): Response {
-        val newPlayerEnabled = authenticatedRequest.request.header("BANDAGE_ENABLE_NEW_PLAYER")?.toBoolean() ?: false || authenticatedRequest.request.query("newPlayer")?.toBoolean() ?: false
+    operator fun invoke(
+        authenticatedRequest: AuthenticatedRequest,
+        metadataStorage: MetadataStorage,
+        enableNewPlayerForEnvironment: Boolean
+    ): Response {
+        val request = authenticatedRequest.request
+        val newPlayerEnabled =
+            request.header("BANDAGE_ENABLE_NEW_PLAYER")?.toBoolean() ?: false
+                    || request.query("newPlayer")?.toBoolean() ?: false
+                    || enableNewPlayerForEnvironment
 
         val user = authenticatedRequest.user
-        val trackMetadata = (authenticatedRequest.request.path("id")?.let { id ->
+        val trackMetadata = (request.path("id")?.let { id ->
             val uuid = try { UUID.fromString(id) } catch (e: Exception) { return loggedResponse(NOT_FOUND, e.message, user) }
             val maybeFoundTrack = metadataStorage.findTrack(uuid)
             when (maybeFoundTrack) {
@@ -59,7 +67,7 @@ object TrackMetadata {
             if (newPlayerEnabled) { File("public/panarific_2.json").readText() } else null // TODO temporary, for testing
         )
 
-        return Response(Status.OK).with(Bandage.StaticConfig.view of TrackMetadataPage(authenticatedRequest.user, trackMetadataViewModel, playerMetadata))
+        return Response(Status.OK).with(Bandage.StaticConfig.view of TrackMetadataPage(user, trackMetadataViewModel, playerMetadata))
     }
 
     data class TrackMetadataPage(val loggedInUser: User, val trackMetadata: ViewModels.AudioTrackMetadata, val playerMetadata: Dashboard.ViewModels.AudioTrackMetadata) : ViewModel {

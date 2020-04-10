@@ -22,9 +22,16 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 object Dashboard {
-    operator fun invoke(authenticatedRequest: AuthenticatedRequest, metadataStorage: MetadataStorage): Response {
+    operator fun invoke(
+        authenticatedRequest: AuthenticatedRequest,
+        metadataStorage: MetadataStorage,
+        enableNewPlayerForEnvironment: Boolean
+    ): Response {
         val request = authenticatedRequest.request
-        val newPlayerEnabled = request.header("BANDAGE_ENABLE_NEW_PLAYER")?.toBoolean() ?: false || request.query("newPlayer")?.toBoolean() ?: false
+        val newPlayerEnabled =
+            request.header("BANDAGE_ENABLE_NEW_PLAYER")?.toBoolean() ?: false
+                    || request.query("newPlayer")?.toBoolean() ?: false
+                    || enableNewPlayerForEnvironment
 
         val dateGroupedTracks = metadataStorage.tracks().map { all ->
             with(AudioTrackMetadataEnhancer) {

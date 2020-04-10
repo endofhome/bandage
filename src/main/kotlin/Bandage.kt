@@ -103,9 +103,12 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
     private val authentication = Authentication(providedConfig, userManagement)
     private fun redirectTo(location: String) = Response(SEE_OTHER).header("Location", location)
 
+    private val disableId3Tagging = providedConfig.get(BandageConfigItem.DISABLE_ID3_TAGGING_ON_THE_FLY).toBoolean()
+    private val enableNewPlayer = providedConfig.get(BandageConfigItem.ENABLE_NEW_PLAYER).toBoolean()
+
     private val legacyRoutes: RoutingHttpHandler = with(authentication) {
         routes(
-            play         bind GET  to { request -> ifAuthenticated(request, then = { Play(request,metadataStorage,fileStorage,providedConfig.get(BandageConfigItem.DISABLE_ID3_TAGGING_ON_THE_FLY).toBoolean()) }, otherwise = Response(UNAUTHORIZED))}
+            play         bind GET  to { request -> ifAuthenticated(request, then = { Play(request,metadataStorage,fileStorage, disableId3Tagging) }, otherwise = Response(UNAUTHORIZED))}
         )
     }
 
@@ -123,8 +126,8 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
             login         bind GET  to { request -> ifAuthenticated(request, then = { redirectTo(index) }, otherwise = Login(request, userManagement)) },
             login         bind POST to { request -> authenticateUser(request) },
             logout        bind GET  to { logout() },
-            dashboard     bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  Dashboard(authenticatedRequest, metadataStorage) }) },
-            metadata      bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  TrackMetadata(authenticatedRequest, metadataStorage) }) },
+            dashboard     bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  Dashboard(authenticatedRequest, metadataStorage, enableNewPlayer) }) },
+            metadata      bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  TrackMetadata(authenticatedRequest, metadataStorage, enableNewPlayer) }) },
             upload        bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest -> UploadForm(authenticatedRequest) }) },
             upload        bind POST to { request -> ifAuthenticated(request, then = { Upload(request, metadataStorage, fileStorage, providedConfig.get(DROPBOX_LINK_PASSWORD)) }) },
             uploadPreview bind POST to { request -> ifAuthenticated(request, then = { authenticatedRequest -> UploadPreview(authenticatedRequest) }) },
@@ -137,7 +140,7 @@ class Bandage(providedConfig: Configuration, metadataStorage: MetadataStorage, f
 
     private val nonGzippedRoutes = with(authentication) {
         routes(
-            playWithPath  bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage, providedConfig.get(BandageConfigItem.DISABLE_ID3_TAGGING_ON_THE_FLY).toBoolean()) }, otherwise = Response(UNAUTHORIZED)) },
+            playWithPath  bind GET  to { request -> ifAuthenticated(request, then = { Play(request, metadataStorage, fileStorage, disableId3Tagging) }, otherwise = Response(UNAUTHORIZED)) },
             legacyRoutes
         )
     }
