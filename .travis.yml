@@ -6,7 +6,7 @@ services:
 addons:
   chrome: stable
 script:
-  - "./gradlew assemble"
+  - "./build.sh"
   - "./gradlew check --info"
 deploy:
   provider: heroku
