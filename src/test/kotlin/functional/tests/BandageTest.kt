@@ -62,6 +62,7 @@ import storage.DummyFileStorage
 import storage.DummyMetadataStorage
 import storage.StubFileStorage
 import storage.StubMetadataStorage
+import storage.Waveform
 import java.time.Clock
 import java.time.Instant.EPOCH
 import java.time.ZoneOffset.UTC
@@ -486,6 +487,7 @@ class BandageTest {
     @Nested
     @DisplayName("Uploading tracks")
     inner class UploadingTracks {
+        private val baseFilePath = "/src/test/resources/files/"
         private val fixedClock = Clock.fixed(EPOCH.plus(366, ChronoUnit.DAYS), UTC)
         private val now = fixedClock.instant().atZone(UTC)
         private val year = now.year
@@ -503,7 +505,7 @@ class BandageTest {
         @Test
         fun `a track with no date or time in the filename can be uploaded`() {
             assertFileUploadedCorrectly(
-                filePath = "/src/test/resources/files/440Hz-5sec.mp3",
+                filePath = baseFilePath + "440Hz-5sec.mp3",
                 dateh4DataTestAttr = "date-$nowNumericalAttributeString",
                 dateh4Text = nowWordPresentationString,
                 recordedOnMetadata = nowNumericalPresentationString,
@@ -514,7 +516,7 @@ class BandageTest {
         @Test
         fun `a track with only a date in the filename can be uploaded`() {
             assertFileUploadedCorrectly(
-                filePath = "/src/test/resources/files/2019-09-07 - 440Hz-5sec.mp3",
+                filePath = baseFilePath + "2019-09-07 - 440Hz-5sec.mp3",
                 dateh4DataTestAttr = "date-2019-09-07",
                 dateh4Text = "7 September 2019",
                 recordedOnMetadata = "07/09/2019"
@@ -524,7 +526,7 @@ class BandageTest {
         @Test
         fun `a track with a date and time in the filename can be uploaded`() {
             assertFileUploadedCorrectly(
-                filePath = "/src/test/resources/files/2019-09-07_19-32-13 - 440Hz-5sec.mp3",
+                filePath = baseFilePath + "2019-09-07_19-32-13 - 440Hz-5sec.mp3",
                 dateh4DataTestAttr = "date-2019-09-07",
                 dateh4Text = "7 September 2019",
                 recordedOnMetadata = "07/09/2019   19:32"
@@ -534,7 +536,7 @@ class BandageTest {
         @Test
         fun `a track with many id3 tags is normalised correctly`() {
             assertFileUploadedCorrectly(
-                filePath = "/src/test/resources/files/many-tags.mp3",
+                filePath = baseFilePath + "many-tags.mp3",
                 dateh4DataTestAttr = "date-$nowNumericalAttributeString",
                 dateh4Text = nowWordPresentationString,
                 recordedOnMetadata = nowNumericalPresentationString,
@@ -548,7 +550,7 @@ class BandageTest {
         @Test
         fun `a track with no id3 tags is normalised correctly`() {
             assertFileUploadedCorrectly(
-                filePath = "/src/test/resources/files/no-tags.mp3",
+                filePath = baseFilePath + "no-tags.mp3",
                 dateh4DataTestAttr = "date-$nowNumericalAttributeString",
                 dateh4Text = nowWordPresentationString,
                 recordedOnMetadata = nowNumericalPresentationString,
@@ -562,7 +564,7 @@ class BandageTest {
         @Test
         fun `non-mp3 files are not normalised`() {
             assertFileUploadedCorrectly(
-                filePath = "/src/test/resources/files/not-an-mp3.wav",
+                filePath = baseFilePath + "not-an-mp3.wav",
                 dateh4DataTestAttr = "date-$nowNumericalAttributeString",
                 dateh4Text = nowWordPresentationString,
                 recordedOnMetadata = nowNumericalPresentationString,
