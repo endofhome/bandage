@@ -22,6 +22,6 @@ object ApplicationStatus {
                 separator = ",\n",
                 prefix = "{\n",
                 postfix = "\n}\n"
-            ) { "  ${it.first}: ${it.second}" }
+            ) { "  \"${it.first}\": \"${it.second}\"" }
         )
 }
