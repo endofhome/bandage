@@ -32,8 +32,7 @@ import java.io.FileOutputStream
 import java.util.UUID
 import PreProcessMetadata.hashFile as hashOf
 
-class PlayAudioTest {
-
+class PlayAudioTests {
     private val config = dummyConfiguration()
     private val metadataStorage = StubMetadataStorage(mutableListOf(exampleAudioTrackMetadata))
     private val fileStorage = StubFileStorage(
