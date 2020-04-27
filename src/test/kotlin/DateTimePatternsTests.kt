@@ -11,7 +11,7 @@ import java.time.temporal.ChronoUnit.MONTHS
 import java.time.temporal.ChronoUnit.SECONDS
 import java.time.temporal.ChronoUnit.YEARS
 
-class DateTimePatternsTest {
+class DateTimePatternsTests {
     private data class Pattern(val shortPattern: String, val longPattern: String, val filenamePattern: String)
 
     private val expectedResults = mapOf(
