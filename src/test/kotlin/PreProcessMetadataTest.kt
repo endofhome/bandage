@@ -13,6 +13,7 @@ import java.time.temporal.ChronoUnit.DAYS
 import java.time.temporal.ChronoUnit.SECONDS
 
 internal class PreProcessMetadataTest {
+    private val baseTestFileDir = "src/test/resources/files/"
     private val baseExpected = PreProcessedAudioTrackMetadata(
         artist = "Test Tone Generator",
         workingTitle = "440Hz Sine Wave",
@@ -28,7 +29,7 @@ internal class PreProcessMetadataTest {
 
     @Test
     fun `can pre-process mp3 file without date or timestamp in filename`() {
-        val testFile = File("src/test/resources/files/440Hz-5sec.mp3")
+        val testFile = File(baseTestFileDir + "440Hz-5sec.mp3")
 
         val actual = PreProcessMetadata(testFile)
 
@@ -38,8 +39,7 @@ internal class PreProcessMetadataTest {
     @Nested
     @DisplayName("can pre-process mp3 file with date/timestamp in filename")
     inner class PreProcessMp3WithTimestamps {
-        private val baseTestFileDir = "src/test/resources/files/"
-        private val baseTestFile = File("${baseTestFileDir}440Hz-5sec.mp3")
+        private val baseTestFile = File(baseTestFileDir + "440Hz-5sec.mp3")
 
         @Test
         fun `with pattern yyyy-MM-dd`() {
@@ -100,7 +100,7 @@ internal class PreProcessMetadataTest {
             expectedTimestamp: ZonedDateTime,
             expectedPrecision: ChronoUnit
         ) {
-            val file = baseTestFile.copyTo(File("$baseTestFileDir$filename"), overwrite = true)
+            val file = baseTestFile.copyTo(File(baseTestFileDir + filename), overwrite = true)
             try {
                 val expected = baseExpected.copy(
                     recordedTimestamp = expectedTimestamp,
