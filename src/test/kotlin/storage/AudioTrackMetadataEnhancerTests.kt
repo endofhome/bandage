@@ -5,7 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import exampleAudioTrackMetadata
 import org.junit.jupiter.api.Test
 
-internal class AudioTrackMetadataEnhancerTest {
+internal class AudioTrackMetadataEnhancerTests {
     @Test
     fun `Adds take numbers based on preferred title`() = with(AudioTrackMetadataEnhancer) {
         val tracks = listOf(
