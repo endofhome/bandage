@@ -27,7 +27,7 @@ import java.time.Instant.EPOCH
 import java.time.ZoneOffset.UTC
 
 @ExtendWith(ApprovalTest::class)
-internal class UploadPreviewTest {
+internal class UploadPreviewTests {
     @Test
     fun `returns 400 BAD REQUEST when no multipart form body`() {
         val request = Request(Method.POST, "http://dont.care")
