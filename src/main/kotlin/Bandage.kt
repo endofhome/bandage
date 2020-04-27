@@ -23,6 +23,7 @@ import config.Configuration
 import config.RequiredConfig
 import config.ValidateConfig
 import config.withDynamicDatabaseUrlFrom
+import handlers.ApplicationStatus
 import handlers.Dashboard
 import handlers.EditTrackMetadata
 import handlers.Login
@@ -123,7 +124,8 @@ class Bandage(
         routes(
             login         bind POST  to { request -> authenticateUserApi(request) },
             tracks        bind GET   to { request -> ifAuthenticated(request, then = { Tracks(metadataStorage) }, otherwise = Response(UNAUTHORIZED)) },
-            metadata      bind POST  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  EditTrackMetadata(authenticatedRequest, metadataStorage) }) }
+            metadata      bind POST  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  EditTrackMetadata(authenticatedRequest, metadataStorage) }) },
+            "status"      bind GET to { ApplicationStatus() }
         )
     }
 
