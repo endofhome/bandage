@@ -1,7 +1,0 @@
-ffmpeg
-darwin: as filename
-linux: 4.2
-
-ffprobe
-darwin: as filename
-linux: 4.0.2

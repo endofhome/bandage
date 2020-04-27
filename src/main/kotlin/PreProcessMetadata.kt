@@ -44,15 +44,8 @@ object PreProcessMetadata {
         )
     }
 
-    private fun ffprobeForCurrentOs(): String =
-        if (System.getProperty("os.name").toLowerCase().startsWith("mac")) {
-            "lib/ffprobe_darwin_4.2.2"
-        } else {
-            "lib/ffprobe_linux_x64"
-        }
-
     fun metadataReader(filePath: String): BufferedReader {
-        val ffprobeMetadata = "${ffprobeForCurrentOs()} -v quiet -print_format json -show_format -show_streams".split(" ").plus(filePath)
+        val ffprobeMetadata = "lib/ffprobe -v quiet -print_format json -show_format -show_streams".split(" ").plus(filePath)
         val process = ProcessBuilder().command(ffprobeMetadata).start()
         return BufferedReader(InputStreamReader(process.inputStream))
     }
