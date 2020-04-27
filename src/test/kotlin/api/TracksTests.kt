@@ -13,7 +13,7 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 @ExtendWith(JsonApprovalTest::class)
-internal class TracksTest {
+internal class TracksTests {
     @Test
     fun `tracks are available via API`(approver: Approver) {
         val uuids = (1..5).map { UUID.nameUUIDFromBytes(it.toString().toByteArray()) }
