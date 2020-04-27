@@ -22,7 +22,7 @@ import storage.DummyMetadataStorage
 import storage.StubMetadataStorage
 import java.util.UUID
 
-class EditTrackMetadataTest {
+class EditTrackMetadataTests {
     @Test
     fun `no id path parameter returns 400 BAD REQUEST`() {
         val authenticatedRequest = AuthenticatedRequest(
