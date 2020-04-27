@@ -9,7 +9,7 @@ import org.http4k.core.Request
 import org.jsoup.Jsoup
 import org.junit.jupiter.api.Test
 
-internal class UploadFormTest {
+internal class UploadFormTests {
     @Test
     fun `unsupported file types produce an error message`() {
         val request = AuthenticatedRequest(Request(Method.GET, "https://something-blah-blah.com?unsupported-file-type=nope"), exampleUser)
