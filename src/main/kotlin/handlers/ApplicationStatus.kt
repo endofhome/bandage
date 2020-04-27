@@ -6,18 +6,22 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 object ApplicationStatus {
-    operator fun invoke(): Response {
-        val audiowaveformVersion = "./lib/audiowaveform -v".split(" ")
-        val process = ProcessBuilder().command(audiowaveformVersion).start()
-        val reader = BufferedReader(InputStreamReader(process.inputStream))
-        val version = reader.readLine().trim()
+    private val libs = mapOf(
+        "audiowaveform" to "-v",
+        "ffmpeg" to "-version",
+        "ffprobe" to "-version"
+    )
 
-        return Response(OK).body(
-        """
-            {
-                audiowaveform: $version
-            }
-        """.trimIndent()
+    operator fun invoke(): Response =
+        Response(OK).body(
+            libs.map { (command, args) ->
+                val process = ProcessBuilder().command(listOf(command, args)).start()
+                val reader = BufferedReader(InputStreamReader(process.inputStream))
+                command to reader.readLine().trim()
+            }.joinToString(
+                separator = ",\n",
+                prefix = "{\n",
+                postfix = "\n}\n"
+            ) { "  ${it.first}: ${it.second}" }
         )
-    }
 }
