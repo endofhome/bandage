@@ -15,7 +15,7 @@ object ApplicationStatus {
     operator fun invoke(): Response =
         Response(OK).body(
             libs.map { (command, args) ->
-                val process = ProcessBuilder().command(listOf(command, args)).start()
+                val process = ProcessBuilder().command(listOf("./lib/$command", args)).start()
                 val reader = BufferedReader(InputStreamReader(process.inputStream))
                 command to reader.readLine().trim()
             }.joinToString(
