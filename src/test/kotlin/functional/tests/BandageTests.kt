@@ -62,7 +62,6 @@ import storage.DummyFileStorage
 import storage.DummyMetadataStorage
 import storage.StubFileStorage
 import storage.StubMetadataStorage
-import storage.Waveform
 import java.time.Clock
 import java.time.Instant.EPOCH
 import java.time.ZoneOffset.UTC
@@ -74,7 +73,7 @@ import java.util.UUID
 
 
 @ExtendWith(ApprovalTest::class)
-class BandageTest {
+class BandageTests {
     private val config = dummyConfiguration()
     private val bandage = Bandage(config, DummyMetadataStorage(), DummyFileStorage()).app
     private val driver = Http4kWebDriver(bandage)
