@@ -12,7 +12,7 @@ import storage.PostgresMetadataStorage.PostgresTrack
 import storage.PostgresMetadataStorage.PostgresWaveform
 import java.util.UUID
 
-class PostgresMetadataStorageTest {
+class PostgresMetadataStorageTests {
     @Test
     fun `round trip serialisation of audio track metadata`() = with(PostgresMetadataStorage.JsonSerialisation) {
         val originalMetadata = exampleAudioTrackMetadata.copy(workingTitles = listOf("a single working title"))
