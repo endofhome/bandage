@@ -8,6 +8,7 @@ planning
 todo.txt
 doc
 misc
+lib
 docker-images
 lighthouse-reports
 src/main/kotlin/scripts/loft
