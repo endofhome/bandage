@@ -12,7 +12,7 @@ import java.time.temporal.ChronoUnit
 import java.time.temporal.ChronoUnit.DAYS
 import java.time.temporal.ChronoUnit.SECONDS
 
-internal class PreProcessMetadataTest {
+internal class PreProcessMetadataTests {
     private val baseTestFileDir = "src/test/resources/files/"
     private val baseExpected = PreProcessedAudioTrackMetadata(
         artist = "Test Tone Generator",
