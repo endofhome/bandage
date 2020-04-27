@@ -12,7 +12,7 @@ import org.http4k.routing.RoutedRequest
 import org.junit.jupiter.api.Test
 import storage.DummyMetadataStorage
 
-internal class TrackMetadataTest {
+internal class TrackMetadataTests {
     @Test
     fun `malformed uuid in path parameter returns 404 NOT FOUND`() {
         val authenticatedRequest = AuthenticatedRequest(
