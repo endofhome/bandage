@@ -22,7 +22,7 @@ import storage.DummyMetadataStorage
 import storage.FileStoragePermission
 import java.io.File
 
-internal class UploadTest {
+internal class UploadTests {
 
     private val noOpMetadataStorage = object : DummyMetadataStorage() {
         override fun addTracks(newMetadata: List<AudioTrackMetadata>) {}
