@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import storage.DummyFileStorageFactory
 import storage.DummyMetadataStorageFactory
 
-class BandageConfigTest {
+class BandageConfigTests {
 
     @Test
     fun `application is configured correctly`() {
