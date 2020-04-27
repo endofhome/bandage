@@ -19,7 +19,7 @@ if [[ -z $audiowaveform_installed ]]; then
       curl -Ls https://www.dropbox.com/s/8ezc6k1fbg74n52/audiowaveform-linux-x64-1.4.1?raw=1 -o lib/audiowaveform
     else
       echo
-      echo "Error: your OS $os_type is unsupported."
+      echo "Error: your OS $OSTYPE is unsupported."
       exit 1
     fi
     if [[ $? -eq 0 ]]; then
@@ -42,7 +42,7 @@ if [[ -z $ffmpeg_installed ]]; then
       curl -Ls https://www.dropbox.com/s/w1agd8evvbuz0d5/ffmpeg_linux_x64?raw=1 -o lib/ffmpeg
     else
       echo
-      echo "Error: your OS $os_type is unsupported."
+      echo "Error: your OS $OSTYPE is unsupported."
       exit 1
     fi
     if [[ $? -eq 0 ]]; then
@@ -65,7 +65,7 @@ if [[ -z $ffprobe_installed ]]; then
       curl -Ls https://www.dropbox.com/s/5fge9t5pmsf4gd4/ffprobe_linux_x64?raw=1 -o lib/ffprobe
     else
       echo
-      echo "Error: your OS $os_type is unsupported."
+      echo "Error: your OS $OSTYPE is unsupported."
       exit 1
     fi
     if [[ $? -eq 0 ]]; then
