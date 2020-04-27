@@ -102,7 +102,7 @@ object Tagger {
     ): List<String> {
 
         val commandOpening = listOf(
-            ffmpegForCurrentOs(),
+            "lib/ffmpeg",
             "-f", format,
 
             "-i", inputFile.absolutePath,
@@ -158,13 +158,6 @@ object Tagger {
         val executor = Executors.newScheduledThreadPool(1)
         executor.scheduleAtFixedRate(copyingFile, 0, 1, TimeUnit.SECONDS)
     }
-
-    private fun ffmpegForCurrentOs(): String =
-        if (System.getProperty("os.name").toLowerCase().startsWith("mac")) {
-            "lib/ffmpeg_darwin_4.2.2"
-        } else {
-            "lib/ffmpeg_linux_x64"
-        }
 }
 
 data class StreamWithLength(val inputstream: InputStream, val size: Long)
