@@ -62,6 +62,14 @@ import storage.DummyFileStorage
 import storage.DummyMetadataStorage
 import storage.StubFileStorage
 import storage.StubMetadataStorage
+import storage.Waveform
+import storage.Waveform.Companion.Bits
+import storage.Waveform.Companion.Channels
+import storage.Waveform.Companion.Data
+import storage.Waveform.Companion.Length
+import storage.Waveform.Companion.SampleRate
+import storage.Waveform.Companion.SamplesPerPixel
+import storage.Waveform.Companion.Version
 import java.time.Clock
 import java.time.Instant.EPOCH
 import java.time.ZoneOffset.UTC
@@ -507,8 +515,7 @@ class BandageTests {
                 filePath = baseFilePath + "440Hz-5sec.mp3",
                 dateh4DataTestAttr = "date-$nowNumericalAttributeString",
                 dateh4Text = nowWordPresentationString,
-                recordedOnMetadata = nowNumericalPresentationString,
-                clock = fixedClock
+                recordedOnMetadata = nowNumericalPresentationString
             )
         }
 
@@ -541,8 +548,7 @@ class BandageTests {
                 recordedOnMetadata = nowNumericalPresentationString,
                 expectedTitle = "Top 5 number",
                 expectedFileSize = 41126L,
-                expectedNormalisedFileSize = 40796L,
-                clock = fixedClock
+                expectedNormalisedFileSize = 40796L
             )
         }
 
@@ -555,8 +561,7 @@ class BandageTests {
                 recordedOnMetadata = nowNumericalPresentationString,
                 expectedTitle = "no-tags",
                 expectedFileSize = 40978L,
-                expectedNormalisedFileSize = 40796L,
-                clock = fixedClock
+                expectedNormalisedFileSize = 40796L
             )
         }
 
@@ -568,9 +573,31 @@ class BandageTests {
                 dateh4Text = nowWordPresentationString,
                 recordedOnMetadata = nowNumericalPresentationString,
                 expectedTitle = "not-an-mp3",
+                expectedFileFormat = "wav",
                 expectedFileSize = 40978L,
-                expectedNormalisedFileSize = null,
-                clock = fixedClock
+                expectedNormalisedFileSize = null
+            )
+        }
+
+        @Test
+        fun `waveform is extracted`() {
+            assertFileUploadedCorrectly(
+                filePath = baseFilePath + "440Hz-5sec.mp3",
+                dateh4DataTestAttr = "date-$nowNumericalAttributeString",
+                dateh4Text = nowWordPresentationString,
+                recordedOnMetadata = nowNumericalPresentationString,
+                expectedWaveform = Waveform(
+                    version = Version(2),
+                    channels = Channels(1),
+                    sampleRate = SampleRate(44100),
+                    samplesPerPixel = SamplesPerPixel(2205),
+                    bits = Bits(8),
+                    length = Length(102),
+                    data = Data(
+                        listOf(-1.0, 1.0, -1.0, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.01, 1.0, -1.0, 1.0, -1.0, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.0, 1.0, -1.01, 1.0, -1.01, 1.0, 0.0, 0.0)
+                    )
+                ),
+                expectedFileFormat = "mp3"
             )
         }
 
@@ -582,60 +609,67 @@ class BandageTests {
             expectedTitle: String = "440Hz Sine Wave",
             expectedFileSize: Long? = null,
             expectedNormalisedFileSize: Long? = null,
-            clock: Clock = Clock.system(UTC)
+            expectedWaveform: Waveform? = null,
+            expectedFileFormat: String = "mp3"
         ) {
             val metadataStorage = StubMetadataStorage(mutableListOf())
-            val bandage = Bandage(config, metadataStorage, StubFileStorage(mutableMapOf()), clock).app
+            val bandage = Bandage(config, metadataStorage, StubFileStorage(mutableMapOf()), fixedClock).app
             val driver = ChromeDriver(ChromeOptions().setHeadless(true))
             val baseUrl = "http://localhost:7000"
+            val server = bandage.asServer(Jetty(HttpConfig.port)).also { it.start() }
 
-            val server = bandage.asServer(Jetty(HttpConfig.port))
-            server.start()
-            driver.navigate().to(baseUrl)
-            driver.userLogsIn()
+            try {
+                driver.navigate().to(baseUrl)
+                driver.userLogsIn()
 
-            val uploadLink = driver.findElement(By.cssSelector("a[data-test=\"upload-link\"]")) ?: fail("Upload link is unavailable")
-            uploadLink.click()
+                val uploadLink = driver.findElement(By.cssSelector("a[data-test=\"upload-link\"]")) ?: fail("Upload link is unavailable")
+                uploadLink.click()
 
-            assertThat(driver.currentUrl, equalTo("$baseUrl/upload"))
-            val uploadTrackForm = driver.findElement(By.cssSelector("form[data-test=\"upload-track-form\"]")) ?: fail("Upload track form is unavailable")
-            val filePicker = uploadTrackForm.findElement(By.cssSelector("input[data-test=\"file-picker\"]")) ?: fail("File picker is unavailable")
-            filePicker.sendKeys(System.getProperty("user.dir") + filePath)
-            uploadTrackForm.submit()
+                assertThat(driver.currentUrl, equalTo("$baseUrl/upload"))
+                val uploadTrackForm = driver.findElement(By.cssSelector("form[data-test=\"upload-track-form\"]")) ?: fail("Upload track form is unavailable")
+                val filePicker = uploadTrackForm.findElement(By.cssSelector("input[data-test=\"file-picker\"]")) ?: fail("File picker is unavailable")
+                filePicker.sendKeys(System.getProperty("user.dir") + filePath)
+                uploadTrackForm.submit()
 
-            assertThat(driver.currentUrl, equalTo("$baseUrl/upload-preview"))
+                assertThat(driver.currentUrl, equalTo("$baseUrl/upload-preview"))
 
-            val previewForm = driver.findElement(By.cssSelector("form[data-test=\"preview-metadata-form\"]"))
-                ?: fail("Preview metadata form is unavailable")
-            previewForm.submit()
+                val previewForm = driver.findElement(By.cssSelector("form[data-test=\"preview-metadata-form\"]"))
+                    ?: fail("Preview metadata form is unavailable")
+                previewForm.submit()
 
-            assertThat(driver.currentUrl, startsWith("$baseUrl/dashboard?highlighted="))
+                assertThat(driver.currentUrl, startsWith("$baseUrl/dashboard?highlighted="))
 
-            val uuidForTrack = driver.currentUrl.substringAfter("$baseUrl/dashboard?highlighted=")
-            val dateh4 =
-                driver.findElement(By.cssSelector("h4[data-test=\"[$dateh4DataTestAttr]\"]")) ?: fail("h4 is unavailable")
-            assertThat(dateh4.text, equalTo(dateh4Text))
+                val uuidForTrack = driver.currentUrl.substringAfter("$baseUrl/dashboard?highlighted=")
+                val dateh4 =
+                    driver.findElement(By.cssSelector("h4[data-test=\"[$dateh4DataTestAttr]\"]")) ?: fail("h4 is unavailable")
+                assertThat(dateh4.text, equalTo(dateh4Text))
 
-            val track = driver.findElement(By.cssSelector("div[data-track]")) ?: fail("Div for track is unavailable")
-            assertThat(track.text, equalTo("$expectedTitle | 0:05 | mp3 | ► | ↓"))
-            assertThat(track.findElement(By.cssSelector("a")).getAttribute("class"), equalTo("working-title-link"))
+                val track = driver.findElement(By.cssSelector("div[data-track]")) ?: fail("Div for track is unavailable")
+                assertThat(track.text, equalTo("$expectedTitle | 0:05 | $expectedFileFormat | ► | ↓"))
+                assertThat(track.findElement(By.cssSelector("a")).getAttribute("class"), equalTo("working-title-link"))
 
-            track.findElement(By.cssSelector("a")).click()
-            assertThat(driver.currentUrl, equalTo("$baseUrl/tracks/$uuidForTrack"))
+                track.findElement(By.cssSelector("a")).click()
+                assertThat(driver.currentUrl, equalTo("$baseUrl/tracks/$uuidForTrack"))
 
-            val recordedTime = driver.findElement(By.cssSelector("input[data-test=\"recordedOn\"]"))
-            assertThat(recordedTime.getAttribute("value"), equalTo(recordedOnMetadata))
+                val recordedTime = driver.findElement(By.cssSelector("input[data-test=\"recordedOn\"]"))
+                assertThat(recordedTime.getAttribute("value"), equalTo(recordedOnMetadata))
 
-            if (expectedFileSize != null && expectedNormalisedFileSize != null) {
-                metadataStorage.findTrack(UUID.fromString(uuidForTrack)).map { foundTrack ->
-                    assertThat(foundTrack?.fileSize?.toLong(), equalTo(expectedFileSize))
-                    assertThat(foundTrack?.normalisedFileSize, equalTo(expectedNormalisedFileSize))
+                if (expectedFileSize != null && expectedNormalisedFileSize != null) {
+                    metadataStorage.findTrack(UUID.fromString(uuidForTrack)).map { foundTrack ->
+                        assertThat(foundTrack?.fileSize?.toLong(), equalTo(expectedFileSize))
+                        assertThat(foundTrack?.normalisedFileSize, equalTo(expectedNormalisedFileSize))
+                    }
                 }
 
+                if (expectedWaveform != null) {
+                    metadataStorage.findTrack(UUID.fromString(uuidForTrack)).map { foundTrack ->
+                        assertThat(foundTrack?.waveform, equalTo(expectedWaveform))
+                    }
+                }
+            } finally {
+                server.stop()
+                driver.close()
             }
-
-            server.stop()
-            driver.close()
         }
     }
 

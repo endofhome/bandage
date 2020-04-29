@@ -20,6 +20,14 @@ import storage.AudioTrackMetadata
 import storage.DummyFileStorage
 import storage.DummyMetadataStorage
 import storage.FileStoragePermission
+import storage.Waveform
+import storage.Waveform.Companion.Bits
+import storage.Waveform.Companion.Channels
+import storage.Waveform.Companion.Data
+import storage.Waveform.Companion.Length
+import storage.Waveform.Companion.SampleRate
+import storage.Waveform.Companion.SamplesPerPixel
+import storage.Waveform.Companion.Version
 import java.io.File
 
 internal class UploadTests {
@@ -31,6 +39,10 @@ internal class UploadTests {
     private val noOpFileStorage = object : DummyFileStorage() {
         override fun uploadFile(file: File, destinationPath: String): Result<Error, File> = File("dummy-file").asSuccess()
         override fun publicLink(path: String, permission: FileStoragePermission): Result<Error, Uri> = Uri.of("http://some-uri.com").asSuccess()
+    }
+
+    private val stubExtractWaveform : (File) -> Waveform = {
+        Waveform(Bits(0), Data(emptyList()), Length(0), Version(0), Channels(0), SampleRate(0), SamplesPerPixel(0))
     }
 
     @Test
@@ -119,13 +131,11 @@ internal class UploadTests {
             .form("hash", "")
 
     private fun handleRequests(validRequests: List<Request>, invalidRequests: List<Request>): Pair<List<Response>, List<Response>> {
-        val validResponses = validRequests.map {
-            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
-        }
+        fun handle(request: Request) =
+            Upload(request, noOpMetadataStorage, noOpFileStorage, "file-storage-password", stubExtractWaveform)
 
-        val invalidResponses = invalidRequests.map {
-            Upload(it, noOpMetadataStorage, noOpFileStorage, "file-storage-password")
-        }
+        val validResponses = validRequests.map { handle(it) }
+        val invalidResponses = invalidRequests.map { handle(it) }
 
         return Pair(validResponses, invalidResponses)
     }

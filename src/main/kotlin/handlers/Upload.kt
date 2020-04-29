@@ -19,6 +19,7 @@ import storage.FileStorage
 import storage.FileStoragePermission.PasswordProtected
 import storage.HasPresentationFormat.Companion.presentationFormat
 import storage.MetadataStorage
+import storage.Waveform
 import storage.toBitRate
 import storage.toDuration
 import java.io.File
@@ -34,7 +35,7 @@ object Upload {
     val hourRange = 0..23
     val timeRange = 0..59
 
-    operator fun invoke(request: Request, metadataStorage: MetadataStorage, fileStorage: FileStorage, fileStoragePassword: String): Response {
+    operator fun invoke(request: Request, metadataStorage: MetadataStorage, fileStorage: FileStorage, fileStoragePassword: String, extractWaveform: (File) -> Waveform): Response {
         val preProcessedAudioTrackMetadata: PreProcessedAudioTrackMetadata = try {
             val formAsMap = request.formAsMap()
 
@@ -94,6 +95,8 @@ object Upload {
         val destinationPath = "/$foldername/${preProcessedAudioTrackMetadata.filename}"
         val tempFile = File("$tempDir/${preProcessedAudioTrackMetadata.filename}")
 
+        val waveform = extractWaveform(tempFile) // TODO do this whilst uploading file not before
+
         return fileStorage.uploadFile(tempFile, destinationPath).flatMap {
             fileStorage.publicLink(destinationPath, PasswordProtected(fileStoragePassword)).map { passwordProtectedLink ->
                 val uuid = UUID.randomUUID()
@@ -117,7 +120,8 @@ object Upload {
                             passwordProtectedLink,
                             destinationPath,
                             preProcessedAudioTrackMetadata.hash,
-                            emptyList()
+                            emptyList(),
+                            waveform
                         )
                     )
                 )

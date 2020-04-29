@@ -138,7 +138,7 @@ class Bandage(
             dashboard     bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  Dashboard(authenticatedRequest, metadataStorage, enableNewPlayer) }) },
             metadata      bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest ->  TrackMetadata(authenticatedRequest, metadataStorage, enableNewPlayer) }) },
             upload        bind GET  to { request -> ifAuthenticated(request, then = { authenticatedRequest -> UploadForm(authenticatedRequest) }) },
-            upload        bind POST to { request -> ifAuthenticated(request, then = { Upload(request, metadataStorage, fileStorage, providedConfig.get(DROPBOX_LINK_PASSWORD)) }) },
+            upload        bind POST to { request -> ifAuthenticated(request, then = { Upload(request, metadataStorage, fileStorage, providedConfig.get(DROPBOX_LINK_PASSWORD), ExtractWaveform) }) },
             uploadPreview bind POST to { request -> ifAuthenticated(request, then = { authenticatedRequest -> UploadPreview(authenticatedRequest, clock = clock) }) },
 
             api           bind apiRoutes,
