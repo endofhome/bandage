@@ -106,12 +106,18 @@ class PostgresMetadataStorage(config: Configuration, sslRequireModeOverride: Boo
         }
 
     override fun addTracks(newMetadata: List<AudioTrackMetadata>) {
+        val columns = listOf(
+            "?::uuid",
+            "?::jsonb",
+            "?::jsonb"
+        )
+
         datasource.connection.use { connection ->
             val preparedStatement = connection.prepareStatement("""
-                INSERT INTO tracks VALUES ${newMetadata.joinToString(",") { "(?::uuid, ?::jsonb, ?::jsonb)" }};
+                INSERT INTO tracks VALUES ${newMetadata.joinToString(",") { "(${columns.joinToString()})" }};
             """.trimIndent())
 
-            val uuidIndexes = 1..newMetadata.size * 3 step 3
+            val uuidIndexes = 1..newMetadata.size * columns.size step columns.size
 
             newMetadata.zip(uuidIndexes).forEach { (audioFileMetadata, uuidIndex) ->
                 preparedStatement.setString(uuidIndex, audioFileMetadata.uuid.toString())
