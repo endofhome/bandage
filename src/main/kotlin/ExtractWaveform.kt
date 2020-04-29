@@ -1,6 +1,5 @@
+import json.json
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 import storage.Waveform
 import storage.Waveform.Companion.Bits
 import storage.Waveform.Companion.Channels
@@ -30,7 +29,6 @@ object ExtractWaveform : (File) -> Waveform {
         )).start().waitFor()
 
         val output = File(outputFile).reader().readLines().joinToString("")
-
         val audiowaveform = json.parse(Audiowaveform.serializer(), output).normalise()
 
         return Waveform(
@@ -63,5 +61,3 @@ fun Audiowaveform.normalise(): Audiowaveform =
                 .map { BigDecimal(it / maxPeak).setScale(2, RoundingMode.HALF_EVEN).toDouble() }
         )
     } ?: error("Cannot get max of empty list.")
-
-val json = Json(JsonConfiguration.Stable)
